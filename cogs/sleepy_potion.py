@@ -65,7 +65,7 @@ class SleepyPotionCog(commands.Cog):
                 return
             if not user_settings.bot_enabled: return
             await reminders.reduce_reminder_time(user.id, timedelta(days=1), strings.SLEEPY_POTION_AFFECTED_ACTIVITIES)
-            if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
+            if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVCHI)
 
 
 # Initialization

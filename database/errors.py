@@ -88,7 +88,7 @@ async def log_error(error: Union[Exception, str], ctx: Optional[Union[commands.C
         jump_url = 'N/A'
         user_settings = 'N/A'
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         cur.execute(sql, (date_time, message_content, error_message, user_settings, jump_url))
         logs.logger.error(f'\n{error_message}\n>> Jump URL: {jump_url}')
     except sqlite3.Error as error:

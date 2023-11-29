@@ -33,7 +33,7 @@ async def embed_portals(bot: discord.Bot, ctx: Union[discord.ApplicationContext,
     except exceptions.NoDataFoundError:
         user_portals = None
         description = (
-            f'_No portals found. Use {await functions.get_navi_slash_command(bot, "settings portals")} '
+            f'_No portals found. Use {await functions.get_navchi_slash_command(bot, "settings portals")} '
             f'to set some._'
         )
     if user_portals is not None:

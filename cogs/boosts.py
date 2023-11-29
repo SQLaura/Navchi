@@ -137,7 +137,7 @@ class BoostsCog(commands.Cog):
                 if user_settings.potion_dragon_breath_active != potion_dragon_breath_active:
                     await user_settings.update(potion_dragon_breath_active=potion_dragon_breath_active)
                 if user_settings.reactions_enabled and user_settings.alert_boosts.enabled:
-                    await message.add_reaction(emojis.NAVI)
+                    await message.add_reaction(emojis.NAVCHI)
 
         if not message.embeds:
             message_content = message.content

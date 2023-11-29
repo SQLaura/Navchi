@@ -63,7 +63,7 @@ class HelperTrainingCog(commands.Cog):
                             await functions.add_warning_reaction(message)
                             await errors.log_error('Timestring not found for void areas message.', message)
                             return
-                if updated_settings: await message.add_reaction(emojis.NAVI)
+                if updated_settings: await message.add_reaction(emojis.NAVCHI)
 
         if not message.embeds:
             message_content = message.content

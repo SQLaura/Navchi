@@ -23,7 +23,7 @@ class FeedbackCog(commands.Cog):
         ctx: discord.ApplicationContext,
         message: Option(str, 'Complaint you want to send', max_length=2000),
     ) -> None:
-        """Sends a complaint about Navi to the dev."""
+        """Sends a complaint about Navchi to the dev."""
         embed = discord.Embed(
             title = f'**{ctx.author.name}** has a complaint',
             description = message
@@ -64,7 +64,7 @@ class FeedbackCog(commands.Cog):
         ctx: discord.ApplicationContext,
         message: Option(str, 'Suggestion you want to send', max_length=2000),
     ) -> None:
-        """Sends a suggestion about Navi to the dev."""
+        """Sends a suggestion about Navchi to the dev."""
         embed = discord.Embed(
             title = f'**{ctx.author.name}** has a suggestion',
             description = message

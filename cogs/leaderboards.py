@@ -34,7 +34,7 @@ class LeaderboardsCog(commands.Cog):
             await leaderboards.command_leaderboard_clan(ctx)
         else:
             await ctx.reply(
-                f'Hey! Please use {await functions.get_navi_slash_command(self.bot, "settings guild")} '
+                f'Hey! Please use {await functions.get_navchi_slash_command(self.bot, "settings guild")} '
                 f'to change guild settings.'
             )
 

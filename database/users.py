@@ -737,7 +737,7 @@ async def get_user(user_id: int) -> User:
     function_name = 'get_user'
     sql = f'SELECT * FROM {table} WHERE user_id=?'
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         cur.execute(sql, (user_id,))
         record = cur.fetchone()
     except sqlite3.Error as error:
@@ -772,7 +772,7 @@ async def get_all_users() -> Tuple[User]:
     function_name = 'get_all_users'
     sql = f'SELECT * FROM {table}'
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         cur.execute(sql)
         records = cur.fetchall()
     except sqlite3.Error as error:
@@ -810,7 +810,7 @@ async def get_users_by_clan_name(clan_name: str) -> Tuple[User]:
     function_name = 'get_users_by_clan_name'
     sql = f'SELECT * FROM {table} WHERE clan_name=?'
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         cur.execute(sql, (clan_name,))
         records = cur.fetchall()
     except sqlite3.Error as error:
@@ -845,7 +845,7 @@ async def get_user_count() -> int:
     function_name = 'get_user_count'
     sql = f'SELECT COUNT(user_id) FROM {table}'
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         cur.execute(sql)
         record = cur.fetchone()
     except sqlite3.Error as error:
@@ -1072,7 +1072,7 @@ async def _update_user(user: User, **kwargs) -> None:
         )
         raise exceptions.NoArgumentsError('You need to specify at least one keyword argument.')
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         sql = f'UPDATE {table} SET'
         for kwarg in kwargs:
             sql = f'{sql} {kwarg} = :{kwarg},'
@@ -1114,7 +1114,7 @@ async def insert_user(user_id: int) -> User:
         sql = f'{sql}?,'
     sql = f'{sql.strip(",")})'
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         cur.execute(sql, values)
     except sqlite3.Error as error:
         await errors.log_error(

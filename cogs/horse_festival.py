@@ -134,7 +134,7 @@ class HorseFestivalCog(commands.Cog):
                 if user_settings.auto_ready_enabled and user_settings.ready_after_all_commands:
                     asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
                 if user_settings.reactions_enabled:
-                    await message.add_reaction(emojis.NAVI)
+                    await message.add_reaction(emojis.NAVCHI)
                     await message.add_reaction(emojis.KIRBY_RUN)
 
             # Megarace

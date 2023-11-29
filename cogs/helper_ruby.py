@@ -86,7 +86,7 @@ class HelperRubyCog(commands.Cog):
                 if ruby_count < 0: ruby_count == 0
                 await user_settings.update(inventory_ruby=ruby_count)
                 if user_settings.inventory.ruby == ruby_count and user_settings.reactions_enabled:
-                    await message.add_reaction(emojis.NAVI)
+                    await message.add_reaction(emojis.NAVCHI)
 
             # Rubies from lootboxes
             search_strings = [
@@ -132,7 +132,7 @@ class HelperRubyCog(commands.Cog):
                 if ruby_count < 0: ruby_count == 0
                 await user_settings.update(inventory_ruby=ruby_count)
                 if user_settings.inventory.ruby == ruby_count and user_settings.reactions_enabled:
-                    await message.add_reaction(emojis.NAVI)
+                    await message.add_reaction(emojis.NAVCHI)
 
             # Rubies from inventory
             search_strings = [
@@ -181,7 +181,7 @@ class HelperRubyCog(commands.Cog):
                         return
                 await user_settings.update(inventory_ruby=ruby_count)
                 if user_settings.inventory.ruby == ruby_count and user_settings.reactions_enabled:
-                    await message.add_reaction(emojis.NAVI)
+                    await message.add_reaction(emojis.NAVCHI)
 
         if not message.embeds:
             message_content = message.content
@@ -285,7 +285,7 @@ class HelperRubyCog(commands.Cog):
                 if ruby_count < 0: ruby_count == 0
                 await user_settings.update(inventory_ruby=ruby_count)
                 if user_settings.inventory.ruby == ruby_count and user_settings.reactions_enabled:
-                    await message.add_reaction(emojis.NAVI)
+                    await message.add_reaction(emojis.NAVCHI)
 
             # Rubies from work commands
             search_strings = [
@@ -364,7 +364,7 @@ class HelperRubyCog(commands.Cog):
                 if ruby_count < 0: ruby_count == 0
                 await user_settings.update(inventory_ruby=ruby_count)
                 if user_settings.inventory.ruby == ruby_count and user_settings.reactions_enabled:
-                    await message.add_reaction(emojis.NAVI)
+                    await message.add_reaction(emojis.NAVCHI)
 
             # Rubies from crafting ruby armor
             search_strings = [
@@ -392,7 +392,7 @@ class HelperRubyCog(commands.Cog):
                 if ruby_count < 0: ruby_count == 0
                 await user_settings.update(inventory_ruby=ruby_count)
                 if user_settings.inventory.ruby == ruby_count and user_settings.reactions_enabled:
-                    await message.add_reaction(emojis.NAVI)
+                    await message.add_reaction(emojis.NAVCHI)
 
             # Rubies from crafting coin sword
             search_strings = [
@@ -420,7 +420,7 @@ class HelperRubyCog(commands.Cog):
                 if ruby_count < 0: ruby_count == 0
                 await user_settings.update(inventory_ruby=ruby_count)
                 if user_settings.inventory.ruby == ruby_count and user_settings.reactions_enabled:
-                    await message.add_reaction(emojis.NAVI)
+                    await message.add_reaction(emojis.NAVCHI)
 
             # Rubies from crafting ultra-edgy armor
             search_strings = [
@@ -448,7 +448,7 @@ class HelperRubyCog(commands.Cog):
                 if ruby_count < 0: ruby_count == 0
                 await user_settings.update(inventory_ruby=ruby_count)
                 if user_settings.inventory.ruby == ruby_count and user_settings.reactions_enabled:
-                    await message.add_reaction(emojis.NAVI)
+                    await message.add_reaction(emojis.NAVCHI)
 
 
 # Initialization

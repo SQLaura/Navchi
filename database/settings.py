@@ -24,7 +24,7 @@ async def get_settings() -> dict:
     function_name = 'get_settings'
     sql = f'SELECT * FROM {table}'
     try:
-        cur=settings.NAVI_DB.cursor()
+        cur=settings.NAVCHI_DB.cursor()
         cur.execute(sql)
         records = cur.fetchall()
     except sqlite3.Error as error:
@@ -65,7 +65,7 @@ async def update_setting(name: str, value: str) -> None:
             )
         )
         raise ArgumentError('Arguments can\'t be None.')
-    cur = settings.NAVI_DB.cursor()
+    cur = settings.NAVCHI_DB.cursor()
     all_settings = await get_settings()
     setting = all_settings.get(name, 'No record')
     try:

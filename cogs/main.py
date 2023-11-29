@@ -29,7 +29,7 @@ class MainCog(commands.Cog):
         """Main help command"""
         await main.command_help(self.bot, ctx)
 
-    @slash_command(description='Some info and links about Navi')
+    @slash_command(description='Some info and links about Navchi')
     async def about(self, ctx: discord.ApplicationContext) -> None:
         """About command"""
         await main.command_about(self.bot, ctx)
@@ -47,7 +47,7 @@ class MainCog(commands.Cog):
         message = (
             f'Sorry, you can\'t invite me.\n'
             f'However, I am fully open source on an MIT license, so feel free to run me yourself.\n'
-            f'https://github.com/Miriel-py/Navi'
+            f'https://github.com/Miriel-py/Navchi'
         )
         await ctx.reply(message)
 
@@ -58,7 +58,7 @@ class MainCog(commands.Cog):
         Interesting errors get written to the database for further review.
         """
         command_name = f'{ctx.command.full_parent_name} {ctx.command.name}'.strip()
-        command_name = await functions.get_navi_slash_command(self.bot, command_name)
+        command_name = await functions.get_navchi_slash_command(self.bot, command_name)
         async def send_error() -> None:
             """Sends error message as embed"""
             embed = discord.Embed(title='An error occured')
@@ -97,7 +97,7 @@ class MainCog(commands.Cog):
         elif isinstance(error, exceptions.FirstTimeUserError):
             await ctx.respond(
                 f'Hey! **{ctx.author.name}**, looks like I don\'t know you yet.\n'
-                f'Use {await functions.get_navi_slash_command(self.bot, "on")} to activate me first.',
+                f'Use {await functions.get_navchi_slash_command(self.bot, "on")} to activate me first.',
                 ephemeral=True
             )
         elif isinstance(error, commands.NotOwner):
@@ -148,7 +148,7 @@ class MainCog(commands.Cog):
         elif isinstance(error, exceptions.FirstTimeUserError):
             await ctx.reply(
                 f'**{ctx.author.name}**, looks like I don\'t know you yet.\n'
-                f'Use {await functions.get_navi_slash_command(self.bot, "on")} to activate me first.',
+                f'Use {await functions.get_navchi_slash_command(self.bot, "on")} to activate me first.',
             )
         elif isinstance(error, (commands.UnexpectedQuoteError, commands.InvalidEndOfQuotedStringError,
                                 commands.ExpectedClosingQuoteError)):
@@ -196,7 +196,7 @@ class MainCog(commands.Cog):
             welcome_message = (
                 f'Hey! **{guild.name}**! I\'m here to remind you to do your EPIC RPG commands!\n\n'
                 f'Note that reminders are off by default. If you want to get reminded, please use '
-                f'{await functions.get_navi_slash_command(self.bot, "on")} to activate me.'
+                f'{await functions.get_navchi_slash_command(self.bot, "on")} to activate me.'
             )
             await guild.system_channel.send(welcome_message)
         except:

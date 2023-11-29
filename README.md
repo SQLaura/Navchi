@@ -1,8 +1,8 @@
-# Navi
+# Navchi
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Python: 3.8](https://img.shields.io/badge/Python-3.8+-brightgreen.svg)](https://www.python.org/) [![Database: SQLite](https://img.shields.io/badge/Database-SQLite-blue.svg)](https://www.sqlite.org/index.html)
 
-Reminder / Helper for EPIC RPG. Forked (technically) from Miriel-py/Navi for Mochi
+Reminder / Helper for EPIC RPG. Forked (technically) from Miriel-py/Navchi for Mochi
 
 ## Setup
 
@@ -10,11 +10,11 @@ Reminder / Helper for EPIC RPG. Forked (technically) from Miriel-py/Navi for Moc
 • Install the third party libraries mentioned in `requirements.txt`.  
 • Create a Discord application with a bot user, activate the required intents and generate a bot token.  
 • Rename `default.env` to `.env` and set all required variables mentioned in the file.  
-• Rename `database/default_db.db` to `database/navi_db.db`.  
-• Upload all emojis in `images/emojis` to a private server Navi can see.  
+• Rename `database/default_db.db` to `database/navchi_db.db`.  
+• Upload all emojis in `images/emojis` to a private server Navchi can see.  
 • Change all emojis in `resources/emojis.py` to the ones you uploaded.  
 • Run `bot.py`.  
-• Invite Navi to your server(s). Note the required permissions below.  
+• Invite Navchi to your server(s). Note the required permissions below.  
 
 ## Updating the bot
 
@@ -40,8 +40,8 @@ Reminder / Helper for EPIC RPG. Forked (technically) from Miriel-py/Navi for Moc
 
 ## Commands
 
-Navi uses slash commands but also supports some text commands.  
-Default prefix for text commands is `navi ` and is changeable in `/settings server`.  
+Navchi uses slash commands but also supports some text commands.  
+Default prefix for text commands is `navchi ` and is changeable in `/settings server`.  
 Use `/help` for an overview.  
 
 ## Dev commands
@@ -68,7 +68,7 @@ Always check what is actually affected before changing this, it's never all comm
 
 ### `/dev post-message`  
 
-Allows you to send a custom message via Navi to a channel. I use this to post Navi updates.  
+Allows you to send a custom message via Navchi to a channel. I use this to post Navchi updates.  
 
 ### `/dev reload`  
 
@@ -84,7 +84,7 @@ To reload files in subfolders, use `folder.file` (e.g. `resources.settings`). Co
 
 ### `/dev server-list`  
 
-Lists all servers Navi is in by name.  
+Lists all servers Navchi is in by name.  
 
 ### `/dev shutdown`  
 
@@ -98,4 +98,4 @@ Ignore other dev commands, they are my own test commands and might even mess up 
 
 ## Dev support server
 
-• If you find bugs, have issues running Navi or something else, feel free to join the [dev support server](https://discord.gg/Kz2Vz2K4gy).  
+• If you find bugs, have issues running Navchi or something else, feel free to join the [dev support server](https://discord.gg/Kz2Vz2K4gy).  

@@ -94,8 +94,8 @@ FARM_HELPER_MODES = {
 
 
 # Links
-LINK_GITHUB = "https://github.com/Miriel-py/Navi"
-LINK_PRIVACY_POLICY = "https://github.com/Miriel-py/Navi/blob/master/PRIVACY.md"
+LINK_GITHUB = "https://github.com/Miriel-py/Navchi"
+LINK_PRIVACY_POLICY = "https://github.com/Miriel-py/Navchi/blob/master/PRIVACY.md"
 
 # --- Default messages ---
 DEFAULT_MESSAGE = "{name} Hey! It's time for {command}!"
@@ -1819,7 +1819,7 @@ FLEX_THUMBNAILS_EVENT_ENCHANT = [
     "https://media.giphy.com/media/ef4gyEAxktrF3cWO5g/giphy.gif",
     "https://media.tenor.com/oTpEgUkQjngAAAAC/vibing-dancing.gif",
     "https://media.tenor.com/9-b0gUv-HokAAAAC/enchanted-sword-enchanted-iron-sword.gif",
-    "https://media.tenor.com/Z3mgGQaNQt4AAAAC/legendofzelda-navi.gif",
+    "https://media.tenor.com/Z3mgGQaNQt4AAAAC/legendofzelda-navchi.gif",
 ]
 
 FLEX_THUMBNAILS_EVENT_FARM = [

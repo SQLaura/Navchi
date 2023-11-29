@@ -216,7 +216,7 @@ async def get_clan_by_user_id(user_id: int) -> Clan:
         f'or member5_id=? or member6_id=? or member7_id=? or member8_id=? or member9_id=? or member10_id=?'
     )
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         cur.execute(sql, (user_id,) * 11)
         record = cur.fetchone()
     except sqlite3.Error as error:
@@ -249,7 +249,7 @@ async def get_clan_by_clan_name(clan_name: str) -> Clan:
     function_name = 'get_clan_by_clan_name'
     sql = f'SELECT * FROM {table} WHERE clan_name=?'
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         cur.execute(sql, (clan_name,))
         record = cur.fetchone()
     except sqlite3.Error as error:
@@ -282,7 +282,7 @@ async def get_all_clans() -> Tuple[Clan]:
     function_name = 'get_all_clans'
     sql = f'SELECT * FROM {table}'
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         cur.execute(sql)
         records = cur.fetchall()
     except sqlite3.Error as error:
@@ -320,7 +320,7 @@ async def get_clan_raid(clan_name: str, user_id: str, raid_time: datetime) -> Cl
     function_name = 'get_clan_raid'
     sql = f'SELECT * FROM {table} WHERE clan_name=? AND user_id=? AND raid_time=?'
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         cur.execute(sql, (clan_name, user_id, raid_time))
         record = cur.fetchone()
     except sqlite3.Error as error:
@@ -356,7 +356,7 @@ async def get_leaderboard(clan: Clan) -> ClanLeaderboard:
     stealth_threshold = 1000
     sql = f'SELECT * FROM {table} WHERE clan_name=? AND energy>={stealth_threshold} ORDER BY energy DESC LIMIT 5'
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         cur.execute(sql, (clan.clan_name,))
         records_best = cur.fetchall()
     except sqlite3.Error as error:
@@ -366,7 +366,7 @@ async def get_leaderboard(clan: Clan) -> ClanLeaderboard:
         raise
     sql = f'SELECT * FROM {table} WHERE clan_name=? AND energy<{stealth_threshold} ORDER BY energy ASC LIMIT 5'
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         cur.execute(sql, (clan.clan_name,))
         records_worst = cur.fetchall()
     except sqlite3.Error as error:
@@ -408,7 +408,7 @@ async def get_weekly_report(clan: Clan) -> ClanWeeklyReport:
     function_name = 'get_weekly_report'
     sql = f'SELECT text FROM {table} ORDER BY RANDOM() LIMIT 1'
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         cur.execute(sql)
         praise_record = cur.fetchone()
     except sqlite3.Error as error:
@@ -419,7 +419,7 @@ async def get_weekly_report(clan: Clan) -> ClanWeeklyReport:
     table = 'clans_leaderboard_roasts'
     sql = f'SELECT text FROM {table} ORDER BY RANDOM() LIMIT 1'
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         cur.execute(sql)
         roast_record = cur.fetchone()
     except sqlite3.Error as error:
@@ -430,7 +430,7 @@ async def get_weekly_report(clan: Clan) -> ClanWeeklyReport:
     table = 'clans_raids'
     sql = f'SELECT energy FROM {table} WHERE clan_name=?'
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         cur.execute(sql, (clan.clan_name,))
         all_raids_records = cur.fetchall()
     except:
@@ -463,7 +463,7 @@ async def _delete_clan(clan_name: str) -> None:
     function_name = '_delete_clan'
     sql = f'DELETE FROM {table} WHERE clan_name=?'
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         cur.execute(sql, (clan_name,))
     except sqlite3.Error as error:
         await errors.log_error(
@@ -515,7 +515,7 @@ async def _update_clan(current_clan_name: str, **kwargs) -> None:
             kwargs[f'member{index+1}_id'] = member_id
         kwargs.pop('member_ids', None)
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         sql = f'UPDATE {table} SET'
         for kwarg in kwargs:
             sql = f'{sql} {kwarg} = :{kwarg},'
@@ -542,7 +542,7 @@ async def delete_clan_leaderboard(clan_name: Optional[str] = None) -> None:
     function_name = 'delete_clan_leaderboard'
     sql = f'DELETE FROM {table}' if clan_name is None else f'DELETE FROM {table} WHERE clan_name=?'
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         cur.execute(sql) if clan_name is None else cur.execute(sql, (clan_name,))
     except sqlite3.Error as error:
         await errors.log_error(
@@ -586,7 +586,7 @@ async def insert_clan(clan_name: str, leader_id: int, member_ids: Union[Tuple[in
         for index, member_id in enumerate(member_ids):
             member_ids_all[index] = member_id
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         cur.execute(
             sql,
             (clan_name, 1, settings.CLAN_DEFAULT_STEALTH_THRESHOLD, leader_id,
@@ -619,7 +619,7 @@ async def insert_clan_raid(clan_name: str, user_id: int, energy: int, raid_time:
     table = 'clans_raids'
     sql = f'INSERT INTO {table} (clan_name, user_id, energy, raid_time) VALUES (?, ?, ?, ?)'
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         cur.execute(sql, (clan_name, user_id, energy, raid_time))
     except sqlite3.Error as error:
         await errors.log_error(

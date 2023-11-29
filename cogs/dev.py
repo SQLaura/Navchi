@@ -106,7 +106,7 @@ class DevCog(commands.Cog):
         else:
             description = (
                 '- _Invalid emojis have an error in their definition in `emojis.py`._\n'
-                '- _Missing emojis are valid but not found on Discord. Upload them to a server Navi can see and set '
+                '- _Missing emojis are valid but not found on Discord. Upload them to a server Navchi can see and set '
                 'the correct IDs in `emojis.py`._\n'
             )
         if invalid_emojis:    
@@ -140,13 +140,13 @@ class DevCog(commands.Cog):
 
     @dev.command(name='backup')
     async def dev_dump(self, ctx: discord.ApplicationContext) -> None:
-        """Manually backups the database to navi_db_backup.db"""
+        """Manually backups the database to navchi_db_backup.db"""
         if ctx.author.id not in settings.DEV_IDS:
             await ctx.respond(MSG_NOT_DEV, ephemeral=True)
             return
         view = views.ConfirmCancelView(ctx, styles=[discord.ButtonStyle.blurple, discord.ButtonStyle.grey])
         interaction = await ctx.respond(
-            f'This will back up the database to `navi_db_backup.db`. You can continue using Navi while doing this.\n'
+            f'This will back up the database to `navchi_db_backup.db`. You can continue using Navchi while doing this.\n'
             f'**If the target file exists, it will be overwritten!**\n\n'
             f'Proceed?',
             view=view,
@@ -161,10 +161,10 @@ class DevCog(commands.Cog):
         else:    
             start_time = datetime.utcnow()
             interaction = await ctx.respond('Starting backup...')
-            backup_db_file = os.path.join(settings.BOT_DIR, 'database/navi_db_backup.db')
-            navi_backup_db = sqlite3.connect(backup_db_file)
-            settings.NAVI_DB.backup(navi_backup_db)
-            navi_backup_db.close()
+            backup_db_file = os.path.join(settings.BOT_DIR, 'database/navchi_db_backup.db')
+            navchi_backup_db = sqlite3.connect(backup_db_file)
+            settings.NAVCHI_DB.backup(navchi_backup_db)
+            navchi_backup_db.close()
             time_taken = datetime.utcnow() - start_time
             await functions.edit_interaction(interaction, content=f'Backup finished after {format_timespan(time_taken)}')
 
@@ -234,7 +234,7 @@ class DevCog(commands.Cog):
             await ctx.respond(MSG_NOT_DEV, ephemeral=True)
             return
         await ctx.respond(
-            f'Got some issues or questions running Navi? Feel free to join the Navi dev support server:\n'
+            f'Got some issues or questions running Navchi? Feel free to join the Navchi dev support server:\n'
             f'https://discord.gg/Kz2Vz2K4gy'
         )
 
@@ -332,7 +332,7 @@ class DevCog(commands.Cog):
             date_time_max = date_time.replace(hour=23, minute=59, second=59, microsecond=999999)
             await tracking.delete_log_entries(user_id, guild_id, command, date_time_min, date_time_max)
             await asyncio.sleep(0.01)
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         cur.execute('VACUUM')
         end_time = datetime.utcnow().replace(microsecond=0)
         time_passed = end_time - start_time

@@ -128,7 +128,7 @@ class DungeonMinibossCog(commands.Cog):
                     await errors.log_error(f'Had an error deleting the dungeon/miniboss reminder in dungeon reset.',
                                            message)
                     return
-                if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
+                if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVCHI)
 
 
 # Initialization

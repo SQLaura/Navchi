@@ -219,7 +219,7 @@ class AutoFlexCog(commands.Cog):
                 f'{user.mention} Nice! You just did something flex worthy. Because you have auto flex enabled, '
                 f'this was automatically posted to the channel <#{guild_settings.auto_flex_channel_id}>.\n'
                 f'If you don\'t like this, you can turn it off in '
-                f'{await functions.get_navi_slash_command(self.bot, "settings user")}.'
+                f'{await functions.get_navchi_slash_command(self.bot, "settings user")}.'
             )
             await user_settings.update(auto_flex_tip_read=True)
 

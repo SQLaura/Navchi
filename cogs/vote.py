@@ -69,7 +69,7 @@ class VoteCog(commands.Cog):
                         if reminder.record_exists:
                             logs.logger.error(f'{datetime.utcnow()}: Had an error deleting the horse reminder.')
                         else:
-                            if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
+                            if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVCHI)
                     else:
                         timestring = timestring_match.group(1)
                         user_command = await functions.get_slash_command(user_settings, 'vote')

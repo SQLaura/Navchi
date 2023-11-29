@@ -227,7 +227,7 @@ class ChristmasCog(commands.Cog):
             # Turn on christmas area mode, gingerbread
             search_strings = [
                 'has teleported to the **christmas area**', #English
-                'se ha teletransportado al **área de navidad**', #Spanish
+                'se ha teletransportado al **área de navchidad**', #Spanish
                 'se teletransportou para a **zona de natal**', #Portuguese
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
@@ -452,7 +452,7 @@ class ChristmasCog(commands.Cog):
                     if reminder.record_exists:
                         await functions.add_warning_reaction(message)
                         await errors.log_error(f'Had an error deleting the reminder with activity "{activity}".', message)
-                if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
+                if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVCHI)
 
 
 # Initialization

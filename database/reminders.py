@@ -198,7 +198,7 @@ async def get_user_reminder(user_id: int, activity: str, custom_id: Optional[int
     sql = f'SELECT * FROM {table} WHERE user_id=? AND activity=?'
     if custom_id is not None: sql = f'{sql} AND custom_id=?'
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         cur.execute(sql, (user_id, activity)) if custom_id is None else cur.execute(sql, (user_id, activity, custom_id))
         record = cur.fetchone()
     except sqlite3.Error as error:
@@ -233,7 +233,7 @@ async def get_clan_reminder(clan_name: str) -> Reminder:
     function_name = 'get_clan_reminder'
     sql = f'SELECT * FROM {table} WHERE clan_name=?'
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         cur.execute(sql, (clan_name,))
         record = cur.fetchone()
     except sqlite3.Error as error:
@@ -288,7 +288,7 @@ async def get_active_user_reminders(user_id: Optional[int] = None, activity: Opt
         queries.append(f'{activity}%')
     sql = f'{sql} ORDER BY end_time'
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         cur.execute(sql, queries)
         records = cur.fetchall()
     except sqlite3.Error as error:
@@ -330,7 +330,7 @@ async def get_active_clan_reminders(clan_name: Optional[str] = None) -> Tuple[Re
     else:
         sql = f'SELECT * FROM {table} WHERE clan_name=? AND end_time>? ORDER BY end_time'
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         current_time = datetime.utcnow().replace(microsecond=0)
         current_time_str = current_time.isoformat(sep=' ')
         cur.execute(sql, (current_time_str,)) if clan_name is None else cur.execute(sql, (clan_name, current_time_str))
@@ -375,7 +375,7 @@ async def get_due_user_reminders(user_id: Optional[int] = None) -> Tuple[Reminde
     else:
         sql = f'SELECT * FROM {table} WHERE user_id=? AND triggered=? AND end_time BETWEEN ? AND ?'
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         current_time = datetime.utcnow().replace(microsecond=0)
         end_time = current_time + timedelta(seconds=15)
         current_time_str = current_time.isoformat(sep=' ')
@@ -426,7 +426,7 @@ async def get_due_clan_reminders(clan_name: Optional[str] = None) -> Tuple[Remin
     else:
         sql = f'SELECT * FROM {table} WHERE clan_name=? AND triggered=? AND end_time BETWEEN ? AND ?'
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         current_time = datetime.utcnow().replace(microsecond=0)
         end_time  = current_time + timedelta(seconds=15)
         current_time_str = current_time.isoformat(sep=' ')
@@ -477,7 +477,7 @@ async def get_old_user_reminders(user_id: Optional[int] = None) -> Tuple[Reminde
     else:
         sql = f'SELECT * FROM {table} WHERE user_id=? AND end_time < ?'
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         current_time = datetime.utcnow().replace(microsecond=0)
         end_time  = current_time - timedelta(seconds=20)
         end_time_str = end_time.isoformat(sep=' ')
@@ -523,7 +523,7 @@ async def get_old_clan_reminders(clan_name: Optional[str] = None) -> Tuple[Remin
     else:
         sql = f'SELECT * FROM {table} WHERE clan_name=? AND end_time < ?'
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         current_time = datetime.utcnow().replace(microsecond=0)
         end_time  = current_time - timedelta(seconds=20)
         end_time_str = end_time.isoformat(sep=' ')
@@ -567,7 +567,7 @@ async def _delete_reminder(reminder: Reminder) -> None:
         sql = f'DELETE FROM {table} WHERE clan_name=? AND activity=?'
     if reminder.activity == 'custom': sql = f'{sql} AND custom_id=?'
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         reminder_id = reminder.user_id if reminder.reminder_type == 'user' else reminder.clan_name
         if reminder.activity == 'custom':
             cur.execute(sql, (reminder_id, reminder.activity, reminder.custom_id))
@@ -616,7 +616,7 @@ async def _update_reminder(reminder: Reminder, **kwargs) -> None:
     triggered = False if time_left.total_seconds() > 15 else True
     if 'triggered' not in kwargs: kwargs['triggered'] = triggered
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         sql = f'UPDATE {table} SET'
         for kwarg in kwargs:
             sql = f'{sql} {kwarg} = :{kwarg},'
@@ -668,7 +668,7 @@ async def insert_user_reminder(user_id: int, activity: str, time_left: timedelta
     custom_id = None
     triggered = False if time_left.total_seconds() > 15 else True
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         if activity == 'custom':
             sql = f'SELECT custom_id FROM {table} WHERE user_id = ? AND activity = ? ORDER BY custom_id ASC'
             cur.execute(sql, (user_id, 'custom',))
@@ -763,7 +763,7 @@ async def insert_clan_reminder(clan_name: str, time_left: timedelta, channel_id:
             f'VALUES (?, ?, ?, ?, ?, ?)'
         )
         try:
-            cur = settings.NAVI_DB.cursor()
+            cur = settings.NAVCHI_DB.cursor()
             cur.execute(sql, (clan_name, 'guild', end_time, channel_id, message, triggered))
         except sqlite3.Error as error:
             await errors.log_error(

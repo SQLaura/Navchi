@@ -15,14 +15,14 @@ from resources import functions, logs, settings
 
 #Check if database is up to date
 try:
-    cur = settings.NAVI_DB.cursor()
+    cur = settings.NAVCHI_DB.cursor()
     db_version = update_database.get_user_version()
-    if db_version != settings.NAVI_DB_VERSION:
+    if db_version != settings.NAVCHI_DB_VERSION:
         logs.logger.info('Database: Database structure is outdated. Running update...')
         correct_version = update_database.update_database()
         if not correct_version:
             db_version = update_database.get_user_version()
-            error_message = f'Database: Database version mismatch after update, should be {settings.NAVI_DB_VERSION}, '
+            error_message = f'Database: Database version mismatch after update, should be {settings.NAVCHI_DB_VERSION}, '
             f'is {db_version}. Exiting. Please check the database manually.'
             logs.logger.error(error_message)
             print(error_message)

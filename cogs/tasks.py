@@ -321,7 +321,7 @@ class TasksCog(commands.Cog):
                 date_time_max = date_time.replace(hour=23, minute=59, second=59, microsecond=999999)
                 await tracking.delete_log_entries(user_id, guild_id, command, date_time_min, date_time_max)
                 await asyncio.sleep(0.01)
-            cur = settings.NAVI_DB.cursor()
+            cur = settings.NAVCHI_DB.cursor()
             date_time = datetime.utcnow() - timedelta(days=366)
             date_time = date_time.replace(hour=0, minute=0, second=0)
             sql = 'DELETE FROM tracking_log WHERE date_time<?'

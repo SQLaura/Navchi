@@ -92,7 +92,7 @@ class TradeCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled or not user_settings.top_hat_unlocked: return
                 await user_settings.update(trade_daily_done=user_settings.trade_daily_done + traded_amount)
-                if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
+                if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVCHI)
 
             # Updates daily trades total and done from trade list
             search_strings = [
@@ -127,7 +127,7 @@ class TradeCog(commands.Cog):
                 trade_daily_done = int(trade_daily_data.group(1).replace(',',''))
                 trade_daily_total = int(trade_daily_data.group(2).replace(',',''))
                 await user_settings.update(trade_daily_done=trade_daily_done, trade_daily_total=trade_daily_total)
-                if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
+                if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVCHI)
 
 # Initialization
 def setup(bot):

@@ -19,12 +19,12 @@ class SettingsCog(commands.Cog):
     # Slash commands
     @slash_command()
     async def on(self, ctx: discord.ApplicationContext) -> None:
-        """Turn on Navi"""
+        """Turn on Navchi"""
         await settings_cmd.command_on(self.bot, ctx)
 
     @slash_command()
     async def off(self, ctx: discord.ApplicationContext) -> None:
-        """Turn off Navi"""
+        """Turn off Navchi"""
         await settings_cmd.command_off(self.bot, ctx)
 
     cmd_purge = SlashCommandGroup(
@@ -34,7 +34,7 @@ class SettingsCog(commands.Cog):
 
     @cmd_purge.command()
     async def data(self, ctx: discord.ApplicationContext) -> None:
-        """Purges user data from Navi"""
+        """Purges user data from Navchi"""
         await settings_cmd.command_purge_data(self.bot, ctx)
 
     cmd_settings = SlashCommandGroup(
@@ -138,21 +138,21 @@ class SettingsCog(commands.Cog):
     @commands.command(name='on', aliases=('register', 'activate', 'start'))
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
     async def prefix_on(self, ctx: commands.Context, *args: str) -> None:
-        """Turn on Navi (prefix version)"""
-        await ctx.reply(f'Hey! Please use {await functions.get_navi_slash_command(self.bot, "on")} to activate me.')
+        """Turn on Navchi (prefix version)"""
+        await ctx.reply(f'Hey! Please use {await functions.get_navchi_slash_command(self.bot, "on")} to activate me.')
 
     @commands.command(name='off', aliases=('deactivate','stop'))
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
     async def prefix_off(self, ctx: commands.Context, *args: str) -> None:
-        """Turn off Navi (prefix version)"""
-        await ctx.reply(f'Hey! Please use {await functions.get_navi_slash_command(self.bot, "off")} to deactivate me.')
+        """Turn off Navchi (prefix version)"""
+        await ctx.reply(f'Hey! Please use {await functions.get_navchi_slash_command(self.bot, "off")} to deactivate me.')
 
     @commands.command(name='alts', aliases=('alt',))
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
     async def prefix_settings_alts(self, ctx: commands.Context, *args: str) -> None:
         """Alt settings (prefix version)"""
         await ctx.reply(
-            f'Hey! Please use {await functions.get_navi_slash_command(self.bot, "settings alts")} '
+            f'Hey! Please use {await functions.get_navchi_slash_command(self.bot, "settings alts")} '
             f'to change these settings.'
         )
         
@@ -166,7 +166,7 @@ class SettingsCog(commands.Cog):
     async def prefix_settings_user(self, ctx: commands.Context, *args: str) -> None:
         """User settings (prefix version)"""
         await ctx.reply(
-            f'Hey! Please use {await functions.get_navi_slash_command(self.bot, "settings user")} '
+            f'Hey! Please use {await functions.get_navchi_slash_command(self.bot, "settings user")} '
             f'to change these settings.'
         )
 
@@ -180,7 +180,7 @@ class SettingsCog(commands.Cog):
     async def prefix_settings_helpers(self, ctx: commands.Context, *args: str) -> None:
         """Helper settings (prefix version)"""
         await ctx.reply(
-            f'Hey! Please use {await functions.get_navi_slash_command(self.bot, "settings helpers")} '
+            f'Hey! Please use {await functions.get_navchi_slash_command(self.bot, "settings helpers")} '
             f'to change these settings.'
         )
 
@@ -189,7 +189,7 @@ class SettingsCog(commands.Cog):
     async def prefix_settings_messages(self, ctx: commands.Context, *args: str) -> None:
         """Message settings (prefix version)"""
         await ctx.reply(
-            f'Hey! Please use {await functions.get_navi_slash_command(self.bot, "settings messages")} '
+            f'Hey! Please use {await functions.get_navchi_slash_command(self.bot, "settings messages")} '
             f'to change your messages.'
         )
 
@@ -198,7 +198,7 @@ class SettingsCog(commands.Cog):
     async def prefix_settings_multipliers(self, ctx: commands.Context, *args: str) -> None:
         """Multiplier settings (prefix version)"""
         await ctx.reply(
-            f'Hey! Please use {await functions.get_navi_slash_command(self.bot, "settings multipliers")} '
+            f'Hey! Please use {await functions.get_navchi_slash_command(self.bot, "settings multipliers")} '
             f'to change these settings.'
         )
 
@@ -207,7 +207,7 @@ class SettingsCog(commands.Cog):
     async def prefix_settings_partner(self, ctx: commands.Context, *args: str) -> None:
         """Partner settings (prefix version)"""
         await ctx.reply(
-            f'Hey! Please use {await functions.get_navi_slash_command(self.bot, "settings partner")} '
+            f'Hey! Please use {await functions.get_navchi_slash_command(self.bot, "settings partner")} '
             f'to change these settings.'
         )
 
@@ -216,7 +216,7 @@ class SettingsCog(commands.Cog):
     async def prefix_settings_server(self, ctx: commands.Context, *args: str) -> None:
         """Server settings (prefix version)"""
         await ctx.reply(
-            f'Hey! Please use {await functions.get_navi_slash_command(self.bot, "settings server")} '
+            f'Hey! Please use {await functions.get_navchi_slash_command(self.bot, "settings server")} '
             f'to change these settings.'
         )
 
@@ -225,17 +225,17 @@ class SettingsCog(commands.Cog):
     async def prefix_settings(self, ctx: commands.Context, *args: str) -> None:
         """Settings (prefix version)"""
         await ctx.reply(
-            f'➜ {await functions.get_navi_slash_command(self.bot, "settings alts")}\n'
-            f'➜ {await functions.get_navi_slash_command(self.bot, "settings guild")}\n'
-            f'➜ {await functions.get_navi_slash_command(self.bot, "settings helpers")}\n'
-            f'➜ {await functions.get_navi_slash_command(self.bot, "settings messages")}\n'
-            f'➜ {await functions.get_navi_slash_command(self.bot, "settings multipliers")}\n'
-            f'➜ {await functions.get_navi_slash_command(self.bot, "settings partner")}\n'
-            f'➜ {await functions.get_navi_slash_command(self.bot, "settings portals")}\n'
-            f'➜ {await functions.get_navi_slash_command(self.bot, "settings ready")}\n'
-            f'➜ {await functions.get_navi_slash_command(self.bot, "settings reminders")}\n'
-            f'➜ {await functions.get_navi_slash_command(self.bot, "settings server")}\n'
-            f'➜ {await functions.get_navi_slash_command(self.bot, "settings user")}\n'
+            f'➜ {await functions.get_navchi_slash_command(self.bot, "settings alts")}\n'
+            f'➜ {await functions.get_navchi_slash_command(self.bot, "settings guild")}\n'
+            f'➜ {await functions.get_navchi_slash_command(self.bot, "settings helpers")}\n'
+            f'➜ {await functions.get_navchi_slash_command(self.bot, "settings messages")}\n'
+            f'➜ {await functions.get_navchi_slash_command(self.bot, "settings multipliers")}\n'
+            f'➜ {await functions.get_navchi_slash_command(self.bot, "settings partner")}\n'
+            f'➜ {await functions.get_navchi_slash_command(self.bot, "settings portals")}\n'
+            f'➜ {await functions.get_navchi_slash_command(self.bot, "settings ready")}\n'
+            f'➜ {await functions.get_navchi_slash_command(self.bot, "settings reminders")}\n'
+            f'➜ {await functions.get_navchi_slash_command(self.bot, "settings server")}\n'
+            f'➜ {await functions.get_navchi_slash_command(self.bot, "settings user")}\n'
         )
 
     # Events
@@ -389,7 +389,7 @@ class SettingsCog(commands.Cog):
                 users_with_clan_name = await users.get_users_by_clan_name(clan_name)
                 for user in users_with_clan_name:
                     if not user.user_id in clan_member_ids: await user.update(clan_name=None)
-                await message_after.add_reaction(emojis.NAVI)
+                await message_after.add_reaction(emojis.NAVCHI)
 
 
 # Initialization

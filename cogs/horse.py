@@ -132,7 +132,7 @@ class HorseCog(commands.Cog):
                 if reminder.record_exists:
                     logs.logger.error(f'{datetime.utcnow()}: Had an error deleting the horse reminder.')
                 else:
-                    if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
+                    if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVCHI)
 
 
 # Initialization

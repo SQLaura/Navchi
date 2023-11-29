@@ -412,12 +412,12 @@ async def embed_ready(bot: discord.Bot, user: discord.User, auto_ready: bool) ->
     if user_settings.cmd_ready_visible:
         field_other = (
             f'{field_other}\n'
-            f'{emojis.BP} {await functions.get_navi_slash_command(bot, "ready")}'
+            f'{emojis.BP} {await functions.get_navchi_slash_command(bot, "ready")}'
         )
     if user_settings.cmd_slashboard_visible:
         field_other = (
             f'{field_other}\n'
-            f'{emojis.BP} {await functions.get_navi_slash_command(bot, "slashboard")}'
+            f'{emojis.BP} {await functions.get_navchi_slash_command(bot, "slashboard")}'
         )
     embed = discord.Embed(
         color = int(f'0x{user_settings.ready_embed_color}', 16),

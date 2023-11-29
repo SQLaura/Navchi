@@ -148,7 +148,7 @@ class TrackingCog(commands.Cog):
                     except exceptions.NoDataFoundError:
                         pass
                     if user_settings.last_tt == tt_time and user_settings.bot_enabled and user_settings.reactions_enabled:
-                        await message.add_reaction(emojis.NAVI)
+                        await message.add_reaction(emojis.NAVCHI)
 
 
 # Initialization
