@@ -123,6 +123,8 @@ SETTINGS_USER_COLUMNS = {
 async def command_on(bot: discord.Bot, ctx: discord.ApplicationContext) -> None:
     """On command"""
     first_time_user = False
+    if ctx.guild.id == 1086120531566268516:
+        return
     try:
         user: users.User = await users.get_user(ctx.author.id)
         if user.bot_enabled:
