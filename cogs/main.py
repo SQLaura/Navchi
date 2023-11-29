@@ -47,7 +47,7 @@ class MainCog(commands.Cog):
         message = (
             f'Sorry, you can\'t invite me.\n'
             f'However, I am fully open source on an MIT license, so feel free to run me yourself.\n'
-            f'https://github.com/Miriel-py/Navchi'
+            f'https://github.com/Miriel-py/Navi'
         )
         await ctx.reply(message)
 

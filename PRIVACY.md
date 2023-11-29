@@ -36,7 +36,7 @@ If there is an error, the following data is stored permanently in the error log:
 Please be aware that I have no control over the code and policies of forks and other projects that use Navchi’s source code and cannot accept responsibility or liability for their respective privacy practices.  
 
 This policy therefore only applies to:  
-• The code in the [main repository](https://github.com/Miriel-py/Navchi), maintained by myself.  
+• The code in the [main repository](https://github.com/Miriel-py/Navi), maintained by myself.  
 • The bot instance with the username `Navchi#4692`, hosted by myself. This bot instance is only available in RPG Army, Charivari Headquarters and a few private servers which are not accessible to the public. If you encounter Navchi on any server not listed here, it is outside of the scope of this privacy policy.  
 
 The bot may also link to external sites that are not operated by me. The same limits apply to those sites.
