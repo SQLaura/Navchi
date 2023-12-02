@@ -143,11 +143,12 @@ async def embed_help(bot: discord.Bot, ctx: discord.ApplicationContext) -> disco
         f'{emojis.BP} :flag_es: Spanish\n'
         f'{emojis.BP} :flag_br: Portuguese\n'
     )
+    ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
         title = 'NAVCHI',
         description =   (
-            f'_Hey! **{ctx.author.name}**! Hello!_\n'
+            f'_Hey! **{ctx_author_name}**! Hello!_\n'
             f'_May I interest you in some settings?_'
         )
     )
@@ -200,8 +201,8 @@ async def embed_about(bot: commands.Bot, api_latency: datetime) -> discord.Embed
         'My keyboard',
         'That one QBasic book back in 1997',
     ]
-    img_navchi = discord.File(settings.IMG_NAVCHI, filename='navchi.png')
-    image_url = 'attachment://navchi.png'
+    img_navchi = discord.File(settings.IMG_NAVCHI, filename='navi.png')
+    image_url = 'attachment://navi.png'
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
         title = 'ABOUT NAVCHI',

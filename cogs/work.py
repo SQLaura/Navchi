@@ -21,6 +21,10 @@ class WorkCog(commands.Cog):
     async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
         """Runs when a message is edited in a channel."""
         if message_before.pinned != message_after.pinned: return
+        embed_data_before = await functions.parse_embed(message_before)
+        embed_data_after = await functions.parse_embed(message_after)
+        if (message_before.content == message_after.content and embed_data_before == embed_data_after
+            and message_before.components == message_after.components): return
         for row in message_after.components:
             for component in row.children:
                 if component.disabled:
@@ -109,8 +113,12 @@ class WorkCog(commands.Cog):
 
         if not message.embeds:
             message_content = ''
+            filter_strings = [
+                'card',
+                'present',
+            ]
             for line in message.content.split('\n'):
-                if not 'card' in line:
+                if all(string not in line.lower() for string in filter_strings):
                     message_content = f'{message_content}\n{line}'
             message_content = message_content.strip()
             
@@ -156,6 +164,8 @@ class WorkCog(commands.Cog):
                 'coin ring', #All languages, artifacts
                 'master key', #All languages, artifacts
                 'pocket watch', #All languages, artifacts
+                'claus belt', #All languages, artifacts
+                'vampire teeth', #All languages, artifacts
             ]
             search_strings = [
                 '** got ', #English

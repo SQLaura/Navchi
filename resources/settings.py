@@ -14,7 +14,7 @@ ENV_VARIABLE_MISSING = (
     'accordingly.'
 )
 
-NAVCHI_DB_VERSION = 11
+NAVCHI_DB_VERSION = 12
 
 # Files and directories
 BOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -26,7 +26,7 @@ else:
     sys.exit()
 NAVCHI_DB.row_factory = sqlite3.Row
 LOG_FILE = os.path.join(BOT_DIR, 'logs/discord.log')
-IMG_NAVCHI = os.path.join(BOT_DIR, 'images/navchi.png')
+IMG_NAVCHI = os.path.join(BOT_DIR, 'images/navi.png')
 VERSION_FILE = os.path.join(BOT_DIR, 'VERSION')
 
 
