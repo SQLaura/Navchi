@@ -1,6 +1,8 @@
 tox.ini
 pyrightconfig.json
-database/*db
+
+database/navchi_db.db
+database/navchi_db_backup.db
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
