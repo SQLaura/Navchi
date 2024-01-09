@@ -354,7 +354,10 @@ async def embed_ready(bot: discord.Bot, user: discord.User, auto_ready: bool) ->
             else:
                 command = f"{command} `{user_settings.last_hunt_mode}`"
         elif activity == 'eternal-presents':
-            command = f"{command} `eternal present`"
+            if user_settings.slash_mentions_enabled:
+                command = f"{command} `eternal`"
+            else:
+                command = f"{command} `eternal`"
         elif activity == 'farm':
             command = await functions.get_farm_command(user_settings, False)
         return command.replace('` `', ' ')
@@ -393,6 +396,8 @@ async def embed_ready(bot: discord.Bot, user: discord.User, auto_ready: bool) ->
         ready_command_activities.remove('guild')
     if 'eternal-presents' in ready_command_activities and user_settings.inventory.present_eternal < 1:
         ready_command_activities.remove('eternal-presents')
+    if 'advent-calendar' in ready_command_activities and (current_time.month != 12 or current_time.day > 25):
+        ready_command_activities.remove('advent-calendar')
     for activity in ready_command_activities.copy():
         alert_settings = getattr(user_settings, strings.ACTIVITIES_COLUMNS[activity])
         if not alert_settings.enabled:
@@ -584,7 +589,8 @@ async def embed_ready(bot: discord.Bot, user: discord.User, auto_ready: bool) ->
             for reminder in active_reminders:
                 if 'pets' in reminder.activity: continue
                 if reminder.activity in strings.ACTIVITIES_BOOSTS or reminder.activity in strings.BOOSTS_ALIASES: continue
-                if not user_settings.ready_up_next_show_hidden_reminders and not 'custom' in reminder.activity:
+                if (not user_settings.ready_up_next_show_hidden_reminders and not 'custom' in reminder.activity
+                    and not reminder.activity == "unstuck"):
                     alert_settings = getattr(user_settings, strings.ACTIVITIES_COLUMNS[reminder.activity])
                     if not alert_settings.visible: continue
                 if user_settings.ready_up_next_as_timestamp:

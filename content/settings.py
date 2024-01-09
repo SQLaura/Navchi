@@ -159,8 +159,8 @@ async def command_on(bot: discord.Bot, ctx: discord.ApplicationContext) -> None:
             f'To read more about what data is processed and why, feel free to check the privacy policy found in '
             f'{await functions.get_navchi_slash_command(bot, "help")}.'
         )
-        img_navchi = discord.File(settings.IMG_NAVCHI, filename='navi.png')
-        image_url = 'attachment://navi.png'
+        img_navchi = discord.File(settings.IMG_NAVCHI, filename='navchi.png')
+        image_url = 'attachment://navchi.png'
         embed = discord.Embed(
             title = f'Hey! {ctx_author_name}! Hello!'.upper(),
             description = (

@@ -201,8 +201,8 @@ async def embed_about(bot: commands.Bot, api_latency: datetime) -> discord.Embed
         'My keyboard',
         'That one QBasic book back in 1997',
     ]
-    img_navchi = discord.File(settings.IMG_NAVCHI, filename='navi.png')
-    image_url = 'attachment://navi.png'
+    img_navchi = discord.File(settings.IMG_NAVCHI, filename='navchi.png')
+    image_url = 'attachment://navchi.png'
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
         title = 'ABOUT NAVCHI',

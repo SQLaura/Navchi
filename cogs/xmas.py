@@ -120,7 +120,7 @@ class ChristmasCog(commands.Cog):
                 reminder_message = user_settings.alert_chimney.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'chimney', time_left,
-                                                        message.channel.id, reminder_message)
+                                                         message.channel.id, reminder_message)
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
 
@@ -130,8 +130,8 @@ class ChristmasCog(commands.Cog):
             ]
             if any(search_string in message_author.lower() for search_string in search_strings):
                 current_time = datetime.utcnow().replace(microsecond=0)
-                christmas_day = datetime(year=current_time.year, month=12, day=25, hour=0, minute=0, second=0)
-                if current_time >= christmas_day: return
+                stephans_day = datetime(year=current_time.year, month=12, day=26, hour=0, minute=0, second=0)
+                if current_time >= stephans_day: return
                 user_id = user_name = None
                 user = await functions.get_interaction_user(message)
                 if user is None:
@@ -177,18 +177,17 @@ class ChristmasCog(commands.Cog):
             # Opening eternal presents
             search_strings = [
                 'you can open up to 10 presents', #English
-                'you can open up to 10 presents', #Spanish, MISSING
-                'you can open up to 10 presents', #Portuguese, MISSING
+                'você pode abrir até 10 presentes', #Spanish & Portuguese
             ]
             if any(search_string in message_footer.lower() for search_string in search_strings):
                 user_id = user_name = None
                 user = await functions.get_interaction_user(message)
-                if user is None:
-                    user_command_message = (
-                        await messages.find_message(message.channel.id, regex.COMMAND_XMAS_OPEN_ETERNAL)
-                    )
-                    if user_command_message is None: return
-                    if user is None: user = user_command_message.author
+                if user is not None: return
+                user_command_message = (
+                    await messages.find_message(message.channel.id, regex.COMMAND_XMAS_OPEN_ETERNAL)
+                )
+                if user_command_message is None: return
+                if user is None: user = user_command_message.author
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
@@ -463,7 +462,6 @@ class ChristmasCog(commands.Cog):
                     '**Elf**',
                     '**Christmas Reindeer**',
                     '**Snowman**',
-                    'Krampus',
                     '**Krampus**',
                     '**Yeti**',
                     '**Hyper Giant Ice Block**',
