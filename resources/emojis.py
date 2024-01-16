@@ -18,6 +18,7 @@ POTION_COOKIE = '<:potion_cookie:1144082248048578590>'
 POTION_DRAGON_BREATH = '<:potion_dragon_breath:1144082251873796166>'
 POTION_ELECTRONICAL = '<:potion_electronical:1144082259079594025>'
 POTION_FISH = '<:potion_fish:1144082262766403695>'
+POTION_FLASK = '<:potion_flask:1196766923304742953>'
 POTION_INVERTED = '<:potion_inverted:1144082264599306330>'
 POTION_JUICE = '<:potion_juice:1144082268546142330>'
 POTION_JUMPY = '<:potion_jumpy:1144082271679291493>'
@@ -25,7 +26,9 @@ POTION_KING = '<:potion_king:1144082274346864640>'
 POTION_LIQUID_HAIR = '<:potion_liquid_hair:1144082282181820537>'
 POTION_LOOTBOX = '<:potion_lootbox:1144082288213237780>'
 POTION_MONSTER = '<:potion_monster:1144082290012598322>'
+POTION_P2W = '<:potion_p2w:1196767245519573083>'
 POTION_POTION = '<:potion_potion:1144082293351264446>'
+POTION_SMOL = '<:potion_smol:1196767264213565450>'
 POTION_TIME = '<:potion_time:1144082297084203078>'
 POTION_TRIPLE = '<:potion_triple:1144082300011827244>'
 POTION_VOID = '<:potion_void:1144082302159310898>'
@@ -47,6 +50,7 @@ CARD_ETERNAL = '<a:card_eternal:1179386160578056192>'
 CARD_GODLY = '<:card_godly:1179386164143194113>'
 CARD_OMEGA = '<:card_omega:1179386167641260133>'
 CARD_RARE = '<:card_rare:1179386169595805706>'
+CARD_ROUND = '<:card_round:1196766772058148935>'
 CARD_UNCOMMON = '<:card_uncommon:1179386173345505360>'
 CARD_VOID = '<:card_void:1179386179280441375>'
 
@@ -209,12 +213,15 @@ MONSTER_DROP_AREAS_EMOJIS = {
 
 BOOST_ITEMS_EMOJIS = {
     'banana potion': POTION_BANANA,
+    'christmas-boost': PRESENT,
     'cookie potion': POTION_COOKIE,
     'dev boost': DEV_BUFF,
     'dev buff': DEV_BUFF,
     'dragon breath potion': POTION_DRAGON_BREATH,
     'electronical potion': POTION_ELECTRONICAL,
     'fish potion': POTION_FISH,
+    'flask-potion': POTION_FLASK,
+    'halloween-boost': PUMPKIN,
     'inverted potion': POTION_INVERTED,
     'juice potion': POTION_JUICE,
     'jumpy potion': POTION_JUMPY,
@@ -224,8 +231,11 @@ BOOST_ITEMS_EMOJIS = {
     'mod boost': MOD_BUFF,
     'mod buff': MOD_BUFF,
     'monster potion': POTION_MONSTER,
+    'p2w-potion': POTION_P2W,
     'party popper': PARTY_POPPER,
     'potion potion': POTION_POTION,
+    'smol-potion': POTION_SMOL,
+    'round_card': CARD_ROUND,
     'time potion': POTION_TIME,
     'triple potion': POTION_TRIPLE,
     'valentine boost': '❤️',
