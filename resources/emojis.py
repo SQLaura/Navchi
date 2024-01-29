@@ -171,7 +171,7 @@ YAY = '<:emcheer:1105669775063007332>'
 # Misc
 ADD = '<:add:1144093456826896384>'
 BOOM = '💥'
-BP = '🔹'
+BP = '🔹' # Do not change this to a custom emoji, keep it 1 character long, otherwise stuff will break
 CHECK = '✅'
 CROSS = '❎'
 CROSSED_SWORDS = '⚔️'
