@@ -35,6 +35,7 @@ POTION_VOID = '<:potion_void:1144082302159310898>'
 POTION_WOOD = '<:potion_wood:1144082307016294461>'
 
 # EPIC RPG artifacts
+ARTIFACT_CHOCOLATE_BOX = '<:artifact_chocolate_box:1205528257785757726>'
 ARTIFACT_CLAUS_BELT = '<:artifact_claus_belt:1179391324642881598>'
 ARTIFACT_COIN_RING = '<:artifact_coin_ring:1146227689565470812>'
 ARTIFACT_GOLDEN_PAN = '<:artifact_golden_pan:1146227692564398122>'
@@ -105,6 +106,7 @@ RUBY = '<:ruby:1144083017346850866>'
 SEED_BREAD = '<:seed_bread:1144083019251060798>'
 SEED_CARROT = '<:seed_carrot:1144083022564565112>'
 SEED_POTATO = '<:seed_potato:1144083026372984864>'
+TIME_COOKIE = '<:time_cookie:1205528420692533270>'
 UNICORN_HORN = '<:unicorn_horn:1144083030001057855>'
 WATERMELON = '<:water_melon:1144083032416985159>'
 WOLF_SKIN = '<:wolf_skin:1144083035667562578>'
@@ -115,6 +117,7 @@ ASCENSION = '🌟'
 DEV_BUFF = '<:devbuff:1144090229045723156>'
 MOD_BUFF = '💠'
 GODLY_COOKIE = '<:godlycookie:1144090232707371008>'
+MEGA_BOOST = '<:mega_boost:1205528449184301066>'
 MOB_ANCIENT_DRAGON = '<:ancientdragon:1144090225006624839>'
 SWORD_GODLY = '<:godlysword:1144090234942914670>'
 TIME_CAPSULE = '<:timecapsule:1144090239711854612>'
@@ -228,6 +231,7 @@ BOOST_ITEMS_EMOJIS = {
     'king potion': POTION_KING,
     'liquid hair potion': POTION_LIQUID_HAIR,
     'lootbox potion': POTION_LOOTBOX,
+    'mega-boost': MEGA_BOOST,
     'mod boost': MOD_BUFF,
     'mod buff': MOD_BUFF,
     'monster potion': POTION_MONSTER,
@@ -235,10 +239,19 @@ BOOST_ITEMS_EMOJIS = {
     'party popper': PARTY_POPPER,
     'potion potion': POTION_POTION,
     'smol-potion': POTION_SMOL,
-    'round_card': CARD_ROUND,
+    'round-card': CARD_ROUND,
     'time potion': POTION_TIME,
     'triple potion': POTION_TRIPLE,
     'valentine boost': '❤️',
     'void potion': POTION_VOID,
     'wood potion': POTION_WOOD,
+}
+
+EPIC_SHOP_EMOJIS = {
+    'edgy-lootbox': LB_EDGY,
+    'epic-berry': EPIC_BERRY,
+    'special-deal': '✨',
+    'rare-lootbox': LB_RARE,
+    'time-cookie': TIME_COOKIE,
+    'mega-boost': MEGA_BOOST,
 }
