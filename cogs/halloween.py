@@ -151,13 +151,13 @@ class HalloweenCog(commands.Cog):
                 if user is not None:
                     if not user_settings.dnd_mode_enabled:
                         if user_settings.ping_after_message:
-                            await message.reply(f'{answer} {user.mention}')
+                            await message.channel.send(f'{answer} {user.mention}')
                         else:
-                            await message.reply(f'{user.mention} {answer}')
+                            await message.channel.send(f'{user.mention} {answer}')
                     else:
-                        await message.reply(answer)
+                        await message.channel.send(answer)
                 else:
-                    await message.reply(answer)
+                    await message.channel.send(answer)
 
         if not message.embeds:
             message_content = message.content
