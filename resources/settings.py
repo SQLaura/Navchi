@@ -14,7 +14,7 @@ ENV_VARIABLE_MISSING = (
     'accordingly.'
 )
 
-NAVCHI_DB_VERSION = 17
+NAVCHI_DB_VERSION = 21
 
 # Files and directories
 BOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -49,6 +49,7 @@ except:
     sys.exit()
 
 DEBUG_MODE = True if os.getenv('DEBUG_MODE') == 'ON' else False
+LITE_MODE = True if os.getenv('LITE_MODE') == 'ON' else False
 
 DEV_IDS = os.getenv('DEV_IDS')
 if DEV_IDS is None or DEV_IDS == '':
@@ -87,11 +88,29 @@ else:
         print(f'Can\'t convert value "{EMBED_COLOR}" of variable EMBED_COLOR in the .env file to an integer.')
         sys.exit()
 
+LINK_INVITE = os.getenv('LINK_INVITE')
+if LINK_INVITE != '' and LINK_INVITE is not None:
+    LINK_INVITE = LINK_INVITE.strip('" ')
+else:
+    LINK_INVITE = None
+
 LINK_SUPPORT = os.getenv('LINK_SUPPORT')
 if LINK_SUPPORT != '' and LINK_SUPPORT is not None:
     LINK_SUPPORT = LINK_SUPPORT.strip('" ')
 else:
     LINK_SUPPORT = None
+
+LINK_PRIVACY_POLICY = os.getenv('LINK_PRIVACY_POLICY')
+if LINK_PRIVACY_POLICY != '' and LINK_PRIVACY_POLICY is not None:
+    LINK_PRIVACY_POLICY = LINK_PRIVACY_POLICY.strip('" ')
+else:
+    LINK_PRIVACY_POLICY = None
+
+LINK_TERMS = os.getenv('LINK_TERMS')
+if LINK_TERMS != '' and LINK_TERMS is not None:
+    LINK_TERMS = LINK_TERMS.strip('" ')
+else:
+    LINK_TERMS = None
     
 COMPLAINT_CHANNEL_ID = os.getenv('COMPLAINT_CHANNEL_ID')
 if COMPLAINT_CHANNEL_ID != '' and COMPLAINT_CHANNEL_ID is not None:
@@ -144,4 +163,4 @@ CLAN_DEFAULT_STEALTH_THRESHOLD = 90
 CHOCOLATE_BOX_MULTIPLIER = 0.98
 CHRISTMAS_AREA_MULTIPLIER = 1 # Set this to 0.9 during christmas event and to 1 during the rest of the year
 POTION_FLASK_MULTIPLIER = 0.9999 # Why did I even do this
-ROUND_CARD_MULTIPLIER = 0.05
+ROUND_CARD_MULTIPLIER = 0.1

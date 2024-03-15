@@ -6,7 +6,7 @@ import re
 from typing import Dict, List, Optional, Union
 
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 from discord.utils import MISSING
 
 from database import cooldowns, errors, reminders, users
@@ -87,7 +87,7 @@ async def get_message_from_channel_history(channel: discord.channel, regex: Unio
     return None
 
 
-async def get_discord_user(bot: discord.Bot, user_id: int) -> discord.User:
+async def get_discord_user(bot: bridge.AutoShardedBot, user_id: int) -> discord.User:
     """Checks the user cache for a user and makes an additional API call if not found. Returns None if user not found."""
     await bot.wait_until_ready()
     user = bot.get_user(user_id)
@@ -99,7 +99,7 @@ async def get_discord_user(bot: discord.Bot, user_id: int) -> discord.User:
     return user
 
 
-async def get_discord_channel(bot: discord.Bot, channel_id: int) -> discord.User:
+async def get_discord_channel(bot: bridge.AutoShardedBot, channel_id: int) -> discord.User:
     """Checks the channel cache for a channel and makes an additional API call if not found. Returns None if channel not found."""
     if channel_id is None: return None
     await bot.wait_until_ready()
@@ -289,13 +289,24 @@ async def parse_timestring_to_timedelta(timestring: str) -> timedelta:
     """Parses a time string and returns the time as timedelta."""
     time_left_seconds = 0
 
+    if timestring.find('y') > -1:
+        years_start = 0
+        years_end = timestring.find('y')
+        years = timestring[years_start:years_end]
+        timestring = timestring[years_end+1:].strip()
+        try:
+            time_left_seconds = time_left_seconds + (int(years) * 31_536_000)
+        except:
+            await errors.log_error(
+                f'Error parsing timestring \'{timestring}\', couldn\'t convert \'{years}\' to an integer'
+            )
     if timestring.find('w') > -1:
         weeks_start = 0
         weeks_end = timestring.find('w')
         weeks = timestring[weeks_start:weeks_end]
         timestring = timestring[weeks_end+1:].strip()
         try:
-            time_left_seconds = time_left_seconds + (int(weeks) * 604800)
+            time_left_seconds = time_left_seconds + (int(weeks) * 604_800)
         except:
             await errors.log_error(
                 f'Error parsing timestring \'{timestring}\', couldn\'t convert \'{weeks}\' to an integer'
@@ -306,7 +317,7 @@ async def parse_timestring_to_timedelta(timestring: str) -> timedelta:
         days = timestring[days_start:days_end]
         timestring = timestring[days_end+1:].strip()
         try:
-            time_left_seconds = time_left_seconds + (int(days) * 86400)
+            time_left_seconds = time_left_seconds + (int(days) * 86_400)
         except:
             await errors.log_error(
                 f'Error parsing timestring \'{timestring}\', couldn\'t convert \'{days}\' to an integer'
@@ -317,7 +328,7 @@ async def parse_timestring_to_timedelta(timestring: str) -> timedelta:
         hours = timestring[hours_start:hours_end]
         timestring = timestring[hours_end+1:].strip()
         try:
-            time_left_seconds = time_left_seconds + (int(hours) * 3600)
+            time_left_seconds = time_left_seconds + (int(hours) * 3_600)
         except:
             await errors.log_error(
                 f'Error parsing timestring \'{timestring}\', couldn\'t convert \'{hours}\' to an integer'
@@ -345,7 +356,7 @@ async def parse_timestring_to_timedelta(timestring: str) -> timedelta:
                 f'Error parsing timestring \'{timestring}\', couldn\'t convert \'{seconds}\' to an integer'
             )
 
-    if time_left_seconds > 999_999_999:
+    if time_left_seconds > 999_999_999_999:
         raise OverflowError('Timestring out of valid range. Stop hacking.')
 
     return timedelta(seconds=time_left_seconds)
@@ -811,12 +822,14 @@ async def get_void_training_answer_buttons(message: discord.Message, user_settin
     a19_seal_time = all_settings.get('a19_seal_time', None)
     a20_seal_time = all_settings.get('a20_seal_time', None)
     seal_times = [a16_seal_time, a17_seal_time, a18_seal_time, a19_seal_time, a20_seal_time]
+    seal_times_areas_days = {}
     seal_times_days = []
-    for seal_time in seal_times:
+    for area_no, seal_time in enumerate(seal_times, 16):
         if seal_time is not None:
             seal_time = datetime.fromisoformat(seal_time, )
             time_left = seal_time - current_time
             if seal_time > current_time:
+                seal_times_areas_days[area_no] = str(time_left.days)
                 seal_times_days.append(str(time_left.days))
     matches = []
     for row, action_row in enumerate(message.components, start=1):
@@ -832,8 +845,8 @@ async def get_void_training_answer_buttons(message: discord.Message, user_settin
                     buttons[row][button.custom_id] = (button.label, button.emoji, True)
                 else:
                     buttons[row][button.custom_id] = (button.label, button.emoji, False)
-    for area_no, days in enumerate(seal_times_days, 16):
-            answer = f'{answer}\n{emojis.BP}Area **{area_no}** will close in **{days}** days.'.strip()
+    for area_no, days in seal_times_areas_days.items():
+        answer = f'{answer}\n{emojis.BP}Area **{area_no}** will close in **{days}** days.'.strip()
     if answer == '':
         command_void_areas = await get_slash_command(user_settings, 'void areas')
         answer = (
@@ -855,12 +868,14 @@ async def get_void_training_answer_text(message: discord.Message, user_settings:
     a19_seal_time = all_settings.get('a19_seal_time', None)
     a20_seal_time = all_settings.get('a20_seal_time', None)
     seal_times = [a16_seal_time, a17_seal_time, a18_seal_time, a19_seal_time, a20_seal_time]
+    seal_times_areas_days = {}
     seal_times_days = []
-    for seal_time in seal_times:
+    for area_no, seal_time in enumerate(seal_times, 16):
         if seal_time is not None:
             seal_time = datetime.fromisoformat(seal_time, )
             time_left = seal_time - current_time
             if seal_time > current_time:
+                seal_times_areas_days[area_no] = str(time_left.days)
                 seal_times_days.append(str(time_left.days))
     matches = []
     for row, action_row in enumerate(message.components, start=1):
@@ -869,7 +884,7 @@ async def get_void_training_answer_text(message: discord.Message, user_settings:
                 matches.append(button.label)
     if len(matches) == 1: answer = f'`{matches[0]}`'
     if answer == '':
-        for area_no, days in enumerate(seal_times_days, 16):
+        for area_no, days in seal_times_areas_days.items():
             answer = f'{answer}\n{emojis.BP}Area **{area_no}** will close in **{days}** days.'.strip()
     if answer == '':
         command_void_areas = await get_slash_command(user_settings, 'void areas')
@@ -967,8 +982,13 @@ async def get_farm_command(user_settings: users.User, include_prefix: Optional[b
 
 
 # Miscellaneous
-async def call_ready_command(bot: commands.Bot, message: discord.Message, user: discord.User) -> None:
-    """Calls the ready command as a reply to the current message"""
+async def call_ready_command(bot: bridge.AutoShardedBot, message: discord.Message, user: discord.User,
+                             user_settings: users.User, activity: str) -> None:
+    """Calls the ready command as a reply to the current message
+    """
+    if not user_settings.auto_ready_enabled: return
+    if user_settings.round_card_active: return
+    if not user_settings.ready_after_all_commands and not activity.lower() == 'hunt': return
     command = bot.get_application_command(name='ready')
     if command is not None: await command.callback(command.cog, message, user=user)
 
@@ -983,7 +1003,7 @@ async def get_slash_command(user_settings: users.User, command_name: str, includ
         return f'`{command}`' if include_prefix else f'`{command.replace("rpg ", "")}`'
 
 
-async def get_navchi_slash_command(bot: discord.Bot, command_name: str) -> str:
+async def get_navchi_slash_command(bot: bridge.AutoShardedBot, command_name: str) -> str:
     """Gets a slash command from Navchi. If found, returns the slash mention. If not found, just returns /command.
     Note that slash mentions only work with GLOBAL commands."""
     main_command, *sub_commands = command_name.lower().split(' ')

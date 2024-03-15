@@ -6,7 +6,7 @@ import random
 from typing import List, Optional, Union
 
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 
 from content import settings as settings_cmd
 from database import clans, cooldowns, guilds, portals, reminders, users
@@ -38,7 +38,7 @@ class ReadyView(discord.ui.View):
     'timeout' on timeout.
     None if nothing happened yet.
     """
-    def __init__(self, bot: discord.Bot, ctx: Union[commands.Context, discord.ApplicationContext], user: discord.User,
+    def __init__(self, bot: bridge.AutoShardedBot, ctx: Union[commands.Context, discord.ApplicationContext], user: discord.User,
                  user_settings: users.User, user_mentioned: bool, embed_function: callable,
                  interaction_message: Optional[Union[discord.Message, discord.Interaction]] = None):
         super().__init__(timeout=settings.INTERACTION_TIMEOUT)
@@ -88,7 +88,7 @@ class ConfirmCancelView(discord.ui.View):
 
     Returns 'confirm', 'cancel' or None (if timeout/error)
     """
-    def __init__(self, ctx: Union[commands.Context, discord.ApplicationContext],
+    def __init__(self, ctx: bridge.BridgeContext,
                  styles: Optional[List[discord.ButtonStyle]] = [discord.ButtonStyle.grey, discord.ButtonStyle.grey],
                  labels: Optional[List[str]] = ['Yes','No'],
                  interaction_message: Optional[Union[discord.Message, discord.Interaction]] = None):
@@ -140,7 +140,7 @@ class ConfirmUserView(discord.ui.View):
 
     async def on_timeout(self):
         self.disable_all_items()
-        await functions.edit_interaction(self.interaction, view=self)
+        await self.interaction.edit(view=self)
         self.stop()
 
 
@@ -183,7 +183,7 @@ class SettingsAltsView(discord.ui.View):
     None
 
     """
-    def __init__(self, ctx: discord.ApplicationContext, bot: discord.Bot, user_settings: users.User,
+    def __init__(self, ctx: bridge.BridgeContext, bot: bridge.AutoShardedBot, user_settings: users.User,
                  embed_function: callable, interaction: Optional[discord.Interaction] = None):
         super().__init__(timeout=settings.INTERACTION_TIMEOUT)
         self.ctx = ctx
@@ -206,7 +206,7 @@ class SettingsAltsView(discord.ui.View):
         return True
 
     async def on_timeout(self) -> None:
-        await functions.edit_interaction(self.interaction, view=None)
+        await self.interaction.edit(view=None)
         self.stop()
         
 
@@ -228,7 +228,7 @@ class SettingsClanView(discord.ui.View):
     None
 
     """
-    def __init__(self, ctx: discord.ApplicationContext, bot: discord.Bot, clan_settings: clans.Clan,
+    def __init__(self, ctx: bridge.BridgeContext, bot: bridge.AutoShardedBot, clan_settings: clans.Clan,
                  embed_function: callable, interaction: Optional[discord.Interaction] = None):
         super().__init__(timeout=settings.INTERACTION_TIMEOUT)
         self.ctx = ctx
@@ -248,7 +248,7 @@ class SettingsClanView(discord.ui.View):
         return True
 
     async def on_timeout(self) -> None:
-        await functions.edit_interaction(self.interaction, view=None)
+        await self.interaction.edit(view=None)
         self.stop()
 
 
@@ -270,7 +270,7 @@ class SettingsHelpersView(discord.ui.View):
     None
 
     """
-    def __init__(self, ctx: discord.ApplicationContext, bot: discord.Bot, user_settings: users.User,
+    def __init__(self, ctx: bridge.BridgeContext, bot: bridge.AutoShardedBot, user_settings: users.User,
                  embed_function: callable, interaction: Optional[discord.Interaction] = None):
         super().__init__(timeout=settings.INTERACTION_TIMEOUT)
         self.ctx = ctx
@@ -286,6 +286,7 @@ class SettingsHelpersView(discord.ui.View):
             #'Megarace helper': 'megarace_helper_enabled',
             'Pet catch helper': 'pet_helper_enabled',
             'Ruby counter': 'ruby_counter_enabled',
+            'Time potion warning': 'time_potion_warning_enabled',
             'Training helper': 'training_helper_enabled',
             #'Pumpkin bat helper': 'halloween_helper_enabled',
         }
@@ -301,7 +302,7 @@ class SettingsHelpersView(discord.ui.View):
         return True
 
     async def on_timeout(self) -> None:
-        await functions.edit_interaction(self.interaction, view=None)
+        await self.interaction.edit(view=None)
         self.stop()
 
 
@@ -325,7 +326,7 @@ class SettingsPortalsView(discord.ui.View):
     None
 
     """
-    def __init__(self, ctx: discord.ApplicationContext, bot: discord.Bot, user_settings: users.User,
+    def __init__(self, ctx: bridge.BridgeContext, bot: bridge.AutoShardedBot, user_settings: users.User,
                  user_portals: List[portals.Portal], embed_function: callable,
                  interaction: Optional[discord.Interaction] = None):
         super().__init__(timeout=settings.INTERACTION_TIMEOUT)
@@ -348,7 +349,7 @@ class SettingsPortalsView(discord.ui.View):
         return True
 
     async def on_timeout(self) -> None:
-        await functions.edit_interaction(self.interaction, view=None)
+        await self.interaction.edit(view=None)
         self.stop()
 
 
@@ -371,7 +372,7 @@ class SettingsReadyView(discord.ui.View):
     None
 
     """
-    def __init__(self, ctx: discord.ApplicationContext, bot: discord.Bot, user_settings: users.User,
+    def __init__(self, ctx: bridge.BridgeContext, bot: bridge.AutoShardedBot, user_settings: users.User,
                  clan_settings: clans.Clan, embed_function: callable,
                  interaction: Optional[discord.Interaction] = None):
         super().__init__(timeout=settings.INTERACTION_TIMEOUT)
@@ -402,7 +403,7 @@ class SettingsReadyView(discord.ui.View):
         return True
 
     async def on_timeout(self) -> None:
-        await functions.edit_interaction(self.interaction, view=None)
+        await self.interaction.edit(view=None)
         self.stop()
 
 
@@ -425,7 +426,7 @@ class SettingsReadyRemindersView(discord.ui.View):
     None
 
     """
-    def __init__(self, ctx: discord.ApplicationContext, bot: discord.Bot, user_settings: users.User,
+    def __init__(self, ctx: bridge.BridgeContext, bot: bridge.AutoShardedBot, user_settings: users.User,
                  clan_settings: clans.Clan, embed_function: callable,
                  interaction: Optional[discord.Interaction] = None):
         super().__init__(timeout=settings.INTERACTION_TIMEOUT)
@@ -438,7 +439,7 @@ class SettingsReadyRemindersView(discord.ui.View):
         self.clan_settings = clan_settings
         self.embed_function = embed_function
         toggled_settings_commands = {
-            # 'Advent calendar': 'alert_advent',
+            #'Advent calendar': 'alert_advent',
             'Adventure': 'alert_adventure',
             'Arena': 'alert_arena',
             #'Boo': 'alert_boo',
@@ -457,7 +458,7 @@ class SettingsReadyRemindersView(discord.ui.View):
             'Horse': 'alert_horse_breed',
             'Hunt': 'alert_hunt',
             'Lootbox': 'alert_lootbox',
-            'Love share': 'alert_love_share',
+            #'Love share': 'alert_love_share',
             #'Megarace': 'alert_megarace',
             #'Minirace': 'alert_minirace',
             'Quest': 'alert_quest',
@@ -499,7 +500,7 @@ class SettingsReadyRemindersView(discord.ui.View):
         return True
 
     async def on_timeout(self) -> None:
-        await functions.edit_interaction(self.interaction, view=None)
+        await self.interaction.edit(view=None)
         self.stop()
 
 
@@ -521,7 +522,7 @@ class SettingsMultipliersView(discord.ui.View):
     None
 
     """
-    def __init__(self, ctx: discord.ApplicationContext, bot: discord.Bot, user_settings: users.User,
+    def __init__(self, ctx: bridge.BridgeContext, bot: bridge.AutoShardedBot, user_settings: users.User,
                  embed_function: callable, interaction: Optional[discord.Interaction] = None):
         super().__init__(timeout=settings.INTERACTION_TIMEOUT)
         self.ctx = ctx
@@ -541,7 +542,7 @@ class SettingsMultipliersView(discord.ui.View):
         return True
 
     async def on_timeout(self) -> None:
-        await functions.edit_interaction(self.interaction, view=None)
+        await self.interaction.edit(view=None)
         self.stop()
 
 
@@ -563,7 +564,7 @@ class SettingsRemindersView(discord.ui.View):
     None
 
     """
-    def __init__(self, ctx: discord.ApplicationContext, bot: discord.Bot, user_settings: users.User,
+    def __init__(self, ctx: bridge.BridgeContext, bot: bridge.AutoShardedBot, user_settings: users.User,
                  embed_function: callable, interaction: Optional[discord.Interaction] = None):
         super().__init__(timeout=settings.INTERACTION_TIMEOUT)
         self.ctx = ctx
@@ -574,7 +575,7 @@ class SettingsRemindersView(discord.ui.View):
         self.user_settings = user_settings
         self.embed_function = embed_function
         toggled_settings_commands = {
-            # 'Advent calendar': 'alert_advent',
+            #'Advent calendar': 'alert_advent',
             'Adventure': 'alert_adventure',
             'Arena': 'alert_arena',
             #'Boo': 'alert_boo',
@@ -583,13 +584,13 @@ class SettingsRemindersView(discord.ui.View):
             #'Cel dailyquest': 'alert_cel_dailyquest',
             #'Cel multiply': 'alert_cel_multiply',
             #'Cel sacrifice': 'alert_cel_sacrifice',
-            # 'Chimney': 'alert_chimney',
+            #'Chimney': 'alert_chimney',
             'Daily': 'alert_daily',
             'Duel': 'alert_duel',
             'Dungeon / Miniboss': 'alert_dungeon_miniboss',
             'EPIC items': 'alert_epic',
             'EPIC shop restocks': 'alert_epic_shop',
-            # 'ETERNAL presents': 'alert_eternal_present',
+            #'ETERNAL presents': 'alert_eternal_present',
             'Farm': 'alert_farm',
             'Guild': 'alert_guild',
             'Horse': 'alert_horse_breed',
@@ -597,7 +598,7 @@ class SettingsRemindersView(discord.ui.View):
             #'Megarace': 'alert_megarace',
             #'Minirace': 'alert_minirace',
             'Lootbox': 'alert_lootbox',
-            'Love share': 'alert_love_share',
+            #'Love share': 'alert_love_share',
             'Maintenance': 'alert_maintenance',
             'Partner alert': 'alert_partner',
             'Pets': 'alert_pets',
@@ -629,7 +630,7 @@ class SettingsRemindersView(discord.ui.View):
         return True
 
     async def on_timeout(self) -> None:
-        await functions.edit_interaction(self.interaction, view=None)
+        await self.interaction.edit(view=None)
         self.stop()
 
 
@@ -651,7 +652,7 @@ class SettingsUserView(discord.ui.View):
     None
 
     """
-    def __init__(self, ctx: discord.ApplicationContext, bot: discord.Bot, user_settings: users.User,
+    def __init__(self, ctx: bridge.BridgeContext, bot: bridge.AutoShardedBot, user_settings: users.User,
                  embed_function: callable, interaction: Optional[discord.Interaction] = None):
         super().__init__(timeout=settings.INTERACTION_TIMEOUT)
         self.ctx = ctx
@@ -674,7 +675,7 @@ class SettingsUserView(discord.ui.View):
         return True
 
     async def on_timeout(self) -> None:
-        await functions.edit_interaction(self.interaction, view=None)
+        await self.interaction.edit(view=None)
         self.stop()
 
 
@@ -697,7 +698,7 @@ class SettingsMessagesView(discord.ui.View):
     None
 
     """
-    def __init__(self, ctx: discord.ApplicationContext, bot: discord.Bot, user_settings: users.User,
+    def __init__(self, ctx: bridge.BridgeContext, bot: bridge.AutoShardedBot, user_settings: users.User,
                  embed_function: callable, activity: Optional[str] = 'all',
                  interaction: Optional[discord.Interaction] = None):
         super().__init__(timeout=settings.INTERACTION_TIMEOUT)
@@ -732,7 +733,7 @@ class SettingsMessagesView(discord.ui.View):
         return True
 
     async def on_timeout(self) -> None:
-        await functions.edit_interaction(self.interaction, view=None)
+        await self.interaction.edit(view=None)
         self.stop()
 
 
@@ -755,7 +756,7 @@ class SettingsPartnerView(discord.ui.View):
     None
 
     """
-    def __init__(self, ctx: discord.ApplicationContext, bot: discord.Bot, user_settings: users.User,
+    def __init__(self, ctx: bridge.BridgeContext, bot: bridge.AutoShardedBot, user_settings: users.User,
                  partner_settings: users.User, embed_function: callable,
                  interaction: Optional[discord.Interaction] = None):
         super().__init__(timeout=settings.INTERACTION_TIMEOUT)
@@ -781,7 +782,7 @@ class SettingsPartnerView(discord.ui.View):
         return True
 
     async def on_timeout(self) -> None:
-        await functions.edit_interaction(self.interaction, view=None)
+        await self.interaction.edit(view=None)
         self.stop()
 
 
@@ -796,7 +797,7 @@ class OneButtonView(discord.ui.View):
     custom id of the button when pressed
     'timeout' on timeout.
     """
-    def __init__(self, ctx: Union[commands.Context, discord.ApplicationContext], style: discord.ButtonStyle,
+    def __init__(self, ctx: bridge.BridgeContext, style: discord.ButtonStyle,
                  custom_id: str, label: str, emoji: Optional[discord.PartialEmoji] = None,
                  interaction_message: Optional[Union[discord.Message, discord.Interaction]] = None):
         super().__init__(timeout=settings.INTERACTION_TIMEOUT)
@@ -814,10 +815,7 @@ class OneButtonView(discord.ui.View):
 
     async def on_timeout(self) -> None:
         self.disable_all_items()
-        if isinstance(self.ctx, discord.ApplicationContext):
-            await functions.edit_interaction(self.interaction_message, view=self)
-        else:
-            await self.interaction_message.edit(view=self)
+        await self.interaction_message.edit(view=self)
         self.stop()
 
 
@@ -830,7 +828,7 @@ class RemindersListView(discord.ui.View):
     -------
     None
     """
-    def __init__(self, bot: discord.Bot, ctx: Union[commands.Context, discord.ApplicationContext], user: discord.User,
+    def __init__(self, bot: bridge.AutoShardedBot, ctx: Union[commands.Context, discord.ApplicationContext], user: discord.User,
                  user_settings: users.User, user_mentioned: bool, custom_reminders: List[reminders.Reminder],
                  embed_function: callable, show_timestamps: Optional[bool] = False,
                  interaction_message: Optional[Union[discord.Message, discord.Interaction]] = None):
@@ -879,7 +877,7 @@ class StatsView(discord.ui.View):
     'timeout' on timeout.
     None if nothing happened yet.
     """
-    def __init__(self, bot: discord.Bot, ctx: Union[commands.Context, discord.ApplicationContext],
+    def __init__(self, bot: bridge.AutoShardedBot, ctx: Union[commands.Context, discord.ApplicationContext],
                  user_settings: users.User, user_mentioned: bool, time_left: timedelta, embed_function: callable,
                  interaction_message: Optional[Union[discord.Message, discord.Interaction]] = None):
         super().__init__(timeout=settings.INTERACTION_TIMEOUT)
@@ -939,7 +937,7 @@ class SettingsServerView(discord.ui.View):
     None
 
     """
-    def __init__(self, ctx: discord.ApplicationContext, bot: discord.Bot, guild_settings: guilds.Guild,
+    def __init__(self, ctx: bridge.BridgeContext, bot: bridge.AutoShardedBot, guild_settings: guilds.Guild,
                  embed_function: callable, interaction: Optional[discord.Interaction] = None):
         super().__init__(timeout=settings.INTERACTION_TIMEOUT)
         self.ctx = ctx
@@ -965,7 +963,7 @@ class SettingsServerView(discord.ui.View):
         toggled_auto_flex_alerts_2 = {
             'Party popper from any lootbox': 'auto_flex_lb_party_popper_enabled',
             'SUPER fish from work commands': 'auto_flex_work_superfish_enabled',
-            'TIME capsule from GODLY lootbox': 'auto_flex_lb_godly_tt_enabled',
+            'TIME capsule from GODLY/VOID lootbox': 'auto_flex_lb_godly_tt_enabled',
             'ULTIMATE logs from work commands': 'auto_flex_work_ultimatelog_enabled',
             'ULTRA log from EDGY lootbox': 'auto_flex_lb_edgy_ultra_enabled',
             'ULTRA log from OMEGA lootbox': 'auto_flex_lb_omega_ultra_enabled',
@@ -1017,7 +1015,7 @@ class SettingsServerView(discord.ui.View):
         return True
 
     async def on_timeout(self) -> None:
-        await functions.edit_interaction(self.interaction, view=None)
+        await self.interaction.edit(view=None)
         self.stop()
 
 
@@ -1038,7 +1036,7 @@ class DevEventReductionsView(discord.ui.View):
     None
 
     """
-    def __init__(self, ctx: discord.ApplicationContext, bot: discord.Bot, all_cooldowns: List[cooldowns.Cooldown],
+    def __init__(self, ctx: bridge.BridgeContext, bot: bridge.AutoShardedBot, all_cooldowns: List[cooldowns.Cooldown],
                  embed_function: callable, interaction: Optional[discord.Interaction] = None):
         super().__init__(timeout=settings.INTERACTION_TIMEOUT)
         self.bot = bot
@@ -1062,5 +1060,5 @@ class DevEventReductionsView(discord.ui.View):
         return True
 
     async def on_timeout(self) -> None:
-        await functions.edit_interaction(self.interaction, view=None)
+        await self.interaction.edit(view=None)
         self.stop()

@@ -9,7 +9,7 @@ import discord
 
 from content import settings as settings_cmd
 from database import cooldowns, portals, reminders, users
-from resources import emojis, exceptions, functions, modals, strings, views
+from resources import emojis, exceptions, functions, modals, settings, strings, views
 
 
 class ToggleAutoReadyButton(discord.ui.Button):
@@ -317,8 +317,9 @@ class ManageReadySettingsSelect(discord.ui.Select):
         other_position = 'on bottom' if view.user_settings.ready_other_on_top else 'on top'
         options.append(discord.SelectOption(label=f'Auto-ready',
                                             value='toggle_auto_ready', emoji=auto_ready_emoji))
-        options.append(discord.SelectOption(label=f'Show auto-ready after {frequency}',
-                                            value='toggle_frequency', emoji=None))
+        if not settings.LITE_MODE:
+            options.append(discord.SelectOption(label=f'Show auto-ready after {frequency}',
+                                                value='toggle_frequency', emoji=None))
         options.append(discord.SelectOption(label='Auto-ready ping',
                                             value='toggle_user_ping', emoji=user_ping_emoji))
         options.append(discord.SelectOption(label=f'Show ready commands as {message_style}',
@@ -532,8 +533,9 @@ class ManageUserSettingsSelect(discord.ui.Select):
         auto_flex_emoji = emojis.ENABLED if view.user_settings.auto_flex_enabled else emojis.DISABLED
         auto_flex_ping_emoji = emojis.ENABLED if view.user_settings.auto_flex_ping_enabled else emojis.DISABLED
         tracking_emoji = emojis.ENABLED if view.user_settings.tracking_enabled else emojis.DISABLED
-        options.append(discord.SelectOption(label=f'Reactions', emoji=reactions_emoji,
-                                            value='toggle_reactions'))
+        if not settings.LITE_MODE:
+            options.append(discord.SelectOption(label=f'Reactions', emoji=reactions_emoji,
+                                                value='toggle_reactions'))
         options.append(discord.SelectOption(label=f'Auto flex alerts', emoji=auto_flex_emoji,
                                             value='toggle_auto_flex'))
         options.append(discord.SelectOption(label=f'Auto flex ping', emoji=auto_flex_ping_emoji,
@@ -585,6 +587,7 @@ class ManageReminderBehaviourSelect(discord.ui.Select):
         dnd_emoji = emojis.ENABLED if view.user_settings.dnd_mode_enabled else emojis.DISABLED
         hunt_emoji = emojis.ENABLED if view.user_settings.hunt_rotation_enabled else emojis.DISABLED
         mentions_emoji = emojis.ENABLED if view.user_settings.slash_mentions_enabled else emojis.DISABLED
+        a20_cd_emoji = emojis.ENABLED if view.user_settings.area_20_cooldowns_enabled else emojis.DISABLED
         #christmas_area_emoji = emojis.ENABLED if view.user_settings.christmas_area_enabled else emojis.DISABLED
         options.append(discord.SelectOption(label='DND mode', emoji=dnd_emoji,
                                             value='toggle_dnd'))
@@ -592,6 +595,8 @@ class ManageReminderBehaviourSelect(discord.ui.Select):
                                             value='toggle_hunt'))
         options.append(discord.SelectOption(label='Slash command reminders', emoji=mentions_emoji,
                                             value='toggle_mentions'))
+        options.append(discord.SelectOption(label='Read cooldowns in area 20', emoji=a20_cd_emoji,
+                                            value='toggle_a20_cd'))
         options.append(discord.SelectOption(label='Add this channel as reminder channel', emoji=emojis.ADD,
                                             value='set_channel'))
         options.append(discord.SelectOption(label='Remove reminder channel', emoji=emojis.REMOVE,
@@ -610,6 +615,8 @@ class ManageReminderBehaviourSelect(discord.ui.Select):
             await self.view.user_settings.update(hunt_rotation_enabled=not self.view.user_settings.hunt_rotation_enabled)
         elif select_value == 'toggle_mentions':
             await self.view.user_settings.update(slash_mentions_enabled=not self.view.user_settings.slash_mentions_enabled)
+        elif select_value == 'toggle_a20_cd':
+            await self.view.user_settings.update(area_20_cooldowns_enabled=not self.view.user_settings.area_20_cooldowns_enabled)
         elif select_value == 'set_channel':
             confirm_view = views.ConfirmCancelView(self.view.ctx, styles=[discord.ButtonStyle.blurple, discord.ButtonStyle.grey])
             confirm_interaction = await interaction.response.send_message(
@@ -904,7 +911,7 @@ class AddAltSelect(discord.ui.Select):
         alt_global_name = new_alt.global_name if new_alt.global_name is not None else new_alt.name
         if new_alt == interaction.user:
             await interaction.response.send_message(
-                f'You want to add **yourself** as an alt? Are you **that** lonely?',
+                'You want to add **yourself** as an alt? Are you **that** lonely?',
                 ephemeral=True
             )
             await update_message()
@@ -915,14 +922,14 @@ class AddAltSelect(discord.ui.Select):
             return
         if new_alt.bot:
             await interaction.response.send_message(
-                f'Sorry, bots are not allowed to be alts, they are too smol.',
+                'Sorry, bots are not allowed to be alts, they are too smol.',
                 ephemeral=True
             )
             await update_message()
             return
         if len(self.view.user_settings.alts) >= 24:
             await interaction.response.send_message(
-                f'Your already has 24 alts and no space left. They need to remove one first.',
+                'You already have 24 alts and no space left. You need to remove one first.',
                 ephemeral=True
             )
             await update_message()
@@ -960,21 +967,15 @@ class AddAltSelect(discord.ui.Select):
         view.interaction = interaction
         await view.wait()
         if view.value is None:
-            await functions.edit_interaction(
-                interaction,
-                content=f'**{user_global_name}**, the user didn\'t answer in time.',
-                view=None
-            )
+            await interaction.edit(content=f'**{user_global_name}**, the user didn\'t answer in time.', view=None)
         elif view.value == 'confirm':
             await self.view.user_settings.add_alt(new_alt.id)
-            await functions.edit_interaction(
-                interaction,
+            await interaction.edit(
                 content=f'**{user_global_name}** and **{alt_global_name}** are now alts of each other.',
                 view=None
             )
         else:
-            await functions.edit_interaction(
-                interaction,
+            await interaction.edit(
                 content=(
                     f'**{alt_global_name}** doesn\'t want to be an alt. Oh no.\n'
                     f'Guess they don\'t like you. Oh well. Happens.'
@@ -1035,17 +1036,16 @@ class AddPartnerSelect(discord.ui.Select):
             view.interaction_message = replace_interaction
             await view.wait()
             if view.value is None:
-                await functions.edit_interaction(
-                    replace_interaction,
+                await replace_interaction.edit(
                     content=f'**{user_global_name}**, you didn\'t answer in time.',
                     view=None
                 )
                 await update_message()
                 return
             elif view.value == 'confirm':
-                await functions.edit_interaction(replace_interaction, view=None)
+                await replace_interaction.edit(view=None)
             else:
-                await functions.edit_interaction(replace_interaction, content='Aborted.', view=None)
+                await replace_interaction.edit(content='Aborted.', view=None)
                 await update_message()
                 return
         view = views.ConfirmUserView(new_partner, 'I do!', 'Forever alone')
@@ -1060,8 +1060,7 @@ class AddPartnerSelect(discord.ui.Select):
         view.interaction = partner_interaction
         await view.wait()
         if view.value is None:
-            await functions.edit_interaction(
-                partner_interaction,
+            await partner_interaction.edit(
                 content=f'**{user_global_name}**, your lazy partner didn\'t answer in time.',
                 view=None
             )
@@ -1090,15 +1089,14 @@ class AddPartnerSelect(discord.ui.Select):
                     f'{emojis.BP} **{partner_global_name}**, ... wait what?\n\n'
                     f'Anyway, you may now kiss the brides.'
                 )
-                await functions.edit_interaction(partner_interaction, view=None)
+                await partner_interaction.edit(view=None)
                 await interaction.followup.send(answer)
             else:
                 await interaction.followup.send(strings.MSG_ERROR)
                 await update_message()
                 return
         else:
-            await functions.edit_interaction(
-                partner_interaction,
+            await partner_interaction.edit(
                 content=(
                     f'**{partner_global_name}** prefers to be forever alone.\n'
                     f'Stood up at the altar, that\'s gotta hurt, rip.'
@@ -1200,7 +1198,7 @@ class SetReminderMessageButton(discord.ui.Button):
             except asyncio.TimeoutError:
                 await interaction.edit_original_response(content=f'**{user_global_name}**, you didn\'t answer in time.')
                 return
-            for found_id in re.findall(r'<@!?(\d{16,20})>', answer.content.lower()):
+            for found_id in re.findall(r'<@!?&?(\d{16,20})>', answer.content.lower()):
                 if int(found_id) != interaction.user.id and int(found_id) not in self.view.user_settings.alts:
                     await interaction.delete_original_response(delay=5)
                     followup_message = await interaction.followup.send(

@@ -90,8 +90,8 @@ FARM_HELPER_MODES = {
 
 
 # Links
-LINK_GITHUB = 'https://github.com/Miriel-py/Navi'
-LINK_PRIVACY_POLICY = 'https://github.com/Miriel-py/Navi/blob/master/PRIVACY.md'
+LINK_CHANGELOG = 'https://github.com/MirielCH/Navi/releases'
+LINK_GITHUB = 'https://github.com/MirielCH/Navi'
 
 # --- Default messages ---
 DEFAULT_MESSAGE = '{name} Hey! It\'s time for {command}!'
@@ -216,9 +216,7 @@ ROUND_CARD_AFFECTED_ACTIVITIES = (
     'adventure',
     'arena',
     'duel',
-    'dungeon-miniboss',
     'farm',
-    'horse',
     'hunt',
     'quest',
     'training',
@@ -338,7 +336,7 @@ ACTIVITIES_ALL.sort()
 ACTIVITIES_ALL.insert(0, 'all')
 
 ACTIVITIES_COMMANDS = (
-    # 'advent-calendar',
+    #'advent-calendar',
     'adventure',
     'arena',
     #'boo',
@@ -346,18 +344,18 @@ ACTIVITIES_COMMANDS = (
     #'cel-multiply',
     #'cel-sacrifice',
     'card-hand',
-    # 'chimney',
+    #'chimney',
     'daily',
     'duel',
     'dungeon-miniboss',
     'epic',
-    # 'eternal-presents',
+    #'eternal-presents',
     'farm',
     'guild',
     'horse',
     'hunt',
     'lootbox',
-    'love-share',
+    #'love-share',
     #'megarace',
     #'minirace',
     'quest',
@@ -512,6 +510,9 @@ ACTIVITIES_ALIASES = {
     'lootboxalert': 'partner',
     'lbalert': 'partner',
     'lb-alert': 'partner',
+    'love': 'love-share',
+    'love share': 'love-share',
+    'loveshare': 'love-share',
     'partner-alert': 'partner',
     'partneralert': 'partner',
     'notsominiboss': 'minintboss',
@@ -543,6 +544,9 @@ ACTIVITIES_ALIASES = {
     'calendar': 'advent-calendar',
     'xmas-calendar': 'advent-calendar',
     'xmas-chimney': 'chimney',
+    'boost': 'boosts',
+    'potion': 'boosts',
+    'potions': 'boosts',
 }
 
 ACTIVITIES_COLUMNS = {
@@ -1052,6 +1056,7 @@ SLASH_COMMANDS = {
     'daily': '</daily:956658466099982386>',
     'dice': '</dice:957815871902994432>',
     'dismantle': '</dismantle:960002337328496660>',
+    'donate': '</donate:964351962671874048>',
     'drill': '</drill:959164541206417479>',
     'duel': '</duel:960362921198751784>',
     'dungeon': '</dungeon:966956823032791090>',
@@ -1424,7 +1429,7 @@ FLEX_TITLES_OMEGA_ULTRA = [
     'Why are my OMEGAs never like this?',
 ]
 
-FLEX_TITLES_GODLY_TT = [
+FLEX_TITLES_GODLY_VOID_TT = [
     'There\'s luck, and then there\'s THIS',
     'Jeez, now that is something',
     'Don\'t get jealous folks... or do',
@@ -1840,7 +1845,7 @@ FLEX_THUMBNAILS_OMEGA_ULTRA = [
     'https://media.tenor.com/TukiL_LftA0AAAAC/loz-botw.gif',
 ]
 
-FLEX_THUMBNAILS_GODLY_TT = [
+FLEX_THUMBNAILS_GODLY_VOID_TT = [
     'https://c.tenor.com/-BVQhBulOmAAAAAC/bruce-almighty-morgan-freeman.gif',
     'https://media.giphy.com/media/jltuIcAMViLHYaz9bN/giphy.gif',
 ]
@@ -1912,7 +1917,7 @@ FLEX_THUMBNAILS_EVENT_ENCHANT = [
     'https://media.giphy.com/media/ef4gyEAxktrF3cWO5g/giphy.gif',
     'https://media.tenor.com/oTpEgUkQjngAAAAC/vibing-dancing.gif',
     'https://media.tenor.com/9-b0gUv-HokAAAAC/enchanted-sword-enchanted-iron-sword.gif',
-    'https://media.tenor.com/Z3mgGQaNQt4AAAAC/legendofzelda-navchi.gif',
+    'https://media.tenor.com/Z3mgGQaNQt4AAAAC/legendofzelda-navi.gif',
 ]
 
 FLEX_THUMBNAILS_EVENT_FARM = [
