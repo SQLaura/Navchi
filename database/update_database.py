@@ -454,6 +454,22 @@ def update_database() -> bool:
             "('{name} Hey! It''s time for {command}!')",
             "ALTER TABLE users ADD alert_love_share_visible INTEGER NOT NULL DEFAULT (1)",
         ]
+    if db_version < 18:
+        sqls += [
+            "UPDATE cooldowns SET donor_affected = 1 WHERE activity = 'card-hand'",
+        ]
+    if db_version < 19:
+        sqls += [
+            "ALTER TABLE users ADD area_20_cooldowns_enabled INTEGER NOT NULL DEFAULT (1)",
+        ]
+    if db_version < 20:
+        sqls += [
+            "ALTER TABLE users ADD time_potion_warning_enabled INTEGER NOT NULL DEFAULT (0)",
+        ]
+    if db_version < 21:
+        sqls += [
+            "ALTER TABLE users ADD auto_healing_active INTEGER NOT NULL DEFAULT (0)",
+        ]
 
     # Run SQLs
     for sql in sqls:

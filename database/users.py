@@ -72,9 +72,11 @@ class User():
     alert_work: UserAlert
     alts: Tuple[int]
     ascended: bool
+    area_20_cooldowns_enabled: bool
     auto_flex_enabled: bool
     auto_flex_ping_enabled: bool
     auto_flex_tip_read: bool
+    auto_healing_active: bool
     auto_ready_enabled: bool
     bot_enabled: bool
     chocolate_box_unlocked: bool
@@ -141,6 +143,7 @@ class User():
     ruby_counter_button_mode: bool
     ruby_counter_enabled: bool
     slash_mentions_enabled: bool
+    time_potion_warning_enabled: bool
     time_travel_count: int
     top_hat_unlocked: bool
     tracking_enabled: bool
@@ -194,9 +197,11 @@ class User():
         self.alert_work = new_settings.alert_work
         self.alts = new_settings.alts
         self.ascended = new_settings.ascended
+        self.area_20_cooldowns_enabled = new_settings.area_20_cooldowns_enabled
         self.auto_flex_enabled = new_settings.auto_flex_enabled
         self.auto_flex_ping_enabled = new_settings.auto_flex_ping_enabled
         self.auto_flex_tip_read = new_settings.auto_flex_tip_read
+        self.auto_healing_active = new_settings.auto_healing_active
         self.auto_ready_enabled = new_settings.auto_ready_enabled
         self.bot_enabled = new_settings.bot_enabled
         self.chocolate_box_unlocked = new_settings.chocolate_box_unlocked
@@ -263,6 +268,7 @@ class User():
         self.ruby_counter_button_mode = new_settings.ruby_counter_button_mode
         self.ruby_counter_enabled = new_settings.ruby_counter_enabled
         self.slash_mentions_enabled = new_settings.slash_mentions_enabled
+        self.time_potion_warning_enabled = new_settings.time_potion_warning_enabled
         self.time_travel_count = new_settings.time_travel_count
         self.top_hat_unlocked = new_settings.top_hat_unlocked
         self.tracking_enabled = new_settings.tracking_enabled
@@ -424,9 +430,11 @@ class User():
             alert_work_multiplier: float
             alert_work_visible: bool
             ascended: bool
+            area_20_cooldowns_enabled: bool
             auto_flex_enabled: bool
             auto_flex_ping_enabled: bool
             auto_flex_tip_read: bool
+            auto_healing_active: bool
             auto_ready_enabled: bool
             bot_enabled: bool
             chocolate_box_unlocked: bool
@@ -500,6 +508,7 @@ class User():
             ruby_counter_button_mode: bool
             ruby_counter_enabled: bool
             slash_mentions_enabled: bool
+            time_potion_warning_enabled: bool
             time_travel_count: int
             top_hat_unlocked: bool
             tracking_enabled: bool
@@ -684,8 +693,10 @@ async def _dict_to_user(record: dict) -> User:
                                    visible=bool(record['alert_work_visible'])),
             alts = record['alts'],
             ascended = bool(record['ascended']),
+            area_20_cooldowns_enabled = bool(record['area_20_cooldowns_enabled']),
             auto_flex_enabled = bool(record['auto_flex_enabled']),
             auto_flex_ping_enabled = bool(record['auto_flex_ping_enabled']),
+            auto_healing_active = bool(record['auto_healing_active']),
             auto_ready_enabled = bool(record['auto_ready_enabled']),
             auto_flex_tip_read = bool(record['auto_flex_tip_read']),
             bot_enabled = bool(record['bot_enabled']),
@@ -758,6 +769,7 @@ async def _dict_to_user(record: dict) -> User:
             ruby_counter_button_mode = bool(record['ruby_counter_button_mode']),
             ruby_counter_enabled = bool(record['ruby_counter_enabled']),
             slash_mentions_enabled = bool(record['slash_mentions_enabled']),
+            time_potion_warning_enabled = bool(record['time_potion_warning_enabled']),
             time_travel_count = record['time_travel_count'],
             top_hat_unlocked = bool(record['top_hat_unlocked']),
             tracking_enabled = bool(record['tracking_enabled']),
@@ -1051,9 +1063,11 @@ async def _update_user(user: User, **kwargs) -> None:
         alert_work_multiplier: float
         alert_work_visible: bool
         ascended: bool
+        area_20_cooldowns_enabled: bool
         auto_flex_enabled: bool
         auto_flex_ping_enabled: bool
         auto_flex_tip_read: bool
+        auto_healing_active: bool
         auto_ready_enabled: bool
         bot_enabled: bool
         chocolate_box_unlocked: bool
@@ -1127,6 +1141,7 @@ async def _update_user(user: User, **kwargs) -> None:
         ruby_counter_button_mode: bool
         ruby_counter_enabled: bool
         slash_mentions_enabled: bool
+        time_potion_warning_enabled: bool
         time_travel_count: int
         top_hat_unlocked: bool
         tracking_enabled: bool
@@ -1184,11 +1199,17 @@ async def insert_user(user_id: int) -> User:
     function_name = 'insert_user'
     table = 'users'
     columns = ''
-    values = [user_id,]
+    if settings.LITE_MODE:
+        reactions_enabled = 0
+        ready_after_all_commands = 0
+    else:
+        reactions_enabled = 1
+        ready_after_all_commands = 1
+    values = [user_id, reactions_enabled, ready_after_all_commands]
     for activity, default_message in strings.DEFAULT_MESSAGES.items():
         columns = f'{columns},{strings.ACTIVITIES_COLUMNS[activity]}_message'
         values.append(default_message)
-    sql = f'INSERT INTO {table} (user_id{columns}) VALUES ('
+    sql = f'INSERT INTO {table} (user_id, reactions_enabled, ready_after_all_commands{columns}) VALUES ('
     for value in values:
         sql = f'{sql}?,'
     sql = f'{sql.strip(",")})'
