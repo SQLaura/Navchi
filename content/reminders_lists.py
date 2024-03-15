@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from typing import Optional, Union
 
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 
 from content import settings as settings_cmd
 from database import clans, reminders, users
@@ -14,7 +14,7 @@ from resources import emojis, functions, exceptions, settings, strings, views
 
 # -- Commands ---
 async def command_list(
-    bot: discord.Bot,
+    bot: bridge.AutoShardedBot,
     ctx: Union[commands.Context, discord.ApplicationContext, discord.Message],
     user: Optional[discord.User] = None
 ) -> None:
@@ -47,7 +47,7 @@ async def command_list(
 
 
 async def command_ready(
-    bot: discord.Bot,
+    bot: bridge.AutoShardedBot,
     ctx: Union[commands.Context, discord.ApplicationContext, discord.Message],
     user: Optional[discord.User] = None
 ) -> None:
@@ -106,7 +106,7 @@ async def command_ready(
 
 
 # -- Embeds ---
-async def embed_reminders_list(bot: discord.Bot, user: discord.User,
+async def embed_reminders_list(bot: bridge.AutoShardedBot, user: discord.User,
                                show_timestamps: Optional[bool] = False) -> discord.Embed:
     """Embed with active reminders"""
     user_settings: users.User = await users.get_user(user.id)
@@ -300,7 +300,7 @@ async def embed_reminders_list(bot: discord.Bot, user: discord.User,
     return embed
 
 
-async def embed_ready(bot: discord.Bot, user: discord.User, auto_ready: bool) -> discord.Embed:
+async def embed_ready(bot: bridge.AutoShardedBot, user: discord.User, auto_ready: bool) -> discord.Embed:
     """Embed with ready commands"""
 
     user_settings: users.User = await users.get_user(user.id)
@@ -608,9 +608,10 @@ async def embed_ready(bot: discord.Bot, user: discord.User, auto_ready: bool) ->
             current_time = datetime.utcnow().replace(microsecond=0)
             for reminder in active_reminders:
                 if 'pets' in reminder.activity: continue
-                if reminder.activity in strings.ACTIVITIES_BOOSTS or reminder.activity in strings.BOOSTS_ALIASES: continue
+                if (reminder.activity in strings.ACTIVITIES_BOOSTS or reminder.activity in strings.BOOSTS_ALIASES
+                    or reminder.activity.startswith('epic-shop')): continue
                 if (not user_settings.ready_up_next_show_hidden_reminders and not 'custom' in reminder.activity
-                    and not reminder.activity == "unstuck"):
+                    and not reminder.activity == 'unstuck'):
                     alert_settings = getattr(user_settings, strings.ACTIVITIES_COLUMNS[reminder.activity])
                     if not alert_settings.visible: continue
                 if user_settings.ready_up_next_as_timestamp:
