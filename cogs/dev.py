@@ -1,6 +1,8 @@
 # dev.py
+# pyright: reportInvalidTypeForm=false
 """Internal dev commands"""
 
+import asyncio
 from datetime import datetime
 import importlib
 import os
@@ -10,12 +12,12 @@ import sys
 from typing import List
 
 import discord
-from discord.commands import SlashCommandGroup, Option
-from discord.ext import commands
+from discord.ext import bridge, commands
+from discord.ext.bridge import BridgeOption
 from humanfriendly import format_timespan
 
 from database import cooldowns
-from resources import emojis, exceptions, functions, logs, settings, views
+from resources import emojis, exceptions, logs, settings, views
 
 
 EVENT_REDUCTION_TYPES = [
@@ -27,26 +29,44 @@ MSG_NOT_DEV = 'You are not allowed to use this command.'
 
 class DevCog(commands.Cog):
     """Cog class containing internal dev commands"""
-    def __init__(self, bot: discord.Bot):
+    def __init__(self, bot: bridge.AutoShardedBot):
         self.bot = bot
 
-    dev = SlashCommandGroup(
-        "dev",
-        "Development commands",
-        guild_ids=settings.DEV_GUILDS,
-        default_member_permissions=discord.Permissions(administrator=True)
-    )
+    default_member_permissions=discord.Permissions(administrator=True)
 
-    # Commands
-    @dev.command()
-    async def reload(
+    # Bridge commands
+    @bridge.bridge_group(name='dev', description='Development commands', invoke_without_command=True)
+    @commands.bot_has_permissions(send_messages=True)
+    async def dev_group(self, ctx: bridge.BridgeContext):
+        """Dev command group"""
+        if ctx.author.id not in settings.DEV_IDS:
+            if ctx.is_app: await ctx.respond(MSG_NOT_DEV, ephemeral=True)
+            return
+        await ctx.respond(
+            f'**Dev commands**\n'
+            f'{emojis.BP} `{ctx.prefix}dev cache`\n'
+            f'{emojis.BP} `{ctx.prefix}dev consolidate`\n'
+            f'{emojis.BP} `{ctx.prefix}dev emoji-check`\n'
+            f'{emojis.BP} `{ctx.prefix}dev event-reductions`, `er`\n'
+            f'{emojis.BP} `{ctx.prefix}dev leave-server <server id>`\n'
+            f'{emojis.BP} `{ctx.prefix}dev post-message`, `pm` `<message id> <channel id> <embed title>`\n'
+            f'{emojis.BP} `{ctx.prefix}dev reload <modules>`\n'
+            f'{emojis.BP} `{ctx.prefix}dev server-list`\n'
+            f'{emojis.BP} `{ctx.prefix}dev support`\n'
+            f'{emojis.BP} `{ctx.prefix}dev shutdown`\n'
+        )
+
+    @dev_group.command(name='reload', description='Reloads cogs or modules', guild_ids=settings.DEV_GUILDS)
+    @commands.bot_has_permissions(send_messages=True)
+    async def dev_reload(
         self,
-        ctx: discord.ApplicationContext,
-        modules: Option(str, 'Cogs or modules to reload'),
+        ctx: bridge.BridgeContext,
+        *,
+        modules: BridgeOption(str, description='Cogs or modules to reload'),
     ) -> None:
         """Reloads cogs or modules"""
         if ctx.author.id not in settings.DEV_IDS:
-            await ctx.respond(MSG_NOT_DEV, ephemeral=True)
+            if ctx.is_app: await ctx.respond(MSG_NOT_DEV, ephemeral=True)
             return
         modules = modules.split(' ')
         actions = []
@@ -76,14 +96,13 @@ class DevCog(commands.Cog):
             message = f'{message}\n{action}'
         await ctx.respond(f'```diff\n{message}\n```')
 
-    @dev.command(name='emoji-check')
-    async def emoji_check(
-        self,
-        ctx: discord.ApplicationContext,
-    ) -> None:
-        """Checks the availabilty of all emojis in emojis.py"""
+    @dev_group.command(name='emoji-check', aliases=('emoji','emojis'),
+                       description='Check the availabilty of all emojis in emojis.py', guild_ids=settings.DEV_GUILDS)
+    @commands.bot_has_permissions(send_messages=True, embed_links=True)
+    async def dev_emoji_check(self, ctx: bridge.BridgeContext) -> None:
+        """Check the availabilty of all emojis in emojis.py"""
         if ctx.author.id not in settings.DEV_IDS:
-            await ctx.respond(MSG_NOT_DEV, ephemeral=True)
+            if ctx.is_app: await ctx.respond(MSG_NOT_DEV, ephemeral=True)
             return
         all_emojis = {}
         for attribute_name in dir(emojis):
@@ -109,7 +128,7 @@ class DevCog(commands.Cog):
                 '- _Missing emojis are valid but not found on Discord. Upload them to a server Navchi can see and set '
                 'the correct IDs in `emojis.py`._\n'
             )
-        if invalid_emojis:    
+        if invalid_emojis:
             description = f'{description}\n\n**Invalid emojis**'
             for attribute_name, emoji_string in invalid_emojis.items():
                 description = f'{description}\n- {emoji_string} `{attribute_name}`'
@@ -126,11 +145,13 @@ class DevCog(commands.Cog):
         await ctx.respond(embed=embed)
 
 
-    @dev.command(name='event-reductions')
-    async def dev_event_reductions(self, ctx: discord.ApplicationContext) -> None:
-        """Change event reductions"""
+    @dev_group.command(name='event-reductions', aliases=('er',), description='Manage global event reductions',
+                       guild_ids=settings.DEV_GUILDS)
+    @commands.bot_has_permissions(send_messages=True, embed_links=True)
+    async def dev_event_reductions(self, ctx: bridge.BridgeContext) -> None:
+        """Manage global event reductions"""
         if ctx.author.id not in settings.DEV_IDS:
-            await ctx.respond(MSG_NOT_DEV, ephemeral=True)
+            if ctx.is_app: await ctx.respond(MSG_NOT_DEV, ephemeral=True)
             return
         all_cooldowns = list(await cooldowns.get_all_cooldowns())
         view = views.DevEventReductionsView(ctx, self.bot, all_cooldowns, embed_dev_event_reductions)
@@ -138,12 +159,13 @@ class DevCog(commands.Cog):
         interaction = await ctx.respond(embed=embed, view=view)
         view.interaction = interaction
 
-    @dev.command(name='backup')
-    async def dev_dump(self, ctx: discord.ApplicationContext) -> None:
-        """Manually backups the database to navchi_db_backup.db"""
+    @dev_group.command(name='backup', description='Manually backup the database of Navchi', guild_ids=settings.DEV_GUILDS)
+    @commands.bot_has_permissions(send_messages=True)
+    async def dev_backup(self, ctx: bridge.BridgeContext) -> None:
+        """Manually backup the database of Navchi"""
         ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
         if ctx.author.id not in settings.DEV_IDS:
-            await ctx.respond(MSG_NOT_DEV, ephemeral=True)
+            if ctx.is_app: await ctx.respond(MSG_NOT_DEV, ephemeral=True)
             return
         view = views.ConfirmCancelView(ctx, styles=[discord.ButtonStyle.blurple, discord.ButtonStyle.grey])
         interaction = await ctx.respond(
@@ -155,11 +177,11 @@ class DevCog(commands.Cog):
         view.interaction_message = interaction
         await view.wait()
         if view.value is None:
-            await ctx.followup.send(f'**{ctx_author_name}**, you didn\'t answer in time.')
+            await interaction.edit(f'**{ctx_author_name}**, you didn\'t answer in time.')
         elif view.value != 'confirm':
-            await functions.edit_interaction(interaction, view=None)
-            await ctx.followup.send('Backup aborted.')
-        else:    
+            await interaction.edit(view=None)
+            await interaction.edit('Backup aborted.')
+        else:
             start_time = datetime.utcnow()
             interaction = await ctx.respond('Starting backup...')
             backup_db_file = os.path.join(settings.BOT_DIR, 'database/navchi_db_backup.db')
@@ -167,19 +189,22 @@ class DevCog(commands.Cog):
             settings.NAVCHI_DB.backup(navchi_backup_db)
             navchi_backup_db.close()
             time_taken = datetime.utcnow() - start_time
-            await functions.edit_interaction(interaction, content=f'Backup finished after {format_timespan(time_taken)}')
+            await interaction.edit(f'Backup finished after {format_timespan(time_taken)}')
 
-    @dev.command(name='post-message')
-    async def post_message(
+    @dev_group.command(name='post-message', aliases=('pm',),
+                       description='Sends the content of a message to a channel in an embed', guild_ids=settings.DEV_GUILDS)
+    @commands.bot_has_permissions(send_messages=True, embed_links=True)
+    async def dev_post_message(
         self,
-        ctx: discord.ApplicationContext,
-        message_id: Option(str, 'Message ID of the message IN THIS CHANNEL with the content'),
-        channel_id: Option(str, 'Channel ID of the channel where the message is sent to'),
-        embed_title: Option(str, 'Title of the embed', max_length=256),
+        ctx: bridge.BridgeContext,
+        message_id: BridgeOption(str, description='Message ID of the message IN THIS CHANNEL with the content'),
+        channel_id: BridgeOption(str, description='Channel ID of the channel where the message is sent to'),
+        *,
+        embed_title: BridgeOption(str, description='Title of the embed', max_length=256),
     ) -> None:
         """Sends the content of a message to a channel in an embed"""
         if ctx.author.id not in settings.DEV_IDS:
-            await ctx.respond(MSG_NOT_DEV, ephemeral=True)
+            if ctx.is_app: await ctx.respond(MSG_NOT_DEV, ephemeral=True)
             return
         ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
         await self.bot.wait_until_ready()
@@ -220,51 +245,79 @@ class DevCog(commands.Cog):
         view.interaction_message = interaction
         await view.wait()
         if view.value is None:
-            await ctx.followup.send(f'**{ctx_author_name}**, you didn\'t answer in time.')
+            await interaction.edit(view=None)
+            answer = f'**{ctx_author_name}**, you didn\'t answer in time.'
         elif view.value == 'confirm':
             await channel.send(embed=embed)
-            await functions.edit_interaction(interaction, view=None)
-            await ctx.followup.send('Message sent.')
+            await interaction.edit(view=None)
+            answer = 'Message sent.'
         else:
-            await functions.edit_interaction(interaction, view=None)
-            await ctx.followup.send('Sending aborted.')
+            await interaction.edit(view=None)
+            answer = 'Sending aborted.'
+        if ctx.is_app:
+            await ctx.followup.send(answer)
+        else:
+            await ctx.send(answer)
 
-    @dev.command()
-    async def support(self, ctx: discord.ApplicationContext):
+    @dev_group.command(name='support', description='Link to the dev support server', guild_ids=settings.DEV_GUILDS)
+    @commands.bot_has_permissions(send_messages=True)
+    async def dev_support(self, ctx: bridge.BridgeContext):
         """Link to the dev support server"""
         if ctx.author.id not in settings.DEV_IDS:
-            await ctx.respond(MSG_NOT_DEV, ephemeral=True)
+            if ctx.is_app: await ctx.respond(MSG_NOT_DEV, ephemeral=True)
             return
         await ctx.respond(
             f'Got some issues or questions running Navchi? Feel free to join the Navchi dev support server:\n'
             f'https://discord.gg/Kz2Vz2K4gy'
         )
 
-    @dev.command()
-    async def shutdown(self, ctx: discord.ApplicationContext):
+    @dev_group.command(name='shutdown', description='Shuts down the bot', guild_ids=settings.DEV_GUILDS)
+    @commands.bot_has_permissions(send_messages=True)
+    async def dev_shutdown(self, ctx: bridge.BridgeContext):
         """Shuts down the bot"""
         if ctx.author.id not in settings.DEV_IDS:
-            await ctx.respond(MSG_NOT_DEV, ephemeral=True)
+            if ctx.is_app: await ctx.respond(MSG_NOT_DEV, ephemeral=True)
             return
         ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
-        view = views.ConfirmCancelView(ctx, styles=[discord.ButtonStyle.red, discord.ButtonStyle.grey])
-        interaction = await ctx.respond(f'**{ctx_author_name}**, are you **SURE**?', view=view)
-        view.interaction_message = interaction
-        await view.wait()
-        if view.value is None:
-            await functions.edit_interaction(interaction, content=f'**{ctx_author_name}**, you didn\'t answer in time.',
-                                             view=None)
-        elif view.value == 'confirm':
-            await functions.edit_interaction(interaction, content='Shutting down.', view=None)
+        aborted = confirmed = timeout = False
+        answer = f'**{ctx_author_name}**, are you **SURE**?'
+        if ctx.is_app:
+            view = views.ConfirmCancelView(ctx, styles=[discord.ButtonStyle.red, discord.ButtonStyle.grey])
+            interaction = await ctx.respond(answer, view=view)
+            view.interaction_message = interaction
+            await view.wait()
+            if view.value is None:
+                timeout = True
+            elif view.value == 'confirm':
+                confirmed = True
+            else:
+                aborted = True
+        else:
+            def check(m: discord.Message) -> bool:
+                return m.author == ctx.author and m.channel == ctx.channel
+
+            interaction = await ctx.respond(f'{answer} `[yes/no]`')
+            try:
+                answer = await self.bot.wait_for('message', check=check, timeout=30)
+            except asyncio.TimeoutError:
+                timeout = True
+            if answer.content.lower() in ['yes','y']:
+                confirmed = True
+            else:
+                aborted = True
+        if timeout:
+            await interaction.edit(interaction, content=f'**{ctx_author_name}**, you didn\'t answer in time.', view=None)
+        elif confirmed:
+            await interaction.edit(content='Shutting down.', view=None)
             await self.bot.close()
         else:
-            await functions.edit_interaction(interaction, content='Shutdown aborted.', view=None)
+            await interaction.edit(content='Shutdown aborted.', view=None)
 
-    @dev.command()
-    async def cache(self, ctx: discord.ApplicationContext):
-        """Shows cache size"""
+    @dev_group.command(name='cache', description='Shows messagecache size', guild_ids=settings.DEV_GUILDS)
+    async def dev_cache(self, ctx: bridge.BridgeContext):
+        """Shows message cache size"""
         if ctx.author.id not in settings.DEV_IDS:
-            await ctx.respond(MSG_NOT_DEV, ephemeral=True)
+            if ctx.is_app: await ctx.respond(MSG_NOT_DEV, ephemeral=True)
             return
         from cache import messages
         cache_size = sys.getsizeof(messages._MESSAGE_CACHE)
@@ -281,11 +334,12 @@ class DevCog(commands.Cog):
             f'Message count: {message_count:,}\n'
         )
 
-    @dev.command(name='server-list')
-    async def server_list(self, ctx: discord.ApplicationContext):
-        """Lists the servers the bot is in by name"""
+    @dev_group.command(name='server-list', aliases=('servers',), description='List all servers the bot is in',
+                       guild_ids=settings.DEV_GUILDS)
+    async def dev_server_list(self, ctx: bridge.BridgeContext):
+        """List all servers the bot is inname"""
         if ctx.author.id not in settings.DEV_IDS:
-            await ctx.respond(MSG_NOT_DEV, ephemeral=True)
+            if ctx.is_app: await ctx.respond(MSG_NOT_DEV, ephemeral=True)
             return
         description = ''
         guilds = sorted(self.bot.guilds, key=lambda guild: guild.name)
@@ -303,11 +357,12 @@ class DevCog(commands.Cog):
         )
         await ctx.respond(embed=embed)
 
-    @dev.command()
-    async def consolidate(self, ctx: discord.ApplicationContext):
-        """Miriel test command. Consolidates tracking records older than 28 days manually"""
+    @dev_group.command(name='consolidate', description='Consolidates tracking records older than 28 days manually',
+                       guild_ids=settings.DEV_GUILDS)
+    async def dev_consolidate(self, ctx: bridge.BridgeContext):
+        """Consolidates tracking records older than 28 days manually"""
         if ctx.author.id not in settings.DEV_IDS:
-            await ctx.respond(MSG_NOT_DEV, ephemeral=True)
+            if ctx.is_app: await ctx.respond(MSG_NOT_DEV, ephemeral=True)
             return
         await ctx.defer()
         from datetime import datetime
@@ -342,15 +397,15 @@ class DevCog(commands.Cog):
         logs.logger.info(f'Consolidated {log_entry_count:,} log entries in {format_timespan(time_passed)} manually.')
         await ctx.respond(f'Consolidated {log_entry_count:,} log entries in {format_timespan(time_passed)}.')
 
-    @dev.command(name='leave-server')
-    async def leave_server(
+    @dev_group.command(name='leave-server', description='Removes Navchi from a specific guild', guild_ids=settings.DEV_GUILDS)
+    async def dev_leave_server(
         self,
-        ctx: discord.ApplicationContext,
-        guild_id: Option(str, 'ID of the server you want to leave'),
+        ctx: bridge.BridgeContext,
+        guild_id: BridgeOption(str, description='ID of the server you want to leave'),
     ) -> None:
-        """Removes Navi from a specific guild"""
+        """Removes Navchi from a specific guild"""
         if ctx.author.id not in settings.DEV_IDS:
-            await ctx.respond(MSG_NOT_DEV, ephemeral=True)
+            if ctx.is_app: await ctx.respond(MSG_NOT_DEV, ephemeral=True)
             return
         try:
             guild_id = int(guild_id)
@@ -363,7 +418,7 @@ class DevCog(commands.Cog):
             return
         view = views.ConfirmCancelView(ctx, styles=[discord.ButtonStyle.blurple, discord.ButtonStyle.grey])
         interaction = await ctx.respond(
-            f'Remove Navi from **{guild_to_leave.name}** (`{guild_to_leave.id}`)?',
+            f'Remove Navchi from **{guild_to_leave.name}** (`{guild_to_leave.id}`)?',
             view=view
         )
         view.interaction_message = interaction
@@ -378,11 +433,10 @@ class DevCog(commands.Cog):
                     f'Leaving the server failed with the following error:\n'
                     f'```\n{error}\n```'
                 )
-            await functions.edit_interaction(interaction,
-                                             content=f'Removed Navi from **{guild_to_leave.name}** (`{guild_to_leave.id}`).',
-                                             view=None)
+            await interaction.edit(content=f'Removed Navchi from **{guild_to_leave.name}** (`{guild_to_leave.id}`).',
+                                   view=None)
         else:
-            await functions.edit_interaction(interaction, content='Aborted.', view=None)
+            await interaction.edit(content='Aborted.', view=None)
 
 
 def setup(bot):

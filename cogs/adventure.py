@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import re
 
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 
 from cache import messages
 from database import errors, reminders, tracking, users
@@ -14,7 +14,7 @@ from resources import emojis, exceptions, functions, regex, settings, strings
 
 class AdventureCog(commands.Cog):
     """Cog that contains the adventure detection commands"""
-    def __init__(self, bot):
+    def __init__(self, bot: bridge.AutoShardedBot):
         self.bot = bot
 
     @commands.Cog.listener()
@@ -81,6 +81,7 @@ class AdventureCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_adventure.enabled: return
+                if not user_settings.area_20_cooldowns_enabled and user_settings.current_area == 20: return
                 if not slash_command:
                     last_adventure_mode = None
                     user_command_message_content = re.sub(r'\bh\b', 'hardmode', user_command_message.content.lower())
@@ -181,8 +182,7 @@ class AdventureCog(commands.Cog):
                     for stuff_name, stuff_emoji in found_stuff.items():
                         if stuff_name in message_content.lower():
                             await message.add_reaction(stuff_emoji)
-                if user_settings.auto_ready_enabled and user_settings.ready_after_all_commands:
-                    asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
+                asyncio.ensure_future(functions.call_ready_command(self.bot, message, user, user_settings, 'adventure'))
                 await functions.add_reminder_reaction(message, reminder, user_settings)
                 # Add an F if the user died
                 search_strings = [

@@ -5,16 +5,16 @@ from datetime import timedelta
 import re
 
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 
 from cache import messages
 from database import errors, reminders, users
-from resources import emojis, exceptions, functions, regex, settings
+from resources import exceptions, functions, regex, settings
 
 
 class HalloweenCog(commands.Cog):
     """Cog that contains the halloween detection"""
-    def __init__(self, bot):
+    def __init__(self, bot: bridge.AutoShardedBot):
         self.bot = bot
 
     @commands.Cog.listener()
@@ -148,6 +148,7 @@ class HalloweenCog(commands.Cog):
                     'behind': 'dodge',
                 }
                 answer = f'`{attacks_answers[attack].upper()}`'
+                
                 if user is not None:
                     if not user_settings.dnd_mode_enabled:
                         if user_settings.ping_after_message:
@@ -202,8 +203,7 @@ class HalloweenCog(commands.Cog):
                     await reminders.insert_user_reminder(user.id, 'boo', time_left,
                                                          message.channel.id, reminder_message)
                 )
-                if user_settings.auto_ready_enabled and user_settings.ready_after_all_commands:
-                    asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
+                asyncio.ensure_future(functions.call_ready_command(self.bot, message, user, user_settings, 'boo'))
                 await functions.add_reminder_reaction(message, reminder, user_settings)
 
 

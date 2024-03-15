@@ -5,7 +5,7 @@ from datetime import timedelta
 import re
 
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 
 from cache import messages
 from database import errors, reminders, users
@@ -14,7 +14,7 @@ from resources import exceptions, functions, regex, settings
 
 class BuyCog(commands.Cog):
     """Cog that contains the lootbox detection commands"""
-    def __init__(self, bot):
+    def __init__(self, bot: bridge.AutoShardedBot):
         self.bot = bot
 
     @commands.Cog.listener()
@@ -77,6 +77,7 @@ class BuyCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_lootbox.enabled: return
+                if not user_settings.area_20_cooldowns_enabled and user_settings.current_area == 20: return
                 lootbox_name = '[lootbox]' if user_settings.last_lootbox == '' else f'{user_settings.last_lootbox} lootbox'
                 user_command = await functions.get_slash_command(user_settings, 'buy')
                 if user_settings.slash_mentions_enabled:
@@ -154,8 +155,7 @@ class BuyCog(commands.Cog):
                     await reminders.insert_user_reminder(user.id, 'lootbox', time_left,
                                                          message.channel.id, reminder_message)
                 )
-                if user_settings.auto_ready_enabled and user_settings.ready_after_all_commands:
-                    asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
+                asyncio.ensure_future(functions.call_ready_command(self.bot, message, user, user_settings, 'lootbox'))
                 await functions.add_reminder_reaction(message, reminder, user_settings)
 
 

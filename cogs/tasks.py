@@ -9,7 +9,7 @@ import sqlite3
 from typing import List
 
 import discord
-from discord.ext import commands, tasks
+from discord.ext import bridge, commands, tasks
 
 from cache import messages
 from database import clans, errors, reminders, tracking, users
@@ -21,7 +21,7 @@ running_tasks = {}
 
 class TasksCog(commands.Cog):
     """Cog with tasks"""
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: bridge.AutoShardedBot):
         self.bot = bot
 
     # Task management
@@ -105,6 +105,16 @@ class TasksCog(commands.Cog):
                         await reminders.increase_reminder_time_percentage(user.id, 95, strings.ROUND_CARD_AFFECTED_ACTIVITIES,
                                                                           user_settings)
                         await user_settings.update(round_card_active=False)
+                    elif reminder.activity == 'mega-boost':
+                        try:
+                            await reminders.get_user_reminder(user_settings.user_id, 'potion-potion')
+                        except exceptions.NoDataFoundError:
+                            await user_settings.update(auto_healing_active=False)
+                    elif reminder.activity == 'potion-potion':
+                        try:
+                            await reminders.get_user_reminder(user_settings.user_id, 'mega-boost')
+                        except exceptions.NoDataFoundError:
+                            await user_settings.update(auto_healing_active=False)
                     for message in messages.values():
                         for found_id in re.findall(r'<@!?(\d{16,20})>', message):
                             if int(found_id) not in user_settings.alts and int(found_id) != user_settings.user_id:
@@ -183,6 +193,7 @@ class TasksCog(commands.Cog):
         self.consolidate_tracking_log.start()
         self.delete_old_messages_from_cache.start()
         self.reset_trade_daily_done.start()
+        self.disable_event_reduction.start()
 
     # Tasks
     @tasks.loop(seconds=0.5)
@@ -357,6 +368,19 @@ class TasksCog(commands.Cog):
         deleted_messages_count = await messages.delete_old_messages(timedelta(minutes=5))
         if settings.DEBUG_MODE:
             logs.logger.debug(f'Deleted {deleted_messages_count} messages from message cache.')
+
+    @tasks.loop(seconds=60)
+    async def disable_event_reduction(self) -> None:
+        """Task that sets all event reductions to 0. Set time when needed (UTC)."""
+        year, month, day = 2024, 2, 29
+        hour, minute = 23, 55
+        start_time = datetime.utcnow().replace(microsecond=0)
+        if (start_time.year == year and start_time.month == month and start_time.day == day and start_time.hour == hour
+            and start_time.minute == minute):
+            from database import cooldowns
+            all_cooldowns = await cooldowns.get_all_cooldowns()
+            for cooldown in all_cooldowns:
+                await cooldown.update(event_reduction_slash=0, event_reduction_mention=0)
 
 # Initialization
 def setup(bot):

@@ -4,7 +4,7 @@ from datetime import timedelta
 import re
 
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 from datetime import timedelta
 
 from cache import messages
@@ -15,7 +15,7 @@ from resources import emojis, exceptions, functions, regex, settings, strings
 
 class CooldownsCog(commands.Cog):
     """Cog that contains the cooldowns detection commands"""
-    def __init__(self, bot):
+    def __init__(self, bot: bridge.AutoShardedBot):
         self.bot = bot
 
     @commands.Cog.listener()
@@ -92,6 +92,7 @@ class CooldownsCog(commands.Cog):
             except exceptions.FirstTimeUserError:
                 return
             if not user_settings.bot_enabled: return
+            if not user_settings.area_20_cooldowns_enabled and user_settings.current_area == 20: return
             # Anniversary event reduction update
             search_patterns = [
                 r'anniversary event cooldown reduction\*\*: (\d+?)%',
@@ -104,6 +105,7 @@ class CooldownsCog(commands.Cog):
                 event_reduction = int(anniversary_event_match.group(1))
                 anniversary_activities = [
                     'arena',
+                    'card-hand',
                     'quest',
                     'dungeon-miniboss',
                     'lootbox',

@@ -4,7 +4,7 @@ from datetime import timedelta
 import re
 
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 
 from cache import messages
 from database import errors, reminders, users
@@ -13,7 +13,7 @@ from resources import exceptions, functions, regex, settings
 
 class DuelCog(commands.Cog):
     """Cog that contains the duel detection commands"""
-    def __init__(self, bot):
+    def __init__(self, bot: bridge.AutoShardedBot):
         self.bot = bot
 
     @commands.Cog.listener()
@@ -78,6 +78,7 @@ class DuelCog(commands.Cog):
                     if not user_name_match or not embed_users: return
                 if interaction_user not in embed_users: return
                 if not user_settings.bot_enabled or not user_settings.alert_duel.enabled: return
+                if not user_settings.area_20_cooldowns_enabled and user_settings.current_area == 20: return
                 user_command = await functions.get_slash_command(user_settings, 'duel')
                 timestring_match = await functions.get_match_from_patterns(regex.PATTERNS_COOLDOWN_TIMESTRING,
                                                                            message_title)

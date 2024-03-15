@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import re
 
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 
 from cache import messages
 from database import errors, reminders, tracking, users
@@ -14,7 +14,7 @@ from resources import emojis, exceptions, functions, regex, settings, strings
 
 class WorkCog(commands.Cog):
     """Cog that contains the work detection commands"""
-    def __init__(self, bot):
+    def __init__(self, bot: bridge.AutoShardedBot):
         self.bot = bot
 
     @commands.Cog.listener()
@@ -81,6 +81,7 @@ class WorkCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_work.enabled: return
+                if not user_settings.area_20_cooldowns_enabled and user_settings.current_area == 20: return
                 if slash_command:
                     interaction = await functions.get_interaction(message)
                     last_work_command = interaction.name
@@ -121,7 +122,7 @@ class WorkCog(commands.Cog):
                 if all(string not in line.lower() for string in filter_strings):
                     message_content = f'{message_content}\n{line}'
             message_content = message_content.strip()
-            
+
             # Work
             excluded_strings = [
                 'hunting together', #English, hunt
@@ -131,8 +132,8 @@ class WorkCog(commands.Cog):
                 '** encontr', #Spanish, Portuguese, hunt/adventure
                 '** plant', #English, Spanish, Portuguese, farm
                 '** throws', #English, world boss
-                '** tiró', #Spanish, MISSING, world boss
-                '** jogou', #Portuguese, MISSING, world boss
+                '** tiró', #TODO: Spanish, world boss
+                '** jogou', #TODO: Portuguese,world boss
                 'new quest', #English, quest
                 'nueva misión', #Spanish, quest
                 'nova missão', #Portuguese, quest
@@ -269,8 +270,7 @@ class WorkCog(commands.Cog):
                     await reminders.insert_user_reminder(user.id, 'work', time_left,
                                                          message.channel.id, reminder_message)
                 )
-                if user_settings.auto_ready_enabled and user_settings.ready_after_all_commands:
-                    asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
+                asyncio.ensure_future(functions.call_ready_command(self.bot, message, user, user_settings, 'work'))
                 await functions.add_reminder_reaction(message, reminder, user_settings)
                 if user_settings.reactions_enabled:
                     search_strings_chop_proc = [
@@ -366,8 +366,7 @@ class WorkCog(commands.Cog):
                         await reminders.insert_user_reminder(user.id, 'work', time_left,
                                                             message.channel.id, reminder_message)
                     )
-                    if user_settings.auto_ready_enabled and user_settings.ready_after_all_commands:
-                        asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
+                    asyncio.ensure_future(functions.call_ready_command(self.bot, message, user, user_settings, 'work'))
                     await functions.add_reminder_reaction(message, reminder, user_settings)
 
             # Work event slash (all languages)
@@ -405,8 +404,7 @@ class WorkCog(commands.Cog):
                         await reminders.insert_user_reminder(user.id, 'work', time_left,
                                                             message.channel.id, reminder_message)
                     )
-                    if user_settings.auto_ready_enabled and user_settings.ready_after_all_commands:
-                        asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
+                    asyncio.ensure_future(functions.call_ready_command(self.bot, message, user, user_settings, 'work'))
                     await functions.add_reminder_reaction(message, reminder, user_settings)
 
 

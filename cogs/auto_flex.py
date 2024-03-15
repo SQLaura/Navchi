@@ -5,7 +5,7 @@ import random
 import re
 
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 
 from cache import messages
 from database import errors, guilds, users
@@ -35,7 +35,8 @@ FLEX_TITLES = {
     'lb_edgy_ultra': strings.FLEX_TITLES_EDGY_ULTRA,
     'lb_godly': strings.FLEX_TITLES_LB_GODLY,
     'lb_godly_partner': strings.FLEX_TITLES_LB_GODLY_PARTNER,
-    'lb_godly_tt': strings.FLEX_TITLES_GODLY_TT,
+    'lb_godly_tt': strings.FLEX_TITLES_GODLY_VOID_TT,
+    'lb_void_tt': strings.FLEX_TITLES_GODLY_VOID_TT,
     'lb_omega_multiple': strings.FLEX_TITLES_LB_OMEGA_MULTIPLE,
     'lb_omega_no_hardmode': strings.FLEX_TITLES_LB_OMEGA_NOHARDMODE,
     'lb_omega_partner': strings.FLEX_TITLES_LB_OMEGA_PARTNER,
@@ -111,7 +112,8 @@ FLEX_THUMBNAILS = {
     'lb_edgy_ultra': strings.FLEX_THUMBNAILS_EDGY_ULTRA,
     'lb_godly': strings.FLEX_THUMBNAILS_LB_GODLY,
     'lb_godly_partner': strings.FLEX_THUMBNAILS_LB_GODLY_PARTNER,
-    'lb_godly_tt': strings.FLEX_THUMBNAILS_GODLY_TT,
+    'lb_godly_tt': strings.FLEX_THUMBNAILS_GODLY_VOID_TT,
+    'lb_void_tt': strings.FLEX_THUMBNAILS_GODLY_VOID_TT,
     'lb_omega_multiple': strings.FLEX_THUMBNAILS_LB_OMEGA_MULTIPLE,
     'lb_omega_no_hardmode': strings.FLEX_THUMBNAILS_LB_OMEGA_NOHARDMODE,
     'lb_omega_partner': strings.FLEX_THUMBNAILS_LB_OMEGA_PARTNER,
@@ -207,7 +209,7 @@ FLEX_COLUMNS = {
 
 class AutoFlexCog(commands.Cog):
     """Cog that contains the auto flex detection"""
-    def __init__(self, bot):
+    def __init__(self, bot: bridge.AutoShardedBot):
         self.bot = bot
 
     async def send_auto_flex_message(self, message: discord.Message, guild_settings: guilds.Guild,
@@ -316,6 +318,8 @@ class AutoFlexCog(commands.Cog):
                     event = 'lb_omega_ultra'
                 elif 'godly lootbox' in embed_field0_name.lower() and '<:timecapsule' in embed_field0_value.lower():
                     event = 'lb_godly_tt'
+                elif 'void lootbox' in embed_field0_name.lower() and '<:timecapsule' in embed_field0_value.lower():
+                    event = 'lb_void_tt'
                 elif '<:partypopper' in embed_field0_value.lower():
                     event = 'lb_party_popper'
                 else:
@@ -381,6 +385,18 @@ class AutoFlexCog(commands.Cog):
                         f'So.\n**{user.name}** opened a {emojis.LB_GODLY} GODLY lootbox. I mean that\'s cool.\n'
                         f'__BUT__. For some reason they found **{amount}** {emojis.TIME_CAPSULE} **time capsule** in there.\n'
                         f'This hasn\'t happened often yet, so expect to get blacklisted from the game.'
+                    )
+                elif event == 'lb_void_tt':
+                    match = re.search(r'\+(.+?) (.+?) time capsule', embed_field0_value.lower())
+                    if not match:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Time capsule amount not found in auto flex void lootbox message.', message)
+                        return
+                    amount = match.group(1)
+                    description = (
+                        f'**{user.name}** decided to not contribue their {emojis.LB_VOID} VOID lootbox and open it.\n'
+                        f'They should be ashamed.\n'
+                        f'Okay, they probably are not, because they got **{amount}** {emojis.TIME_CAPSULE} **time capsule** as a reward for their deceit.'
                     )
                 elif event == 'lb_party_popper':
                     match = re.search(r'\+(.+?) (.+?) party popper', embed_field0_value.lower())
@@ -717,8 +733,8 @@ class AutoFlexCog(commands.Cog):
                 added_tts = 1
                 search_strings = [
                     r'managed to jump out', #English
-                    r'managed to jump out', #Spanish, MISSING
-                    r'managed to jump out', #Portuguese, MISSING
+                    r'managed to jump out', #TODO: Spanish
+                    r'managed to jump out', #TODO: Portuguese
                 ]
                 if any(search_string in embed_description.lower() for search_string in search_strings):
                     added_tts += 1
@@ -836,6 +852,78 @@ class AutoFlexCog(commands.Cog):
                     description = (
                         f'**{user.name}** traveled in time for **999** times and thus broke Epic RPG Guide. Good job.\n'
                         f'Hope you\'re proud. Damn it.'
+                    )
+                elif time_travel_count_old < 1_100 and time_travel_count_new >= 1_100:
+                    event = 'time_travel_1100'
+                    description = (
+                        f'**{user.name}** needs therapy. I mean time traveled **1,100** times.'
+                    )
+                elif time_travel_count_old < 1_200 and time_travel_count_new >= 1_200:
+                    event = 'time_travel_1200'
+                    description = (
+                        f'**{user.name}** time traveled **1,200** times which makes them rather smol if you ask me.'
+                    )
+                elif time_travel_count_old < 1_300 and time_travel_count_new >= 1_300:
+                    event = 'time_travel_1300'
+                    description = (
+                        f'**{user.name}** is increasing their time travel count to **1,300**.\n'
+                        f'Now, some people would call a doctor at this point. Maybe even **the** doctor.'
+                    )
+                elif time_travel_count_old < 1_400 and time_travel_count_new >= 1_400:
+                    event = 'time_travel_1400'
+                    description = (
+                        f'La laaa laaaah, dee daaaahh, running out of ideas, shoo beee dooo...\n'
+                        f'What happened, you ask? Well, **{user.name}** reached TT **1,400**. The usual.'
+                    )
+                elif time_travel_count_old < 1_500 and time_travel_count_new >= 1_500:
+                    event = 'time_travel_1500'
+                    description = (
+                        f'One thousand five hundred time travels.\n'
+                        f'**{user.name}** seems to quite mad.'
+                    )
+                elif time_travel_count_old < 1_600 and time_travel_count_new >= 1_600:
+                    event = 'time_travel_1600'
+                    description = (
+                        f'Ah. Time. A beautiful concept. Some even travel through it.\n'
+                        f'And then there\'s **{user.name}**, doing it freaking **1,600** times.'
+                    )
+                elif time_travel_count_old < 1_700 and time_travel_count_new >= 1_700:
+                    event = 'time_travel_1700'
+                    description = (
+                        f'Did you hear that? I think some fuse blew.\n'
+                        f'Ah yes. Must be **{user.name}**\'s time machine, it finally broke after **1,700** time travels.'
+                    )
+                elif time_travel_count_old < 1_800 and time_travel_count_new >= 1_800:
+                    event = 'time_travel_1800'
+                    description = (
+                        f'Let me introduce you to **{user.name}**, the person who time traveled **1,800** times.\n'
+                        f'I\'m afraid they got quite a few screws loose.'
+                    )
+                elif time_travel_count_old < 1_900 and time_travel_count_new >= 1_900:
+                    event = 'time_travel_1900'
+                    description = (
+                        f'If you see this, then someone triggered it. **{user.name}**, to be exact.\n'
+                        f'The problem is, it requires **1,900** time travels to trigger this.\n'
+                        f'Make of that what you will.'
+                    )
+                elif time_travel_count_old < 2_000 and time_travel_count_new >= 2_000:
+                    event = 'time_travel_2000'
+                    description = (
+                        f'Once upon a time, **{user.name}** found a game called EPIC RPG.\n'
+                        f'It was quite a nice little game, so they decided to play a bit, maybe even TT once or thrice.\n'
+                        f'They happened to like it, so they kept going a bit longer.\n'
+                        f'They kept going.\n'
+                        f'And going.\n'
+                        f'They grew older.\n'
+                        f'Still going.\n'
+                        f'Jesus, why don\'t they stop.\n'
+                        f'Call an ambulance.\n'
+                        f'Is this normal?\n'
+                        f'SOMEONE HELP THEM.\n'
+                        f'Oh lord.\n'
+                        f'STILL GOING.\n'
+                        f'Oh god. They reached **2,000** time travels.\n'
+                        f'Stawp.'
                     )
                 else:
                     return
@@ -1163,94 +1251,96 @@ class AutoFlexCog(commands.Cog):
             search_strings_excluded = [
                 'contribu', #All languages, void contributions
                 'epic bundle', #All languages, halloween shop
+                'epic coins', #All languages, epic shop
             ]
-            if (any(search_string in message_content.lower() for search_string in search_strings)
-                and all(search_string not in message_content.lower() for search_string in search_strings_excluded)
-                or ('nice!' in message_content.lower() and 'watermelon' in message_content.lower())):
-                guild_settings: guilds.Guild = await guilds.get_guild(message.guild.id)
-                if not guild_settings.auto_flex_enabled: return
-                user = await functions.get_interaction_user(message)
-                search_patterns = [
-                    r'\?\? \*\*(.+?)\*\* got (.+?) (.+?) (?:__)?\*\*(.+?)(?:\n|__|$)', #English ULTRA log
-                    r'!!1 (.+?)\*\* got (.+?) (.+?) (?:__)?\*\*(.+?)(?:\n|__|$)', #English HYPER log
-                    r' \*\*(.+?)\*\* got (.+?) (.+?) __\*\*(ultimate log)\*\*__', #English ULTIMATE log
-                    r'\*\*(.+?)\*\* also got (.+?) (.+?) \*\*(epic berry)\*\*', #English EPIC berry
-                    r'\*\*(.+?)\*\* got (.+?) (.+?) (?:__)?\*\*(.+?)(?:\n|__|$)', #English SUPER fish, watermelon
-                    r'\?\? \*\*(.+?)\*\* cons(?:e|i)gui(?:ó|u) (.+?) (.+?) (?:__)?\*\*(.+?)(?:\n|__|$)', #Spanish/Portuguese ULTRA log
-                    r'!!1 (.+?)\*\* cons(?:e|i)gui(?:ó|u) (.+?) (.+?) (?:__)?\*\*(.+?)(?:\n|__|$)', #Spanish/Portuguese HYPER log
-                    r'\*\*(.+?)\*\* cons(?:e|i)gui(?:ó|u) (.+?) (.+?) (?:__)?\*\*(.+?)(?:\n|__|$)', #Spanish/Portuguese ULTIMATE log, SUPER fish, watermelon
-                ]
-                item_events = {
-                    'epic berry': 'work_epicberry',
-                    'hyper log': 'work_hyperlog',
-                    'super fish': 'work_superfish',
-                    'ultimate log': 'work_ultimatelog',
-                    'ultra log': 'work_ultralog',
-                    'watermelon': 'work_watermelon',
-                }
-                match = await functions.get_match_from_patterns(search_patterns, message_content)
-                if not match:
-                    await functions.add_warning_reaction(message)
-                    await errors.log_error('Couldn\'t find auto flex data in work message.', message)
-                    return
-                user_name = match.group(1)
-                item_amount = int(match.group(2))
-                item_name = match.group(4).lower().replace('**','').strip()
-                if item_name not in item_events: return
-                event = item_events[item_name]
-                if user is None:
-                    user_command_message = (
-                        await messages.find_message(message.channel.id, regex.COMMAND_WORK,
-                                                    user_name=user_name)
-                    )
-                    if user_command_message is None:
+            if len(message_content.split('\n')) > 1:
+                if (any(search_string in message_content.lower() for search_string in search_strings)
+                    and all(search_string not in message_content.lower() for search_string in search_strings_excluded)
+                    or ('nice!' in message_content.lower() and 'watermelon' in message_content.lower())):
+                    guild_settings: guilds.Guild = await guilds.get_guild(message.guild.id)
+                    if not guild_settings.auto_flex_enabled: return
+                    user = await functions.get_interaction_user(message)
+                    search_patterns = [
+                        r'\?\? \*\*(.+?)\*\* got (.+?) (.+?) (?:__)?\*\*(.+?)(?:\n|__|$)', #English ULTRA log
+                        r'!!1 (.+?)\*\* got (.+?) (.+?) (?:__)?\*\*(.+?)(?:\n|__|$)', #English HYPER log
+                        r' \*\*(.+?)\*\* got (.+?) (.+?) __\*\*(ultimate log)\*\*__', #English ULTIMATE log
+                        r'\*\*(.+?)\*\* also got (.+?) (.+?) \*\*(epic berry)\*\*', #English EPIC berry
+                        r'\*\*(.+?)\*\* got (.+?) (.+?) (?:__)?\*\*(.+?)(?:\n|__|$)', #English SUPER fish, watermelon
+                        r'\?\? \*\*(.+?)\*\* cons(?:e|i)gui(?:ó|u) (.+?) (.+?) (?:__)?\*\*(.+?)(?:\n|__|$)', #Spanish/Portuguese ULTRA log
+                        r'!!1 (.+?)\*\* cons(?:e|i)gui(?:ó|u) (.+?) (.+?) (?:__)?\*\*(.+?)(?:\n|__|$)', #Spanish/Portuguese HYPER log
+                        r'\*\*(.+?)\*\* cons(?:e|i)gui(?:ó|u) (.+?) (.+?) (?:__)?\*\*(.+?)(?:\n|__|$)', #Spanish/Portuguese ULTIMATE log, SUPER fish, watermelon
+                    ]
+                    item_events = {
+                        'epic berry': 'work_epicberry',
+                        'hyper log': 'work_hyperlog',
+                        'super fish': 'work_superfish',
+                        'ultimate log': 'work_ultimatelog',
+                        'ultra log': 'work_ultralog',
+                        'watermelon': 'work_watermelon',
+                    }
+                    match = await functions.get_match_from_patterns(search_patterns, message_content)
+                    if not match:
                         await functions.add_warning_reaction(message)
-                        await errors.log_error('Couldn\'t find user for auto flex work message.', message)
+                        await errors.log_error('Couldn\'t find auto flex data in work message.', message)
                         return
-                    user = user_command_message.author
-                try:
-                    user_settings: users.User = await users.get_user(user.id)
-                except exceptions.FirstTimeUserError:
-                    return
-                if not user_settings.bot_enabled or not user_settings.auto_flex_enabled: return
+                    user_name = match.group(1)
+                    item_amount = int(match.group(2))
+                    item_name = match.group(4).lower().replace('**','').strip()
+                    if item_name not in item_events: return
+                    event = item_events[item_name]
+                    if user is None:
+                        user_command_message = (
+                            await messages.find_message(message.channel.id, regex.COMMAND_WORK,
+                                                        user_name=user_name)
+                        )
+                        if user_command_message is None:
+                            await functions.add_warning_reaction(message)
+                            await errors.log_error('Couldn\'t find user for auto flex work message.', message)
+                            return
+                        user = user_command_message.author
+                    try:
+                        user_settings: users.User = await users.get_user(user.id)
+                    except exceptions.FirstTimeUserError:
+                        return
+                    if not user_settings.bot_enabled or not user_settings.auto_flex_enabled: return
 
-                if event == 'work_ultimatelog':
-                    description = (
-                        f'**{user_name}** did some really weird timber magic stuff and found **{item_amount:,}** '
-                        f'{emojis.LOG_ULTIMATE} **ULTIMATE logs**!\n'
-                        f'Not sure this is allowed.'
-                    )
-                elif event == 'work_ultralog':
-                    description = (
-                        f'**{user_name}** just cut down **{item_amount:,}** {emojis.LOG_ULTRA} **ULTRA logs** with '
-                        f'three chainsaws.\n'
-                        f'One of them in their mouth... uh... okay.'
-                    )
-                elif event == 'work_watermelon':
-                    description = (
-                        f'**{user_name}** got tired of apples and bananas and stole **{item_amount:,}** '
-                        f'{emojis.WATERMELON} **watermelons** instead.\n'
-                        f'They should be ashamed (and make cocktails).'
-                    )
-                elif event == 'work_superfish':
-                    description = (
-                        f'**{user_name}** went fishing and found **{item_amount:,}** weird purple {emojis.FISH_SUPER} '
-                        f'**SUPER fish** in the river.\n'
-                        f'Let\'s eat them, imagine wasting those on a VOID armor or something.'
-                    )
-                elif event == 'work_hyperlog':
-                    description = (
-                        f'**{user_name}** took a walk in the park when suddenly a tree fell over and split into '
-                        f'**{item_amount:,}** {emojis.LOG_HYPER} **HYPER logs**.'
-                    )
-                elif event == 'work_epicberry':
-                    description = (
-                        f'**{user_name}** is making fruit salad!\n'
-                        f'It will consist of bananas, apples and '
-                        f'**{item_amount:,}** {emojis.EPIC_BERRY} **EPIC berries** they just randomly found '
-                        f'while gathering the rest.\n'
-                    )
-                await self.send_auto_flex_message(message, guild_settings, user_settings, user, event, description)
+                    if event == 'work_ultimatelog':
+                        description = (
+                            f'**{user_name}** did some really weird timber magic stuff and found **{item_amount:,}** '
+                            f'{emojis.LOG_ULTIMATE} **ULTIMATE logs**!\n'
+                            f'Not sure this is allowed.'
+                        )
+                    elif event == 'work_ultralog':
+                        description = (
+                            f'**{user_name}** just cut down **{item_amount:,}** {emojis.LOG_ULTRA} **ULTRA logs** with '
+                            f'three chainsaws.\n'
+                            f'One of them in their mouth... uh... okay.'
+                        )
+                    elif event == 'work_watermelon':
+                        description = (
+                            f'**{user_name}** got tired of apples and bananas and stole **{item_amount:,}** '
+                            f'{emojis.WATERMELON} **watermelons** instead.\n'
+                            f'They should be ashamed (and make cocktails).'
+                        )
+                    elif event == 'work_superfish':
+                        description = (
+                            f'**{user_name}** went fishing and found **{item_amount:,}** weird purple {emojis.FISH_SUPER} '
+                            f'**SUPER fish** in the river.\n'
+                            f'Let\'s eat them, imagine wasting those on a VOID armor or something.'
+                        )
+                    elif event == 'work_hyperlog':
+                        description = (
+                            f'**{user_name}** took a walk in the park when suddenly a tree fell over and split into '
+                            f'**{item_amount:,}** {emojis.LOG_HYPER} **HYPER logs**.'
+                        )
+                    elif event == 'work_epicberry':
+                        description = (
+                            f'**{user_name}** is making fruit salad!\n'
+                            f'It will consist of bananas, apples and '
+                            f'**{item_amount:,}** {emojis.EPIC_BERRY} **EPIC berries** they just randomly found '
+                            f'while gathering the rest.\n'
+                        )
+                    await self.send_auto_flex_message(message, guild_settings, user_settings, user, event, description)
 
             # Christmas loot, non-embed
             search_strings = [
@@ -1328,7 +1418,7 @@ class AutoFlexCog(commands.Cog):
             search_strings = [
                 'stuck in the chimney...', #English
                 'atascó en la chimenea...', #Spanish
-                'atascó en la chimenea...', #Portuguese, MISSING
+                'atascó en la chimenea...', #TODO: Portuguese
             ]
             if (any(search_string in message_content.lower() for search_string in search_strings)):
                 guild_settings: guilds.Guild = await guilds.get_guild(message.guild.id)
@@ -1566,7 +1656,7 @@ class AutoFlexCog(commands.Cog):
                         message_content_user = message_content_partner = message_content
                     else:
                         search_patterns_user = search_patterns_partner = search_patterns_together_new
-                        search_patterns_user_lost = search_patterns_together_new_lost
+                        search_patterns_user_lost = search_patterns_partner_lost = search_patterns_together_new_lost
                         partner_loot_start = message_content.find(f'**{partner_name}**:')
                         message_content_user = message_content[:partner_loot_start]
                         message_content_partner = message_content[partner_loot_start:]

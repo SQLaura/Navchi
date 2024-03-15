@@ -3,16 +3,16 @@
 import re
 
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 
 from cache import messages
-from database import errors, users
+from database import errors, reminders, users
 from resources import exceptions, functions, regex, settings, strings
 
 
 class CurrentAreaCog(commands.Cog):
     """Cog that contains all commands related to the ruby counter"""
-    def __init__(self, bot):
+    def __init__(self, bot: bridge.AutoShardedBot):
         self.bot = bot
 
     @commands.Cog.listener()
@@ -75,6 +75,11 @@ class CurrentAreaCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled: return
                 await user_settings.update(current_area=1)
+                try:
+                    time_potion_reminder = await reminders.get_user_reminder(user.id, 'time-potion')
+                    await time_potion_reminder.delete()
+                except exceptions.NoDataFoundError:
+                    pass
 
             # Set current area from profile
             search_strings = [
@@ -214,9 +219,9 @@ class CurrentAreaCog(commands.Cog):
                 'has moved to the area #', #English, area change
                 'starts to fly and travels to the next area!', #English, candy cane
                 'se movio al área #', #Spanish, area change
-                'se movio al área #', #Spanish, candy cane, MISSING
-                'foi movido para a área #', #Portuguese, area change
-                'foi movido para a área #', #Portuguese, candy cane, MISSING
+                'se movio al área #', #TODO: Spanish, candy cane
+                'foi movido para a área #', #TODO: Portuguese, area change
+                'foi movido para a área #', #TODO: Portuguese, candy cane
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user_name = None

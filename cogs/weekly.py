@@ -5,7 +5,7 @@ from datetime import timedelta
 import re
 
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 
 from cache import messages
 from database import errors, reminders, users
@@ -14,7 +14,7 @@ from resources import exceptions, functions, regex, settings
 
 class WeeklyCog(commands.Cog):
     """Cog that contains the weekly detection commands"""
-    def __init__(self, bot):
+    def __init__(self, bot: bridge.AutoShardedBot):
         self.bot = bot
 
     @commands.Cog.listener()
@@ -76,6 +76,7 @@ class WeeklyCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_weekly.enabled: return
+                if not user_settings.area_20_cooldowns_enabled and user_settings.current_area == 20: return
                 user_command = await functions.get_slash_command(user_settings, 'weekly')
                 timestring_match = await functions.get_match_from_patterns(regex.PATTERNS_COOLDOWN_TIMESTRING,
                                                                            message_title)
@@ -132,8 +133,7 @@ class WeeklyCog(commands.Cog):
                     await reminders.insert_user_reminder(user.id, 'weekly', time_left,
                                                          message.channel.id, reminder_message)
                 )
-                if user_settings.auto_ready_enabled and user_settings.ready_after_all_commands:
-                    asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
+                asyncio.ensure_future(functions.call_ready_command(self.bot, message, user, user_settings, 'weekly'))
                 await functions.add_reminder_reaction(message, reminder, user_settings)
 
 

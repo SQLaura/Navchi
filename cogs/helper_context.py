@@ -3,7 +3,7 @@
 import re
 
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 
 from cache import messages
 from database import errors, users
@@ -12,7 +12,7 @@ from resources import exceptions, functions, regex, settings, strings
 
 class HelperContextCog(commands.Cog):
     """Cog that contains the training helper detection"""
-    def __init__(self, bot):
+    def __init__(self, bot: bridge.AutoShardedBot):
         self.bot = bot
 
     @commands.Cog.listener()
@@ -242,8 +242,8 @@ class HelperContextCog(commands.Cog):
 
             search_strings = [
                 'is now in the jail', #English
-                'is now in the jail', #Spanish, MISSING
-                'is now in the jail', #Portuguese, MISSING
+                'is now in the jail', #TODO: Spanish
+                'is now in the jail', #TODO: Portuguese
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)

@@ -4,7 +4,7 @@ from datetime import timedelta
 import re
 
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 
 from cache import messages
 from database import errors, reminders, users
@@ -13,7 +13,7 @@ from resources import exceptions, functions, regex, settings
 
 class ArenaCog(commands.Cog):
     """Cog that contains the arena detection commands"""
-    def __init__(self, bot):
+    def __init__(self, bot: bridge.AutoShardedBot):
         self.bot = bot
 
     @commands.Cog.listener()
@@ -77,6 +77,7 @@ class ArenaCog(commands.Cog):
                     return
             if interaction_user not in embed_users: return
             if not user_settings.bot_enabled or not user_settings.alert_arena.enabled: return
+            if not user_settings.area_20_cooldowns_enabled and user_settings.current_area == 20: return
             user_command = await functions.get_slash_command(user_settings, 'arena')
             timestring_match = await functions.get_match_from_patterns(regex.PATTERNS_COOLDOWN_TIMESTRING,
                                                                        message_title)

@@ -4,7 +4,7 @@ from datetime import timedelta
 import re
 
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 
 from cache import messages
 from database import errors, reminders, users
@@ -13,7 +13,7 @@ from resources import emojis, exceptions, functions, regex, settings
 
 class DungeonMinibossCog(commands.Cog):
     """Cog that contains the dungeon/miniboss detection commands"""
-    def __init__(self, bot):
+    def __init__(self, bot: bridge.AutoShardedBot):
         self.bot = bot
 
     @commands.Cog.listener()
@@ -45,9 +45,9 @@ class DungeonMinibossCog(commands.Cog):
 
             # Dungeon / Miniboss cooldown
             search_strings = [
-                'you have been in a fight with a boss recently', #English
-                'has estado en una pelea con un boss recientemente', #Spanish
-                'você esteve em uma briga com um boss recentemente', #Portuguese
+                'been in a fight with a boss recently', #English
+                'en una pelea con un boss recientemente', #Spanish
+                'em uma briga com um boss recentemente', #Portuguese
             ]
             if any(search_string in message_title.lower() for search_string in search_strings):
                 user_id = user_name = user_command_message = None
@@ -78,6 +78,7 @@ class DungeonMinibossCog(commands.Cog):
                         return
                 if interaction_user not in embed_users: return
                 if not user_settings.bot_enabled or not user_settings.alert_dungeon_miniboss.enabled: return
+                if not user_settings.area_20_cooldowns_enabled and user_settings.current_area == 20: return
                 command_dungeon = await functions.get_slash_command(user_settings, 'dungeon')
                 command_miniboss = await functions.get_slash_command(user_settings, 'miniboss')
                 user_command = f"{command_dungeon} or {command_miniboss}"

@@ -5,7 +5,7 @@ import random
 import re
 
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 
 from database import reminders, users
 from resources import exceptions, functions, settings
@@ -13,7 +13,7 @@ from resources import exceptions, functions, settings
 
 class MaintenanceCog(commands.Cog):
     """Cog that contains the celebration event detection commands"""
-    def __init__(self, bot):
+    def __init__(self, bot: bridge.AutoShardedBot):
         self.bot = bot
 
     @commands.Cog.listener()
@@ -40,8 +40,8 @@ class MaintenanceCog(commands.Cog):
             # Cel Multiply cooldown
             search_strings = [
                 'the bot is under maintenance!', #English
-                'the bot is under maintenance!', #Spanish, MISSING
-                'the bot is under maintenance!', #Portuguese, MISSING
+                'the bot is under maintenance!', #TODO: Spanish
+                'the bot is under maintenance!', #TODO: Portuguese
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user = message.mentions[0]

@@ -1,11 +1,9 @@
 # main.py
 """Contains error handling and the help and about commands"""
 
-from typing import Union
-
 import discord
-from discord.ext import commands
-from discord.commands import slash_command
+from discord import slash_command
+from discord.ext import bridge, commands
 
 from content import main
 from database import errors, guilds
@@ -14,42 +12,55 @@ from resources import exceptions, functions, logs, settings
 
 class MainCog(commands.Cog):
     """Cog with events and help and about commands"""
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: bridge.AutoShardedBot):
         self.bot = bot
 
-    # Commands
-    @slash_command(name='event-reductions')
-    async def event_reductions(self, ctx: discord.ApplicationContext) -> None:
+    # Bridge commands
+    @bridge.bridge_command(name='event-reductions', description='Shows currently active event reductions',
+                           aliases=('event','er','events','reductions'))
+    @commands.bot_has_permissions(send_messages=True, embed_links=True)
+    async def event_reductions(self, ctx: bridge.BridgeContext) -> None:
         """Shows currently active event reductions"""
         await main.command_event_reduction(self.bot, ctx)
         
-    @slash_command(description='Main help command')
+    @bridge.bridge_command(name='help', description='Main help command', aliases=('h',))
     @commands.guild_only()
-    async def help(self, ctx: discord.ApplicationContext) -> None:
+    @commands.bot_has_permissions(send_messages=True, embed_links=True)
+    async def help(self, ctx: bridge.BridgeContext) -> None:
         """Main help command"""
         await main.command_help(self.bot, ctx)
 
-    @slash_command(description='Some info and links about Navchi')
-    async def about(self, ctx: discord.ApplicationContext) -> None:
+    @bridge.bridge_command(name='about', description='Some info and links about Navchi', aliases=('info','ping'))
+    @commands.bot_has_permissions(send_messages=True, embed_links=True)
+    async def about(self, ctx: bridge.BridgeContext) -> None:
         """About command"""
         await main.command_about(self.bot, ctx)
 
-    @commands.command(name='help', aliases=('h',))
-    @commands.bot_has_permissions(send_messages=True, embed_links=True)
-    async def prefix_help(self, ctx: Union[commands.Context, discord.Message]) -> None:
-        """Main help command (prefix version)"""
-        await main.command_help(self.bot, ctx)
+    # Slash commands
+    if settings.LINK_INVITE is not None:
+        @slash_command(name='invite', description='Invite Navchi to your server!')
+        async def invite(self, ctx: discord.ApplicationContext) -> None:
+            """Sends and invite link"""
+            await ctx.respond(f'Click [here]({settings.LINK_INVITE}) to invite me!')
 
+    # Text commands
     @commands.command(name='invite', aliases=('inv',))
     @commands.bot_has_permissions(send_messages=True)
-    async def prefix_invite(self, ctx: commands.Context) -> None:
+    async def invite_prefix(self, ctx: commands.Context) -> None:
         """Invite command"""
-        message = (
-            f'Sorry, you can\'t invite me.\n'
-            f'However, I am fully open source on an MIT license, so feel free to run me yourself.\n'
-            f'https://github.com/Miriel-py/Navi'
-        )
-        await ctx.reply(message)
+        if settings.LINK_INVITE is not None:
+            answer = (
+                f'Click [here]({settings.LINK_INVITE}) to invite me!'
+            )
+        else:
+            navi_lite_invite = 'https://discord.com/api/oauth2/authorize?client_id=1213487623688167494&permissions=378944&scope=bot'
+            answer = (
+                f'Sorry, you can\'t invite Navchi.\n\n'
+                f'However, you can:\n'
+                f'1. [Invite Navi Lite]({navi_lite_invite}), a global version of Navi with a few limitations.\n'
+                f'2. [Run Navi yourself](https://github.com/MirielCH/Navi). Navi is free and open source.\n'
+            )
+        await ctx.reply(answer)
 
      # Events
     @commands.Cog.listener()
@@ -76,7 +87,7 @@ class MainCog(commands.Cog):
             else:
                 await ctx.respond(
                     f'I\'m sorry, this command is not available in this server.\n\n'
-                    f'To allow this, the server admin needs to reinvite me with the necessary permissions.\n',
+                    f'To allow this, a server admin needs to reinvite me with the necessary permissions.\n',
                     ephemeral=True
                 )
         elif isinstance(error, (commands.MissingPermissions, commands.MissingRequiredArgument,
@@ -98,7 +109,7 @@ class MainCog(commands.Cog):
             ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
             await ctx.respond(
                 f'Hey! **{ctx_author_name}**, looks like I don\'t know you yet.\n'
-                f'Use {await functions.get_navchi_slash_command(self.bot, "on")} to activate me first.',
+                f'Use {await functions.get_navchi_slash_command(self.bot, "on")} or `{ctx.prefix}on` to activate me first.',
                 ephemeral=True
             )
         elif isinstance(error, commands.NotOwner):
@@ -126,10 +137,10 @@ class MainCog(commands.Cog):
             await ctx.reply(embed=embed)
 
         error = getattr(error, 'original', error)
+        ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
         if isinstance(error, (commands.CommandNotFound, commands.NotOwner)):
             return
         elif isinstance(error, commands.CommandOnCooldown):
-            ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
             await ctx.reply(
                 f'**{ctx_author_name}**, you can only use this command every '
                 f'{int(error.cooldown.per)} seconds.\n'
@@ -137,7 +148,7 @@ class MainCog(commands.Cog):
             )
         elif isinstance(error, commands.DisabledCommand):
             await ctx.reply(f'Command `{ctx.command.qualified_name}` is temporarily disabled.')
-        elif isinstance(error, (commands.MissingPermissions, commands.MissingRequiredArgument,
+        elif isinstance(error, (commands.MissingPermissions,
                                 commands.TooManyArguments, commands.BadArgument)):
             await send_error()
         elif isinstance(error, commands.BotMissingPermissions):
@@ -147,15 +158,23 @@ class MainCog(commands.Cog):
                 await ctx.reply(error)
             else:
                 await send_error()
+        elif isinstance(error, commands.MissingRequiredArgument):
+            parameters = ''
+            full_command_name = f'{ctx.command.full_parent_name} {ctx.invoked_with}'.strip()
+            for param_name in ctx.command.clean_params.keys():
+                parameters = f'{parameters} <{param_name}>'
+            answer = (
+                f'**{ctx_author_name}**, this command is missing the parameter `<{error.param.name}>`.\n\n'
+                f'Syntax: `{ctx.clean_prefix}{full_command_name} {parameters.strip()}`'
+            )
+            await ctx.reply(answer)
         elif isinstance(error, exceptions.FirstTimeUserError):
-            ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
             await ctx.reply(
                 f'**{ctx_author_name}**, looks like I don\'t know you yet.\n'
-                f'Use {await functions.get_navchi_slash_command(self.bot, "on")} to activate me first.',
+                f'Use {await functions.get_navchi_slash_command(self.bot, "on")} or `{ctx.prefix}on` to activate me first.',
             )
         elif isinstance(error, (commands.UnexpectedQuoteError, commands.InvalidEndOfQuotedStringError,
                                 commands.ExpectedClosingQuoteError)):
-            ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
             await ctx.reply(
                 f'**{ctx_author_name}**, whatever you just entered contained invalid characters I can\'t process.\n'
                 f'Please try that again.'
@@ -181,7 +200,8 @@ class MainCog(commands.Cog):
             and (message.content.lower().replace('<@!','').replace('<@','').replace('>','')
                  .replace(str(self.bot.user.id),'')) == ''
         ):
-            await self.prefix_help(message)
+            command = self.bot.get_command(name='help')
+            if command is not None: await command.callback(command.cog, message)
 
     # Events
     @commands.Cog.listener()
@@ -200,7 +220,7 @@ class MainCog(commands.Cog):
             welcome_message = (
                 f'Hey! **{guild.name}**! I\'m here to remind you to do your EPIC RPG commands!\n\n'
                 f'Note that reminders are off by default. If you want to get reminded, please use '
-                f'{await functions.get_navchi_slash_command(self.bot, "on")} to activate me.'
+                f'{await functions.get_navchi_slash_command(self.bot, "on")} or `{guild_settings.prefix}on` to activate me.'
             )
             await guild.system_channel.send(welcome_message)
         except:

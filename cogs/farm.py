@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import re
 
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 
 from cache import messages
 from database import errors, reminders, tracking, users
@@ -14,7 +14,7 @@ from resources import emojis, exceptions, functions, regex, settings
 
 class FarmCog(commands.Cog):
     """Cog that contains the farm detection commands"""
-    def __init__(self, bot):
+    def __init__(self, bot: bridge.AutoShardedBot):
         self.bot = bot
 
     @commands.Cog.listener()
@@ -81,6 +81,7 @@ class FarmCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_farm.enabled: return
+                if not user_settings.area_20_cooldowns_enabled and user_settings.current_area == 20: return
                 if not slash_command:
                     last_farm_seed = None
                     if 'carrot' in user_command_message.content.lower():
@@ -156,20 +157,20 @@ class FarmCog(commands.Cog):
                     kwargs[f'inventory_seed_{seed_used_type}'] = seed_used_count
                 search_strings_excluded = [
                     'no crop has grown', #English
-                    'no crop has grown', #Spanish, MISSING
-                    'no crop has grown', #Portuguese, MISSING
+                    'no crop has grown', #TODO: Spanish
+                    'no crop has grown', #TODO: Portuguese
                 ]
                 if all(search_string not in message_content.lower() for search_string in search_strings_excluded):
                     crop_match = re.search(r'^([0-9,]+) <.+> (.+?) ', message_content.lower(), re.MULTILINE)
                     if crop_match is None:
                         search_patterns = [
                             r'give you ([0-9,]+) <.+> (.+?), ', #English, TOP
-                            r'give you ([0-9,]+) <.+> (.+?), ', #Spanish, TOP, MISSING
-                            r'give you ([0-9,]+) <.+> (.+?), ', #Portuguese, TOP, MISSING
+                            r'give you ([0-9,]+) <.+> (.+?), ', #TODO: Spanish, TOP
+                            r'give you ([0-9,]+) <.+> (.+?), ', #TODO: Portuguese, TOP
                         ]
                         crop_match = await functions.get_match_from_patterns(search_patterns, message_content)
                     crop_type = crop_match.group(2)
-                    crop_count = getattr(user_settings.inventory, crop_type)
+                    crop_count = getattr(user_settings.inventory, crop_type.lower())
                     crop_count += int(crop_match.group(1).replace(',',''))
                     kwargs[f'inventory_{crop_type}'] = crop_count
                     search_patterns = [
@@ -210,8 +211,7 @@ class FarmCog(commands.Cog):
                     await reminders.insert_user_reminder(user.id, 'farm', time_left,
                                                          message.channel.id, reminder_message)
                 )
-                if user_settings.auto_ready_enabled and user_settings.ready_after_all_commands:
-                    asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
+                asyncio.ensure_future(functions.call_ready_command(self.bot, message, user, user_settings, 'farm'))
                 await functions.add_reminder_reaction(message, reminder, user_settings)
                 search_strings = [
                     'also got', #English
@@ -270,8 +270,7 @@ class FarmCog(commands.Cog):
                         await reminders.insert_user_reminder(user.id, 'farm', time_left,
                                                             message.channel.id, reminder_message)
                     )
-                    if user_settings.auto_ready_enabled and user_settings.ready_after_all_commands:
-                        asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
+                    asyncio.ensure_future(functions.call_ready_command(self.bot, message, user, user_settings, 'farm'))
                     await functions.add_reminder_reaction(message, reminder, user_settings)
 
             # Farm event slash (all languages)
@@ -301,8 +300,7 @@ class FarmCog(commands.Cog):
                         await reminders.insert_user_reminder(user.id, 'farm', time_left,
                                                             message.channel.id, reminder_message)
                     )
-                    if user_settings.auto_ready_enabled and user_settings.ready_after_all_commands:
-                        asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
+                    asyncio.ensure_future(functions.call_ready_command(self.bot, message, user, user_settings, 'farm'))
                     await functions.add_reminder_reaction(message, reminder, user_settings)
 
 

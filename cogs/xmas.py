@@ -6,7 +6,7 @@ import random
 import re
 
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 
 from cache import messages
 from database import errors, reminders, users
@@ -38,7 +38,7 @@ ACTIVITIES_AFFECTED_BY_A0 = (
 
 class ChristmasCog(commands.Cog):
     """Cog that contains the horse festival detection commands"""
-    def __init__(self, bot):
+    def __init__(self, bot: bridge.AutoShardedBot):
         self.bot = bot
 
     @commands.Cog.listener()
@@ -108,6 +108,7 @@ class ChristmasCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_chimney.enabled: return
+                if not user_settings.area_20_cooldowns_enabled and user_settings.current_area == 20: return
                 user_command = await functions.get_slash_command(user_settings, 'xmas chimney')
                 timestring_match = await functions.get_match_from_patterns(regex.PATTERNS_COOLDOWN_TIMESTRING,
                                                                            message_title)
@@ -198,7 +199,7 @@ class ChristmasCog(commands.Cog):
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'eternal-presents', timedelta(hours=24),
                                                          message.channel.id, reminder_message)
-                )
+                )   
                 await functions.add_reminder_reaction(message, reminder, user_settings)
 
 
@@ -292,13 +293,12 @@ class ChristmasCog(commands.Cog):
                     await reminders.insert_user_reminder(user.id, 'chimney', time_left,
                                                          message.channel.id, reminder_message)
                 )
-                if user_settings.auto_ready_enabled and user_settings.ready_after_all_commands:
-                    asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
+                asyncio.ensure_future(functions.call_ready_command(self.bot, message, user, user_settings, 'chimney'))
                 await functions.add_reminder_reaction(message, reminder, user_settings)
                 search_strings_stuck = [
                     'now stuck in the chimney', #English
                     'atascó en la chimenea', #Spanish
-                    'now stuck in the chimney', #Portuguese, MISSING
+                    'now stuck in the chimney', #TODO: Portuguese
                 ]
                 if any(search_string in message_content.lower() for search_string in search_strings_stuck):
                     reminder: reminders.Reminder = (
@@ -310,7 +310,7 @@ class ChristmasCog(commands.Cog):
             # Turn on christmas area mode, gingerbread
             search_strings = [
                 'has teleported to the **christmas area**', #English
-                'se ha teletransportado al **área de navchidad**', #Spanish
+                'se ha teletransportado al **área de navidad**', #Spanish
                 'se teletransportou para a **zona de natal**', #Portuguese
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
@@ -351,9 +351,9 @@ class ChristmasCog(commands.Cog):
                 'has moved to the area #', #English, area change
                 'starts to fly and travels to the next area!', #English, candy cane
                 'se movio al área #', #Spanish, area change
-                'se movio al área #', #Spanish, candy cane, MISSING
+                'se movio al área #', #TODO: Spanish, candy cane
                 'foi movido para a área #', #Portuguese, area change
-                'foi movido para a área #', #Portuguese, candy cane, MISSING
+                'foi movido para a área #', #TODO: Portuguese, candy cane
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user_id = user_name = None
@@ -540,8 +540,8 @@ class ChristmasCog(commands.Cog):
             # Eternal present cooldown
             search_strings = [
                 'you cannot open eternal presents', #English
-                'you cannot open eternal presents', #Spanish, MISSING
-                'you cannot open eternal presents', #Portuguese, MISSING
+                'you cannot open eternal presents', #TODO: Spanish
+                'you cannot open eternal presents', #TODO: Portuguese
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user = message.mentions[0]

@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import re
 
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 
 from cache import messages
 from database import cooldowns, errors, reminders, tracking, users
@@ -14,7 +14,7 @@ from resources import emojis, exceptions, functions, regex, settings, strings
 
 class HuntCog(commands.Cog):
     """Cog that contains the hunt detection commands"""
-    def __init__(self, bot):
+    def __init__(self, bot: bridge.AutoShardedBot):
         self.bot = bot
 
     @commands.Cog.listener()
@@ -112,6 +112,7 @@ class HuntCog(commands.Cog):
                         if last_hunt_mode == '': last_hunt_mode = None
                         await user_settings.update(last_hunt_mode=last_hunt_mode)
                 if not user_settings.bot_enabled or not user_settings.alert_hunt.enabled: return
+                if not user_settings.area_20_cooldowns_enabled and user_settings.current_area == 20: return
                 user_command = await functions.get_slash_command(user_settings, 'hunt')
                 if user_settings.last_hunt_mode != '':
                     if user_settings.slash_mentions_enabled:
@@ -402,7 +403,7 @@ class HuntCog(commands.Cog):
                 elif user_settings.christmas_area_enabled and partner_christmas_area and found_together:
                     time_left_seconds *= settings.CHRISTMAS_AREA_MULTIPLIER
                 if user_settings.round_card_active and not found_together:
-                    time_left_seconds *= settings.ROUND_CARD_MULTIPLIER
+                    time_left_seconds *= settings.ROUND_CARD_MULTIPLIER                    
                 if user_settings.potion_flask_active and not found_together:
                     time_left_seconds *= settings.POTION_FLASK_MULTIPLIER
                 if user_settings.chocolate_box_unlocked and not found_together:
@@ -429,8 +430,7 @@ class HuntCog(commands.Cog):
                         await reminders.insert_user_reminder(user.id, 'hunt', time_left,
                                                              message.channel.id, reminder_message)
                     )
-                    if user_settings.auto_ready_enabled:
-                        asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
+                    asyncio.ensure_future(functions.call_ready_command(self.bot, message, user, user_settings, 'hunt'))
                     await functions.add_reminder_reaction(message, reminder, user_settings)
                 partner_start = len(message_content)
                 if found_together and partner is not None:
@@ -673,8 +673,7 @@ class HuntCog(commands.Cog):
                         await reminders.insert_user_reminder(user.id, 'hunt', time_left,
                                                                 message.channel.id, reminder_message)
                     )
-                    if user_settings.auto_ready_enabled:
-                        asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
+                    asyncio.ensure_future(functions.call_ready_command(self.bot, message, user, user_settings, 'hunt'))
                     await functions.add_reminder_reaction(message, reminder, user_settings)
 
 

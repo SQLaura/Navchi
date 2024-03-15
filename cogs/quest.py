@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import re
 
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 
 from cache import messages
 from database import cooldowns, clans, errors, reminders, users
@@ -14,7 +14,7 @@ from resources import emojis, exceptions, functions, regex, settings
 
 class QuestCog(commands.Cog):
     """Cog that contains the quest detection commands"""
-    def __init__(self, bot):
+    def __init__(self, bot: bridge.AutoShardedBot):
         self.bot = bot
 
     @commands.Cog.listener()
@@ -90,6 +90,7 @@ class QuestCog(commands.Cog):
                     if user_settings.alert_dungeon_miniboss.enabled:
                         try:
                             miniboss_reminder = await reminders.get_user_reminder(user.id, 'dungeon-miniboss')
+                            if miniboss_reminder.triggered: miniboss_reminder = None
                         except:
                             miniboss_reminder = None
                         command_miniboss = await functions.get_slash_command(user_settings, 'miniboss')
@@ -103,9 +104,12 @@ class QuestCog(commands.Cog):
                         if user_settings.dnd_mode_enabled:
                             answer = f'**{user_global_name}**, {answer}'
                         else:
-                            answer = f'{user.mention} {answer}'
+                            if user_settings.ping_after_message:
+                                answer = f'{answer} {user.mention}'
+                            else:
+                                answer = f'{user.mention} {answer}'
                         await message.channel.send(answer)
-
+                    
                 search_strings_guild_raid = [
                     'do a guild raid', #English
                     'has un guild raid', #Spanish
@@ -162,6 +166,7 @@ class QuestCog(commands.Cog):
                     if user_settings.alert_guild.enabled:
                         try:
                             clan_user_reminder = await reminders.get_user_reminder(user.id, 'guild')
+                            if clan_user_reminder.triggered: clan_user_reminder = None
                         except:
                             clan_user_reminder = None
                         command_guild_raid = await functions.get_slash_command(user_settings, 'guild raid')
@@ -215,6 +220,7 @@ class QuestCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_quest.enabled: return
+                if not user_settings.area_20_cooldowns_enabled and user_settings.current_area == 20: return
                 if slash_command:
                     interaction = await functions.get_interaction(message)
                     last_quest_command = 'epic quest' if interaction.name.startswith('epic') else 'quest'
@@ -340,8 +346,7 @@ class QuestCog(commands.Cog):
                     await reminders.insert_user_reminder(user.id, 'quest', time_left,
                                                          message.channel.id, reminder_message)
                 )
-                if user_settings.auto_ready_enabled and user_settings.ready_after_all_commands:
-                    asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
+                asyncio.ensure_future(functions.call_ready_command(self.bot, message, user, user_settings, 'quest'))
                 await functions.add_reminder_reaction(message, reminder, user_settings)
 
             # Guild quest in progress
@@ -382,6 +387,7 @@ class QuestCog(commands.Cog):
                 except exceptions.NoDataFoundError:
                     return
                 if not clan.alert_enabled: return
+                user_global_name = user.global_name if user.global_name is not None else user.name
                 if user_settings.dnd_mode_enabled:
                     user_name = f'**{user_global_name}**,'
                 else:
@@ -525,8 +531,7 @@ class QuestCog(commands.Cog):
                             pass
 
                     await user_settings.update(guild_quest_prompt_active=False)
-                if user_settings.auto_ready_enabled and user_settings.ready_after_all_commands:
-                    asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
+                asyncio.ensure_future(functions.call_ready_command(self.bot, message, user, user_settings, 'quest'))
                 await functions.add_reminder_reaction(message, reminder, user_settings)
 
             # Aborted guild quest

@@ -5,7 +5,7 @@ from datetime import timedelta
 import re
 
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 
 from cache import messages
 from database import errors, reminders, users
@@ -14,7 +14,7 @@ from resources import exceptions, functions, regex, settings
 
 class EpicItemsCog(commands.Cog):
     """Cog that contains the epic item detection commands"""
-    def __init__(self, bot):
+    def __init__(self, bot: bridge.AutoShardedBot):
         self.bot = bot
 
     @commands.Cog.listener()
@@ -80,6 +80,7 @@ class EpicItemsCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_epic.enabled: return
+                if not user_settings.area_20_cooldowns_enabled and user_settings.current_area == 20: return
                 timestring_match = await functions.get_match_from_patterns(regex.PATTERNS_COOLDOWN_TIMESTRING,
                                                                            message_title)
                 if not timestring_match:
@@ -151,8 +152,7 @@ class EpicItemsCog(commands.Cog):
                     await reminders.insert_user_reminder(user.id, 'epic', time_left,
                                                          message.channel.id, reminder_message)
                 )
-                if user_settings.auto_ready_enabled and user_settings.ready_after_all_commands:
-                    asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
+                asyncio.ensure_future(functions.call_ready_command(self.bot, message, user, user_settings, 'epic'))
                 await functions.add_reminder_reaction(message, reminder, user_settings)
 
             # Arena token
@@ -198,8 +198,7 @@ class EpicItemsCog(commands.Cog):
                     await reminders.insert_user_reminder(user.id, 'epic', time_left,
                                                          message.channel.id, reminder_message)
                 )
-                if user_settings.auto_ready_enabled and user_settings.ready_after_all_commands:
-                    asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
+                asyncio.ensure_future(functions.call_ready_command(self.bot, message, user, user_settings, 'epic'))
                 await functions.add_reminder_reaction(message, reminder, user_settings)
 
 
