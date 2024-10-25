@@ -38,7 +38,7 @@ POTION_WOOD: Final[str] = '<:potion_wood:1144082307016294461>'
 # EPIC RPG artifacts
 ARTIFACT_BUNNY_MASK: Final[str] = '<:artifact_bunny_mask:1226135629515980932>'
 ARTIFACT_CHOCOLATE_BOX: Final[str] = '<:artifact_chocolate_box:1205528257785757726>'
-ARTIFACT_COWBOY_BOOTS: Final[str] = ''  # TODO
+ARTIFACT_COWBOY_BOOTS: Final[str] = '<:artifact_cowboy_boots:1299486088997503148>'
 ARTIFACT_CLAUS_BELT: Final[str] = '<:artifact_claus_belt:1179391324642881598>'
 ARTIFACT_COIN_RING: Final[str] = '<:artifact_coin_ring:1146227689565470812>'
 ARTIFACT_GOLDEN_PAN: Final[str] = '<:artifact_golden_pan:1146227692564398122>'
@@ -85,8 +85,7 @@ LB_GODLY: Final[str] = '<:lb_godly:1144082896324411472>'
 LB_OMEGA: Final[str] = '<:lb_omega:1144082898505437284>'
 LB_RARE: Final[str] = '<:lb_rare:1144082902267723906>'
 LB_UNCOMMON: Final[str] = '<:lb_uncommon:1144082904079675502>'
-LB_VOID: Final[str] = '<:lb_void:1144082907657424936>'
-LB_VOID: Final[str] = ''  # TODO
+LB_VOID: Final[str] = '<:lb_void:1299486106198216737>'
 
 # EPIC RPG materials
 ARENA_COOKIE: Final[str] = '<:arenacookie:1144082958429466714>'
