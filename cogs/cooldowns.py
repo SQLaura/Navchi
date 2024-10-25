@@ -4,6 +4,7 @@ from datetime import timedelta
 import re
 
 import discord
+from discord import utils
 from discord.ext import bridge, commands
 from datetime import timedelta
 
@@ -21,6 +22,7 @@ class CooldownsCog(commands.Cog):
     @commands.Cog.listener()
     async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
         """Runs when a message is edited in a channel."""
+        if message_after.author.id not in [settings.EPIC_RPG_ID, settings.TESTY_ID]: return
         if message_before.pinned != message_after.pinned: return
         embed_data_before = await functions.parse_embed(message_before)
         embed_data_after = await functions.parse_embed(message_after)
@@ -83,16 +85,16 @@ class CooldownsCog(commands.Cog):
                 alt_found = False
                 if user_alts:
                     for embed_user in embed_users:
-                        if embed_user.id in user_alts:
-                            interaction_user = message.guild.get_member(embed_user.id)
-                            alt_found = True
+                        if embed_user is not None:
+                            if embed_user.id in user_alts:
+                                interaction_user = message.guild.get_member(embed_user.id)
+                                alt_found = True
                 if not alt_found: return
             try:
                 user_settings: users.User = await users.get_user(interaction_user.id)
             except exceptions.FirstTimeUserError:
                 return
             if not user_settings.bot_enabled: return
-            if not user_settings.area_20_cooldowns_enabled and user_settings.current_area == 20: return
             # Anniversary event reduction update
             search_patterns = [
                 r'anniversary event cooldown reduction\*\*: (\d+?)%',
@@ -168,7 +170,7 @@ class CooldownsCog(commands.Cog):
                     cooldowns.append(['card-hand', card_hand_timestring.lower(), card_hand_message])
                 else:
                     ready_commands.append('card-hand')
-            if user_settings.alert_hunt.enabled:
+            if user_settings.alert_hunt.enabled and not user_settings.hunt_reminders_combined:
                 hunt_match = re.search(r'hunt(?: hardmode)?`\*\* \(\*\*(.+?)\*\*', message_fields.lower())
                 if hunt_match:
                     user_command = await functions.get_slash_command(user_settings, 'hunt')
@@ -184,15 +186,6 @@ class CooldownsCog(commands.Cog):
                             else:
                                 user_command = f"{user_command} `hardmode`".replace('` `', ' ')
                     hunt_timestring = hunt_match.group(1)
-                    if ('together' in user_settings.last_hunt_mode
-                        and user_settings.partner_donor_tier < user_settings.user_donor_tier):
-                        time_left = await functions.parse_timestring_to_timedelta(hunt_timestring.lower())
-                        partner_donor_tier = 3 if user_settings.partner_donor_tier > 3 else user_settings.partner_donor_tier
-                        user_donor_tier = 3 if user_settings.user_donor_tier > 3 else user_settings.user_donor_tier
-                        time_difference = ((60 * settings.DONOR_COOLDOWNS[partner_donor_tier])
-                                        - (60 * settings.DONOR_COOLDOWNS[user_donor_tier]))
-                        time_left_seconds = time_left.total_seconds() + time_difference
-                        hunt_timestring = await functions.parse_timedelta_to_timestring(timedelta(seconds=time_left_seconds))
                     hunt_message = user_settings.alert_hunt.message.replace('{command}', user_command)
                     cooldowns.append(['hunt', hunt_timestring.lower(), hunt_message])
                 else:
@@ -315,9 +308,17 @@ class CooldownsCog(commands.Cog):
                 cd_activity = cooldown[0]
                 cd_timestring = cooldown[1]
                 cd_message = cooldown[2]
+                if not user_settings.area_20_cooldowns_enabled and user_settings.current_area == 20 and cd_activity != 'vote':
+                    continue
                 time_left = await functions.parse_timestring_to_timedelta(cd_timestring)
+                bot_answer_time = message.edited_at if message.edited_at else message.created_at
+                current_time = utils.utcnow()
+                time_elapsed = current_time - bot_answer_time
+                time_left -= time_elapsed
                 if time_left < timedelta(0): continue
-                time_left += timedelta(seconds=1)
+                time_left = timedelta(seconds=time_left.total_seconds() + 1)
+                if user_settings.multiplier_management_enabled:
+                    await user_settings.update_multiplier(cd_activity, time_left)
                 if time_left.total_seconds() > 0:
                     reminder: reminders.Reminder = (
                         await reminders.insert_user_reminder(interaction_user.id, cd_activity, time_left,
@@ -326,6 +327,8 @@ class CooldownsCog(commands.Cog):
                     if not reminder.record_exists:
                         await message.channel.send(strings.MSG_ERROR)
                         return
+                if cd_activity == 'hunt':
+                    await user_settings.update(hunt_end_time=current_time + time_left)
             for activity in ready_commands:
                 try:
                     reminder: reminders.Reminder = await reminders.get_user_reminder(interaction_user.id, activity)
@@ -425,5 +428,5 @@ class CooldownsCog(commands.Cog):
 
 
 # Initialization
-def setup(bot):
+def setup(bot: bridge.AutoShardedBot):
     bot.add_cog(CooldownsCog(bot))

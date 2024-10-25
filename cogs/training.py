@@ -1,10 +1,11 @@
 # training.py
 
 import asyncio
-from datetime import datetime, timedelta
+from datetime import timedelta
 import re
 
 import discord
+from discord import utils
 from discord.ext import bridge, commands
 
 from cache import messages
@@ -20,6 +21,7 @@ class TrainingCog(commands.Cog):
     @commands.Cog.listener()
     async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
         """Runs when a message is edited in a channel."""
+        if message_after.author.id not in [settings.EPIC_RPG_ID, settings.TESTY_ID]: return
         if message_before.pinned != message_after.pinned: return
         embed_data_before = await functions.parse_embed(message_before)
         embed_data_after = await functions.parse_embed(message_after)
@@ -105,9 +107,12 @@ class TrainingCog(commands.Cog):
                 timestring = timestring_match.group(1)
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring)
                 if time_left < timedelta(0): return
+                activity: str = 'training'
+                if user_settings.multiplier_management_enabled:
+                    await user_settings.update_multiplier(activity, time_left)
                 reminder_message = user_settings.alert_training.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
-                    await reminders.insert_user_reminder(user.id, 'training', time_left,
+                    await reminders.insert_user_reminder(user.id, activity, time_left,
                                                          message.channel.id, reminder_message)
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
@@ -141,9 +146,8 @@ class TrainingCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled: return
-                current_time = datetime.utcnow().replace(microsecond=0)
                 if user_settings.tracking_enabled:
-                    await tracking.insert_log_entry(user.id, message.guild.id, 'ultraining', current_time)
+                    await tracking.insert_log_entry(user.id, message.guild.id, 'ultraining', utils.utcnow())
                 if not user_settings.alert_training.enabled: return
                 user_command = await functions.get_slash_command(user_settings, 'ultraining')
                 await user_settings.update(last_training_command='ultraining')
@@ -196,9 +200,8 @@ class TrainingCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled: return
                 user_command = await functions.get_slash_command(user_settings, 'training')
-                current_time = datetime.utcnow().replace(microsecond=0)
                 if user_settings.tracking_enabled:
-                    await tracking.insert_log_entry(user.id, message.guild.id, 'training', current_time)
+                    await tracking.insert_log_entry(user.id, message.guild.id, 'training', utils.utcnow())
                 if not user_settings.alert_training.enabled: return
                 await user_settings.update(last_training_command='training')
                 time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'training')
@@ -239,9 +242,8 @@ class TrainingCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled: return
-                current_time = datetime.utcnow().replace(microsecond=0)
                 if user_settings.tracking_enabled:
-                    await tracking.insert_log_entry(user.id, message.guild.id, 'training', current_time)
+                    await tracking.insert_log_entry(user.id, message.guild.id, 'training', utils.utcnow())
                 if not user_settings.alert_training.enabled: return
                 user_command = await functions.get_slash_command(user_settings, 'training')
                 await user_settings.update(last_training_command='training')
@@ -289,5 +291,5 @@ class TrainingCog(commands.Cog):
 
 
 # Initialization
-def setup(bot):
+def setup(bot: bridge.AutoShardedBot):
     bot.add_cog(TrainingCog(bot))

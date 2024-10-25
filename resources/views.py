@@ -25,6 +25,13 @@ COMMANDS_SETTINGS = {
     'User': settings_cmd.command_settings_user,
 }
 
+COMMANDS_SERVER_SETTINGS = {
+    'Main': settings_cmd.command_server_settings_main,
+    'Auto flex (1/2)': settings_cmd.command_server_settings_auto_flex,
+    'Auto flex (2/2)': settings_cmd.command_server_settings_auto_flex_2,
+    'Event pings': settings_cmd.command_server_settings_event_pings,
+}
+
 
 class ReadyView(discord.ui.View):
     """View with button to toggle the auto_ready feature.
@@ -283,12 +290,12 @@ class SettingsHelpersView(discord.ui.View):
         toggled_settings = {
             'Context helper': 'context_helper_enabled',
             'Heal warning': 'heal_warning_enabled',
-            #'Megarace helper': 'megarace_helper_enabled',
             'Pet catch helper': 'pet_helper_enabled',
             'Ruby counter': 'ruby_counter_enabled',
             'Time potion warning': 'time_potion_warning_enabled',
             'Training helper': 'training_helper_enabled',
-            #'Pumpkin bat helper': 'halloween_helper_enabled',
+            'Megarace helper': 'megarace_helper_enabled',
+            'Pumpkin bat helper': 'halloween_helper_enabled',
         }
         self.add_item(components.ToggleUserSettingsSelect(self, toggled_settings, 'Toggle helpers'))
         self.add_item(components.SetFarmHelperModeSelect(self))
@@ -439,28 +446,19 @@ class SettingsReadyRemindersView(discord.ui.View):
         self.clan_settings = clan_settings
         self.embed_function = embed_function
         toggled_settings_commands = {
-            #'Advent calendar': 'alert_advent',
             'Adventure': 'alert_adventure',
             'Arena': 'alert_arena',
-            #'Boo': 'alert_boo',
-            #'Cel dailyquest': 'alert_cel_dailyquest',
-            #'Cel multiply': 'alert_cel_multiply',
-            #'Cel sacrifice': 'alert_cel_sacrifice',
             'Card hand': 'alert_card_hand',
-            'Chimney': 'alert_chimney',
             'Daily': 'alert_daily',
             'Duel': 'alert_duel',
             'Dungeon / Miniboss': 'alert_dungeon_miniboss',
             'EPIC items': 'alert_epic',
-            'ETERNAL presents': 'alert_eternal_present',
             'Farm': 'alert_farm',
             'Guild': 'alert_guild',
             'Horse': 'alert_horse_breed',
             'Hunt': 'alert_hunt',
+            'Hunt partner': 'alert_hunt_partner',
             'Lootbox': 'alert_lootbox',
-            #'Love share': 'alert_love_share',
-            #'Megarace': 'alert_megarace',
-            #'Minirace': 'alert_minirace',
             'Quest': 'alert_quest',
             'Pets claim': 'alert_pets',
             'Training': 'alert_training',
@@ -476,10 +474,25 @@ class SettingsReadyRemindersView(discord.ui.View):
             'Minin\'tboss': 'alert_not_so_mini_boss',
             'Pet tournament': 'alert_pet_tournament',
         }
+        toggled_settings_seasonal = {
+            'Advent calendar': 'alert_advent',
+            'Boo': 'alert_boo',
+            'Cel dailyquest': 'alert_cel_dailyquest',
+            'Cel multiply': 'alert_cel_multiply',
+            'Cel sacrifice': 'alert_cel_sacrifice',
+            'Chimney': 'alert_chimney',
+            'ETERNAL presents': 'alert_eternal_present',
+            'Love share': 'alert_love_share',
+            'Megarace': 'alert_megarace',
+            'Minirace': 'alert_minirace',
+        }
         self.add_item(components.ToggleReadySettingsSelect(self, toggled_settings_commands, 'Toggle command reminders',
                                                            'toggle_command_reminders'))
         self.add_item(components.ToggleReadySettingsSelect(self, toggled_settings_events, 'Toggle event reminders',
                                                            'toggle_event_reminders'))
+        if toggled_settings_commands:
+            self.add_item(components.ToggleReadySettingsSelect(self, toggled_settings_seasonal, 'Toggle seasonal reminders',
+                                                               'toggle_seasonal_reminders'))
         self.add_item(components.ManageReadyReminderChannelsSelect(self))
 
     @discord.ui.button(label="< Back", style=discord.ButtonStyle.grey, row=4)
@@ -532,7 +545,12 @@ class SettingsMultipliersView(discord.ui.View):
         self.user = ctx.author
         self.user_settings = user_settings
         self.embed_function = embed_function
-        self.add_item(components.ManageMultipliersSelect(self))
+        self.add_item(components.ManageMultiplierSettingsSelect(self))
+        select_disabled: bool = False
+        if user_settings.multiplier_management_enabled and user_settings.current_area != 20:
+            select_disabled = True
+        self.add_item(components.ManageManagedMultipliersSelect(self, disabled=select_disabled))
+        self.add_item(components.ManageManualMultipliersSelect(self))
         self.add_item(components.SwitchSettingsSelect(self, COMMANDS_SETTINGS))
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
@@ -575,30 +593,21 @@ class SettingsRemindersView(discord.ui.View):
         self.user_settings = user_settings
         self.embed_function = embed_function
         toggled_settings_commands = {
-            #'Advent calendar': 'alert_advent',
             'Adventure': 'alert_adventure',
             'Arena': 'alert_arena',
-            #'Boo': 'alert_boo',
             'Boost items': 'alert_boosts',
             'Card hand': 'alert_card_hand',
-            #'Cel dailyquest': 'alert_cel_dailyquest',
-            #'Cel multiply': 'alert_cel_multiply',
-            #'Cel sacrifice': 'alert_cel_sacrifice',
-            #'Chimney': 'alert_chimney',
             'Daily': 'alert_daily',
             'Duel': 'alert_duel',
             'Dungeon / Miniboss': 'alert_dungeon_miniboss',
             'EPIC items': 'alert_epic',
             'EPIC shop restocks': 'alert_epic_shop',
-            #'ETERNAL presents': 'alert_eternal_present',
             'Farm': 'alert_farm',
             'Guild': 'alert_guild',
             'Horse': 'alert_horse_breed',
             'Hunt': 'alert_hunt',
-            #'Megarace': 'alert_megarace',
-            #'Minirace': 'alert_minirace',
+            'Hunt partner': 'alert_hunt_partner',
             'Lootbox': 'alert_lootbox',
-            #'Love share': 'alert_love_share',
             'Maintenance': 'alert_maintenance',
             'Partner alert': 'alert_partner',
             'Pets': 'alert_pets',
@@ -607,7 +616,6 @@ class SettingsRemindersView(discord.ui.View):
             'Vote': 'alert_vote',
             'Weekly': 'alert_weekly',
             'Work': 'alert_work',
-
         }
         toggled_settings_events = {
             'Big arena': 'alert_big_arena',
@@ -616,11 +624,26 @@ class SettingsRemindersView(discord.ui.View):
             'Minin\'tboss': 'alert_not_so_mini_boss',
             'Pet tournament': 'alert_pet_tournament',
         }
+        toggled_settings_seasonal = {
+            'Advent calendar': 'alert_advent',
+            'Boo': 'alert_boo',
+            'Cel dailyquest': 'alert_cel_dailyquest',
+            'Cel multiply': 'alert_cel_multiply',
+            'Cel sacrifice': 'alert_cel_sacrifice',
+            'Chimney': 'alert_chimney',
+            'ETERNAL presents': 'alert_eternal_present',
+            'Love share': 'alert_love_share',
+            'Megarace': 'alert_megarace',
+            'Minirace': 'alert_minirace',
+        }
         self.add_item(components.ManageReminderBehaviourSelect(self))
         self.add_item(components.ToggleUserSettingsSelect(self, toggled_settings_commands, 'Toggle reminders',
                                                           'toggle_command_reminders'))
         self.add_item(components.ToggleUserSettingsSelect(self, toggled_settings_events, 'Toggle event reminders',
                                                           'toggle_event_reminders'))
+        if toggled_settings_seasonal:
+            self.add_item(components.ToggleUserSettingsSelect(self, toggled_settings_seasonal, 'Toggle seasonal reminders',
+                                                              'toggle_seasonal_reminders'))
         self.add_item(components.SwitchSettingsSelect(self, COMMANDS_SETTINGS))
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
@@ -918,8 +941,8 @@ class StatsView(discord.ui.View):
         self.stop()
 
 
-class SettingsServerView(discord.ui.View):
-    """View with a all components to manage server settings.
+class SettingsServerAutoFlexView(discord.ui.View):
+    """View with a all components to manage auto-flex server settings.
     Also needs the interaction of the response with the view, so do view.interaction = await ctx.respond('foo').
 
     Arguments
@@ -951,16 +974,17 @@ class SettingsServerView(discord.ui.View):
             'Brew electronical potion': 'auto_flex_brew_electronical_enabled',
             'Artifact crafting': 'auto_flex_artifacts_enabled',
             'Cards from drop': 'auto_flex_card_drop_enabled',
+            'Card goldening': 'auto_flex_card_golden_enabled',
             'Cards from card slots': 'auto_flex_card_slots_enabled',
-            'Card hand: Full house+': 'auto_flex_card_hand_enabled',
             'EPIC berries from hunt or adventure': 'auto_flex_epic_berry_enabled',
             'EPIC berries from work commands': 'auto_flex_work_epicberry_enabled',
-            'GODLY lootbox from hunt or adventure': 'auto_flex_lb_godly_enabled',
+            'ETERNAL lootbox from hunt / adventure': 'auto_flex_lb_eternal_enabled',
+            'GODLY lootbox from hunt / adventure': 'auto_flex_lb_godly_enabled',
             'HYPER logs from work commands': 'auto_flex_work_hyperlog_enabled',
-            'OMEGA lootbox from hunt or adventure': 'auto_flex_lb_omega_enabled',
-            'Lost lootboxes in area 18': 'auto_flex_lb_a18_enabled',
+            'OMEGA lootbox from hunt / adventure': 'auto_flex_lb_omega_enabled',
         }
         toggled_auto_flex_alerts_2 = {
+            'Lost lootboxes in area 18': 'auto_flex_lb_a18_enabled',
             'Party popper from any lootbox': 'auto_flex_lb_party_popper_enabled',
             'SUPER fish from work commands': 'auto_flex_work_superfish_enabled',
             'TIME capsule from GODLY/VOID lootbox': 'auto_flex_lb_godly_tt_enabled',
@@ -968,11 +992,61 @@ class SettingsServerView(discord.ui.View):
             'ULTRA log from EDGY lootbox': 'auto_flex_lb_edgy_ultra_enabled',
             'ULTRA log from OMEGA lootbox': 'auto_flex_lb_omega_ultra_enabled',
             'ULTRA logs from work commands': 'auto_flex_work_ultralog_enabled',
-            'VOID lootbox from hunt or adventure': 'auto_flex_lb_void_enabled',
+            'VOID lootbox from hunt / adventure': 'auto_flex_lb_void_enabled',
             'Watermelons from work commands': 'auto_flex_work_watermelon_enabled',
             'Get ULTRA-EDGY in enchant event': 'auto_flex_event_enchant_enabled',
             'Get 20 levels in farm event': 'auto_flex_event_farm_enabled',
         }
+
+        self.add_item(components.ManageServerSettingsAutoFlexSelect(self))
+        self.add_item(components.ToggleServerSettingsSelect(self, toggled_auto_flex_alerts_1,
+                                                            'Toggle auto flex alerts (I)',
+                                                            'toggle_auto_flex_alerts_1'))
+        self.add_item(components.ToggleServerSettingsSelect(self, toggled_auto_flex_alerts_2,
+                                                            'Toggle auto flex alerts (II)',
+                                                            'toggle_auto_flex_alerts_2'))
+        self.add_item(components.SwitchSettingsSelect(self, COMMANDS_SERVER_SETTINGS))
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if interaction.user != self.user:
+            await interaction.response.send_message(random.choice(strings.MSG_INTERACTION_ERRORS), ephemeral=True)
+            return False
+        return True
+
+    async def on_timeout(self) -> None:
+        await self.interaction.edit(view=None)
+        self.stop()
+
+        
+class SettingsServerAutoFlex2View(discord.ui.View):
+    """View with a all components to manage auto-flex 2/2 server settings.
+    Also needs the interaction of the response with the view, so do view.interaction = await ctx.respond('foo').
+
+    Arguments
+    ---------
+    ctx: Context.
+    bot: Bot.
+    guild_settings: Guild object with the settings of the guild/server.
+    embed_function: Function that returns the settings embed. The view expects the following arguments:
+    - bot: Bot
+    - ctx: context
+    - guild_settings: ClanGuild object with the settings of the guild/server
+
+    Returns
+    -------
+    None
+
+    """
+    def __init__(self, ctx: bridge.BridgeContext, bot: bridge.AutoShardedBot, guild_settings: guilds.Guild,
+                 embed_function: callable, interaction: Optional[discord.Interaction] = None):
+        super().__init__(timeout=settings.INTERACTION_TIMEOUT)
+        self.ctx = ctx
+        self.bot = bot
+        self.value = None
+        self.embed_function = embed_function
+        self.interaction = interaction
+        self.user = ctx.author
+        self.guild_settings = guild_settings
         toggled_auto_flex_alerts_3 = {
             'Kill mysterious man in heal event': 'auto_flex_event_heal_enabled',
             'Evolve OMEGA lootbox in lootbox event': 'auto_flex_event_lb_enabled',
@@ -994,19 +1068,113 @@ class SettingsServerView(discord.ui.View):
             'Drop sleepy potion or suspicious broom in hal boo': 'auto_flex_hal_boo_enabled',
         }
 
-        self.add_item(components.ManageServerSettingsSelect(self))
-        self.add_item(components.ToggleServerSettingsSelect(self, toggled_auto_flex_alerts_1,
-                                                            'Toggle auto flex alerts (I)',
-                                                            'toggle_auto_flex_alerts_1'))
-        self.add_item(components.ToggleServerSettingsSelect(self, toggled_auto_flex_alerts_2,
-                                                            'Toggle auto flex alerts (II)',
-                                                            'toggle_auto_flex_alerts_2'))
         self.add_item(components.ToggleServerSettingsSelect(self, toggled_auto_flex_alerts_3,
                                                             'Toggle auto flex alerts (III)',
                                                             'toggle_auto_flex_alerts_3'))
         self.add_item(components.ToggleServerSettingsSelect(self, toggled_auto_flex_alerts_seasonal,
                                                             'Toggle auto flex alerts (seasonal)',
                                                             'toggle_auto_flex_alerts_seasonal'))
+        self.add_item(components.SwitchSettingsSelect(self, COMMANDS_SERVER_SETTINGS))
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if interaction.user != self.user:
+            await interaction.response.send_message(random.choice(strings.MSG_INTERACTION_ERRORS), ephemeral=True)
+            return False
+        return True
+
+    async def on_timeout(self) -> None:
+        await self.interaction.edit(view=None)
+        self.stop()
+
+        
+class SettingsServerEventPingsView(discord.ui.View):
+    """View with a all components to manage event ping server settings.
+    Also needs the interaction of the response with the view, so do view.interaction = await ctx.respond('foo').
+
+    Arguments
+    ---------
+    ctx: Context.
+    bot: Bot.
+    guild_settings: Guild object with the settings of the guild/server.
+    embed_function: Function that returns the settings embed. The view expects the following arguments:
+    - bot: Bot
+    - ctx: context
+    - guild_settings: ClanGuild object with the settings of the guild/server
+
+    Returns
+    -------
+    None
+
+    """
+    def __init__(self, ctx: bridge.BridgeContext, bot: bridge.AutoShardedBot, guild_settings: guilds.Guild,
+                 embed_function: callable, interaction: Optional[discord.Interaction] = None):
+        super().__init__(timeout=settings.INTERACTION_TIMEOUT)
+        self.ctx = ctx
+        self.bot = bot
+        self.value = None
+        self.embed_function = embed_function
+        self.interaction = interaction
+        self.user = ctx.author
+        self.guild_settings = guild_settings
+        toggled_events = {
+            'Arena': 'event_arena',
+            'Coin rain': 'event_coin',
+            'Epic tree': 'event_log',
+            'Legendary boss': 'event_legendary_boss',
+            'Lootbox summoning': 'event_lootbox',
+            'Megalodon': 'event_fish',
+            'Miniboss': 'event_miniboss',
+        }
+
+        self.add_item(components.ToggleEventPingsSelect(self, toggled_events,
+                                                             'Toggle event pings',
+                                                             'toggle_event_pings'))
+        self.add_item(components.ManageEventPingMessagesSelect(self,))
+        self.add_item(components.SwitchSettingsSelect(self, COMMANDS_SERVER_SETTINGS))
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if interaction.user != self.user:
+            await interaction.response.send_message(random.choice(strings.MSG_INTERACTION_ERRORS), ephemeral=True)
+            return False
+        return True
+
+    async def on_timeout(self) -> None:
+        await self.interaction.edit(view=None)
+        self.stop()
+
+        
+class SettingsServerMainView(discord.ui.View):
+    """View with a all components to manage server auto-flex settings.
+    Also needs the interaction of the response with the view, so do view.interaction = await ctx.respond('foo').
+
+    Arguments
+    ---------
+    ctx: Context.
+    bot: Bot.
+    guild_settings: Guild object with the settings of the guild/server.
+    embed_function: Function that returns the settings embed. The view expects the following arguments:
+    - bot: Bot
+    - ctx: context
+    - guild_settings: ClanGuild object with the settings of the guild/server
+
+    Returns
+    -------
+    None
+
+    """
+    def __init__(self, ctx: bridge.BridgeContext, bot: bridge.AutoShardedBot, guild_settings: guilds.Guild,
+                 embed_function: callable, interaction: Optional[discord.Interaction] = None):
+        super().__init__(timeout=settings.INTERACTION_TIMEOUT)
+        self.ctx = ctx
+        self.bot = bot
+        self.value = None
+        self.embed_function = embed_function
+        self.interaction = interaction
+        self.user = ctx.author
+        self.guild_settings = guild_settings
+
+        self.add_item(components.ManageServerSettingsMainSelect(self))
+        self.add_item(components.SwitchSettingsSelect(self, COMMANDS_SERVER_SETTINGS))
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user != self.user:
@@ -1027,7 +1195,7 @@ class DevEventReductionsView(discord.ui.View):
     ---------
     bot: Bot.
     user_settings: User object with the settings of the user.
-    embed_function: Function that returns the settings embed. The view expects the following arguments:
+    embed_function: Function that returns the settings embed. The function expects the following arguments:
     - bot: Bot
     - user_settings: User object with the settings of the user
 
@@ -1052,6 +1220,46 @@ class DevEventReductionsView(discord.ui.View):
                                                            'Copy slash > text'))
         self.add_item(components.CopyEventReductionsButton(discord.ButtonStyle.grey, 'copy_text_slash',
                                                            'Copy text > slash'))
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if interaction.user != self.user:
+            await interaction.response.send_message(random.choice(strings.MSG_INTERACTION_ERRORS), ephemeral=True)
+            return False
+        return True
+
+    async def on_timeout(self) -> None:
+        await self.interaction.edit(view=None)
+        self.stop()
+
+
+class DevSeasonalEventView(discord.ui.View):
+    """View with a all components to manage the seasonal event.
+    Also needs the interaction of the response with the view, so do view.interaction = await ctx.respond('foo').
+
+    Arguments
+    ---------
+    ctx: Context.
+    bot: Bot.
+    embed_function: Function that returns the settings embed. The function expects no arguments.
+
+    Returns
+    -------
+    None
+
+    """
+    def __init__(self, ctx: bridge.BridgeContext, bot: bridge.AutoShardedBot, active_event: str,
+                 embed_function: callable, interaction: Optional[discord.Interaction] = None):
+        super().__init__(timeout=settings.INTERACTION_TIMEOUT)
+        seasonal_events = ['none',] + strings.SEASONAL_EVENTS
+        self.ctx = ctx
+        self.bot = bot
+        self.value = None
+        self.interaction = interaction
+        self.active_event = active_event
+        self.user = ctx.author
+        self.embed_function = embed_function
+        self.add_item(components.SetSeasonalEventSelect(seasonal_events, active_event,
+                                                 'Set seasonal event ...'))
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user != self.user:

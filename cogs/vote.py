@@ -1,8 +1,9 @@
 # vote.py
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 import discord
+from discord import utils
 from discord.ext import bridge, commands
 
 from cache import messages
@@ -18,6 +19,7 @@ class VoteCog(commands.Cog):
     @commands.Cog.listener()
     async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
         """Runs when a message is edited in a channel."""
+        if message_after.author.id not in [settings.EPIC_RPG_ID, settings.TESTY_ID]: return
         if message_before.pinned != message_after.pinned: return
         embed_data_before = await functions.parse_embed(message_before)
         embed_data_after = await functions.parse_embed(message_after)
@@ -71,7 +73,7 @@ class VoteCog(commands.Cog):
                             return
                         await reminder.delete()
                         if reminder.record_exists:
-                            logs.logger.error(f'{datetime.utcnow()}: Had an error deleting the horse reminder.')
+                            logs.logger.error(f'{utils.utcnow()}: Had an error deleting the horse reminder.')
                         else:
                             if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVCHI)
                     else:
@@ -88,5 +90,5 @@ class VoteCog(commands.Cog):
 
 
 # Initialization
-def setup(bot):
+def setup(bot: bridge.AutoShardedBot):
     bot.add_cog(VoteCog(bot))

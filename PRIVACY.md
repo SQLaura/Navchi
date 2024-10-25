@@ -1,26 +1,26 @@
-# Navchi Privacy Policy
+# Navi Privacy Policy
 
 This policy is effective as of 15 August 2022 and was last updated on 12 March 2023.  
 
 ## User information the bot collects
 
-Navchi does neither collect nor store any personal user data.  
+Navi does neither collect nor store any personal user data.  
 
 ## Command tracking
 
-When you turn on the bot, Navchi starts tracking some of your EPIC RPG commands. The term “tracking” refers to the name of these commands and the time when they were used.  
+When you turn on the bot, Navi starts tracking some of your EPIC RPG commands. The term “tracking” refers to the name of these commands and the time when they were used.  
 This information is used to calculate how many commands you used in `/stats`.  
 You will get a warning that you enabled this when you use `/on`.
 
 Important things to note:  
-• Tracking is only active if you manually activate Navchi using `/on` first (opt-in).  
+• Tracking is only active if you manually activate Navi using `/on` first (opt-in).  
 • You can opt-out at any time by turning off tracking in `/settings user`. Disabling this feature does not impact any of the other functions of the bot.  
 • If you use `/off`, tracking - like everything else - will be disabled.
 
 ## Message content access
 
-Navchi has access to the content of all messages it can see. This access is necessary to create reminders.  
-Navchi reads EPIC RPG messages and also reads the commands you issue to trigger said messages (e.g. if a hunt message is detected, it will also read your `/hunt` slash command or your `rpg hunt` message).  
+Navi has access to the content of all messages it can see. This access is necessary to create reminders.  
+Navi reads EPIC RPG messages and also reads the commands you issue to trigger said messages (e.g. if a hunt message is detected, it will also read your `/hunt` slash command or your `rpg hunt` message).  
 This data does usually not get stored and is immediately discarded.  
 
 ## Storing message data

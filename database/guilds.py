@@ -5,7 +5,7 @@
 from dataclasses import dataclass
 import itertools
 import sqlite3
-from typing import List, Tuple, Union
+from typing import List, NamedTuple, Tuple, Union
 
 import discord
 from discord.ext import bridge, commands
@@ -15,6 +15,10 @@ from resources import exceptions, settings, strings
 
 
 # Containers
+class EventPing(NamedTuple):
+    enabled: bool
+    message: str
+
 @dataclass()
 class Guild():
     """Object that represents a record from table "guilds"."""
@@ -23,6 +27,7 @@ class Guild():
     auto_flex_enabled: bool
     auto_flex_artifacts_enabled: bool
     auto_flex_card_drop_enabled: bool
+    auto_flex_card_golden_enabled: bool
     auto_flex_card_hand_enabled: bool
     auto_flex_card_slots_enabled: bool
     auto_flex_epic_berry_enabled: bool
@@ -36,6 +41,7 @@ class Guild():
     auto_flex_hal_boo_enabled: bool
     auto_flex_lb_a18_enabled: bool
     auto_flex_lb_edgy_ultra_enabled: bool
+    auto_flex_lb_eternal_enabled: bool
     auto_flex_lb_godly_enabled: bool
     auto_flex_lb_godly_tt_enabled: bool
     auto_flex_lb_omega_enabled: bool
@@ -58,6 +64,13 @@ class Guild():
     auto_flex_xmas_godly_enabled: bool
     auto_flex_xmas_snowball_enabled: bool
     auto_flex_xmas_void_enabled: bool
+    event_arena: EventPing
+    event_coin: EventPing
+    event_fish: EventPing
+    event_legendary_boss: EventPing
+    event_log: EventPing
+    event_lootbox: EventPing
+    event_miniboss: EventPing
     guild_id: int
     prefix: str
 
@@ -70,6 +83,7 @@ class Guild():
         self.auto_flex_enabled = new_settings.auto_flex_enabled
         self.auto_flex_artifacts_enabled = new_settings.auto_flex_artifacts_enabled
         self.auto_flex_card_drop_enabled = new_settings.auto_flex_card_drop_enabled
+        self.auto_flex_card_golden_enabled = new_settings.auto_flex_card_golden_enabled
         self.auto_flex_card_hand_enabled = new_settings.auto_flex_card_hand_enabled
         self.auto_flex_card_slots_enabled = new_settings.auto_flex_card_slots_enabled
         self.auto_flex_epic_berry_enabled = new_settings.auto_flex_epic_berry_enabled
@@ -83,6 +97,7 @@ class Guild():
         self.auto_flex_hal_boo_enabled = new_settings.auto_flex_hal_boo_enabled
         self.auto_flex_lb_a18_enabled = new_settings.auto_flex_lb_a18_enabled
         self.auto_flex_lb_edgy_ultra_enabled = new_settings.auto_flex_lb_edgy_ultra_enabled
+        self.auto_flex_lb_eternal_enabled = new_settings.auto_flex_lb_eternal_enabled
         self.auto_flex_lb_godly_enabled = new_settings.auto_flex_lb_godly_enabled
         self.auto_flex_lb_godly_tt_enabled = new_settings.auto_flex_lb_godly_tt_enabled
         self.auto_flex_lb_omega_enabled = new_settings.auto_flex_lb_omega_enabled
@@ -105,6 +120,13 @@ class Guild():
         self.auto_flex_xmas_godly_enabled = new_settings.auto_flex_xmas_godly_enabled
         self.auto_flex_xmas_snowball_enabled = new_settings.auto_flex_xmas_snowball_enabled
         self.auto_flex_xmas_void_enabled = new_settings.auto_flex_xmas_void_enabled
+        self.event_arena = new_settings.event_arena
+        self.event_coin = new_settings.event_coin
+        self.event_fish = new_settings.event_fish
+        self.event_legendary_boss = new_settings.event_legendary_boss
+        self.event_log = new_settings.event_log
+        self.event_lootbox = new_settings.event_lootbox
+        self.event_miniboss = new_settings.event_miniboss
 
     async def update(self, **kwargs) -> None:
         """Updates the guild record in the database. Also calls refresh().
@@ -117,6 +139,7 @@ class Guild():
             auto_flex_enabled: bool
             auto_flex_artifacts_enabled: bool
             auto_flex_card_drop_enabled: bool
+            auto_flex_card_golden_enabled: bool
             auto_flex_card_hand_enabled: bool
             auto_flex_card_slots_enabled: bool
             auto_flex_epic_berry_enabled: bool
@@ -130,6 +153,7 @@ class Guild():
             auto_flex_hal_boo_enabled: bool
             auto_flex_lb_a18_enabled: bool
             auto_flex_lb_edgy_ultra_enabled: bool
+            auto_flex_lb_eternal_enabled: bool
             auto_flex_lb_godly_enabled: bool
             auto_flex_lb_godly_tt_enabled: bool
             auto_flex_lb_omega_enabled: bool
@@ -152,6 +176,20 @@ class Guild():
             auto_flex_xmas_godly_enabled: bool
             auto_flex_xmas_snowball_enabled: bool
             auto_flex_xmas_void_enabled: bool
+            event_arena_enabled: bool
+            event_arena_message: str
+            event_coin_enabled: bool
+            event_coin_message: str
+            event_fish_enabled: bool
+            event_fish_message: str
+            event_legendary_boss_enabled: bool
+            event_legendary_boss_message: str
+            event_log_enabled: bool
+            event_log_message: str
+            event_lootbox_enabled: bool
+            event_lootbox_message: str
+            event_miniboss_enabled: bool
+            event_miniboss_message: str
             prefix: str
         """
         await _update_guild(self.guild_id, **kwargs)
@@ -182,6 +220,7 @@ async def _dict_to_guild(record: dict) -> Guild:
             auto_flex_enabled = bool(record['auto_flex_enabled']),
             auto_flex_artifacts_enabled = bool(record['auto_flex_artifacts_enabled']),
             auto_flex_card_drop_enabled = bool(record['auto_flex_card_drop_enabled']),
+            auto_flex_card_golden_enabled = bool(record['auto_flex_card_golden_enabled']),
             auto_flex_card_slots_enabled = bool(record['auto_flex_card_slots_enabled']),
             auto_flex_card_hand_enabled = bool(record['auto_flex_card_hand_enabled']),
             auto_flex_epic_berry_enabled = bool(record['auto_flex_epic_berry_enabled']),
@@ -195,6 +234,7 @@ async def _dict_to_guild(record: dict) -> Guild:
             auto_flex_hal_boo_enabled = bool(record['auto_flex_hal_boo_enabled']),
             auto_flex_lb_a18_enabled = bool(record['auto_flex_lb_a18_enabled']),
             auto_flex_lb_edgy_ultra_enabled = bool(record['auto_flex_lb_edgy_ultra_enabled']),
+            auto_flex_lb_eternal_enabled = bool(record['auto_flex_lb_eternal_enabled']),
             auto_flex_lb_godly_enabled = bool(record['auto_flex_lb_godly_enabled']),
             auto_flex_lb_godly_tt_enabled = bool(record['auto_flex_lb_godly_tt_enabled']),
             auto_flex_lb_omega_enabled = bool(record['auto_flex_lb_omega_enabled']),
@@ -217,6 +257,13 @@ async def _dict_to_guild(record: dict) -> Guild:
             auto_flex_xmas_godly_enabled = bool(record['auto_flex_xmas_godly_enabled']),
             auto_flex_xmas_snowball_enabled = bool(record['auto_flex_xmas_snowball_enabled']),
             auto_flex_xmas_void_enabled = bool(record['auto_flex_xmas_void_enabled']),
+            event_arena = EventPing(enabled=bool(record['event_arena_enabled']), message=record['event_arena_message']),
+            event_coin = EventPing(enabled=bool(record['event_coin_enabled']), message=record['event_coin_message']),
+            event_fish = EventPing(enabled=bool(record['event_fish_enabled']), message=record['event_fish_message']),
+            event_log = EventPing(enabled=bool(record['event_log_enabled']), message=record['event_log_message']),
+            event_legendary_boss = EventPing(enabled=bool(record['event_legendary_boss_enabled']), message=record['event_legendary_boss_message']),
+            event_lootbox = EventPing(enabled=bool(record['event_lootbox_enabled']), message=record['event_lootbox_message']),
+            event_miniboss = EventPing(enabled=bool(record['event_miniboss_enabled']), message=record['event_miniboss_message']),
             guild_id = record['guild_id'],
             prefix = record['prefix'],
         )
@@ -362,6 +409,7 @@ async def _update_guild(guild_id: int, **kwargs) -> None:
         auto_flex_enabled: bool
         auto_flex_artifacts_enabled: bool
         auto_flex_card_drop_enabled: bool
+        auto_flex_card_golden_enabled: bool
         auto_flex_card_hand_enabled: bool
         auto_flex_card_slots_enabled: bool
         auto_flex_epic_berry_enabled: bool
@@ -397,6 +445,20 @@ async def _update_guild(guild_id: int, **kwargs) -> None:
         auto_flex_xmas_godly_enabled: bool
         auto_flex_xmas_snowball_enabled: bool
         auto_flex_xmas_void_enabled: bool
+        event_arena_enabled: bool
+        event_arena_message: str
+        event_coin_enabled: bool
+        event_coin_message: str
+        event_fish_enabled: bool
+        event_fish_message: str
+        event_legendary_boss_enabled: bool
+        event_legendary_boss_message: str
+        event_log_enabled: bool
+        event_log_message: str
+        event_lootbox_enabled: bool
+        event_lootbox_message: str
+        event_miniboss_enabled: bool
+        event_miniboss_message: str
         prefix: str
 
     Raises

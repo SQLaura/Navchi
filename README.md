@@ -1,26 +1,34 @@
-# Navchi
+# Navi
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Python: 3.8](https://img.shields.io/badge/Python-3.8+-brightgreen.svg)](https://www.python.org/) [![Database: SQLite](https://img.shields.io/badge/Database-SQLite-blue.svg)](https://www.sqlite.org/index.html)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Python: 3.12](https://img.shields.io/badge/Python-3.12+-brightgreen.svg)](https://www.python.org/) [![Database: SQLite](https://img.shields.io/badge/Database-SQLite-blue.svg)](https://www.sqlite.org/index.html)
 
-Reminder / Helper for EPIC RPG. Forked (technically) from MirielCH/Navi for Mochi
+Reminder / Helper for EPIC RPG.  
 
-## Setup
+## How to invite Navi
 
-• Install python 3.8 or higher. I recommend the newest version (3.11).  
-• Install all third party libraries mentioned in `requirements.txt`.  
+If you don't want to run Navi yourself, you can invite [Navi Lite](https://canary.discord.com/api/oauth2/authorize?client_id=1213487623688167494&permissions=378944&scope=bot). This is a global version hosted by me. To prevent rate limit issues, it has the following limitations:  
+• Reactions are permanently disabled.  
+• Auto-ready frequency is fixed to `after hunt only`.  
+
+## How to run Navi
+
+• Install python 3.12.  
+• Install all third party libraries mentioned in `requirements.txt` (`python3.12 -m pip install -r requirements.txt`).  
 • Create a Discord application with a bot user, activate the required intents (see below) and generate a bot token.  
-• Rename `default.env` to `.env` and set all required variables mentioned in the file.  
-• Rename `database/default_db.db` to `database/navi_db.db`.  
-• Upload all emojis in `images/emojis` to private servers.  
-• Change all emojis in `resources/emojis.py` to the ones you uploaded.  
-• Run `bot.py`.  
+• Rename `default.env` to `.env` and set the variables mentioned in the file.  
+• Rename `database/default_db.db` to `database/navchi_db.db`.  
+• Upload all emojis in `images/emojis` to private servers. **DO NOT CHANGE THEIR NAMES**.  
+• Run the bot by running `bot.py` (`python3.12 bot.py`).  
 • Invite Navi to all your emoji servers and all other servers you want to use it. Note the required permissions below.  
+• Run the command `/dev emoji-update` to update the emojis in the code to your uploaded ones.  
+• Run the command `/dev emoji-check` to make sure all emojis are present.  
 
-## Updating the bot
+## How to update Navi
 
-• Merge your old `resources/emojis.py` with the new one, so you have the new code but keep your own emoji IDs.  
 • Replace all other `.py` files with the new ones.  
-• Upload new emojis (if any) and change their ID in `resources/emojis.py`.  
+• Upload new emojis (if any) in `images/emojis` to your emoji servers. **DO NOT CHANGE THEIR NAMES**.  
+• Run the command `/dev emoji-update` to update the emojis in the code to your uploaded ones.  
+• Run the command `/dev emoji-check` to make sure all emojis are present.  
 • Restart the bot.  
 
 ## Required intents
@@ -37,12 +45,12 @@ Reminder / Helper for EPIC RPG. Forked (technically) from MirielCH/Navi for Moch
 • Add Reactions  
 • Use External Emoji  
 • Read Message History  
+• Attach files  
 
 ## Commands
 
-Navi uses slash commands but also supports some text commands.  
-Default prefix for text commands is `navi ` and is changeable in `/settings server`.  
-Use `/help` for an overview.  
+Navi uses both slash and text commands. Use `/help` for an overview.  
+Default prefix for text commands is `navchi ` and is changeable in `/settings server`.  
 
 ## Dev commands
 
@@ -52,30 +60,34 @@ These commands provide bot admin level functionality and are restricted as follo
 • They are not listed in `/help`.  
 **Do not change this behaviour. Some of them would expose data, others would allow users to mess with your Navi.**  
 
-
 The following commands are available:  
 
-### `/dev cache`  
+### `/dev cache`, `navchi dev cache`  
 
 Shows the size of the local message cache. All user messages containing a mention of epic rpg or starting with "rpg " are cached for 1 minute to speed up command detection.  
 
-### `/dev consolidate`  
+### `/dev consolidate`, `navchi dev consolidate`  
 
 Manually triggers the tracking consolidation. This runs daily at 00:00 UTC, so you probably won't need this.  
 
-### `/dev event-reductions`  
+### `/dev emoji-check`, `navchi dev emoji-check`  
+
+Checks if alle emojis Navi needs are uploaded and present.  
+
+### `/dev event-reductions`, `navchi dev er`  
 
 Manages global event reductions. If there is a global reduction (e.g. 25% on New Year event), you can set this here.  
 Always check what is actually affected before changing this, it's never all commands even when lume says otherwise. `guild`, `daily` and `weekly` are almost never included for example.  
 
-### `/dev leave-server`  
+### `/dev leave-server`, `navchi dev leave-server`  
 
 Makes Navi leave the discord server with the provided ID. You can see server IDs in `/dev server-list`. You don't have to be in a server yourself for this to work.  
-### `/dev post-message`  
+
+### `/dev post-message`, `navchi dev pm <message id> <channel id> <embed title>`  
 
 Allows you to send a custom message via Navi to a channel. I use this to post Navi updates.  
 
-### `/dev reload`  
+### `/dev reload`, `navchi dev reload <modules>`  
 
 Allows reloading of cogs and modules on the fly.  
 Note that you should always restart the bot when there is a breaking change, no matter what.  
@@ -87,20 +99,20 @@ It's not possible to reload the following files:
 
 To reload files in subfolders, use `folder.file` (e.g. `resources.settings`). Cogs don't need that, the filename is enough (e.g. `adventure`).  
 
-### `/dev server-list`  
+### `/dev server-list`, `navchi dev server-list`  
 
 Lists all servers Navi is in by name.  
 
-### `/dev shutdown`  
+### `/dev shutdown`, `navchi dev shutdown`  
 
 Shuts down the bot. Note that if the bot is registered as a systemctl or systemd service, it will of course automatically restart.  
 
-### `/dev support`  
+### `/dev support`, `navchi dev support`  
 
 Shows a link to the dev support server (see below).  
 
 Ignore other dev commands, they are my own test commands and might even mess up something for you.  
 
-## Dev support server
+## Support server
 
-• If you find bugs, have issues running Navi or something else, feel free to join the [dev support server](https://discord.gg/Kz2Vz2K4gy).  
+• If you find bugs, have issues running Navi or something else, feel free to join the [support server](https://discord.gg/Kz2Vz2K4gy).  

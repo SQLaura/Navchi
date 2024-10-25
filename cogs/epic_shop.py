@@ -1,10 +1,11 @@
 # epic_shop.py
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 import random
 import re
 
 import discord
+from discord import utils
 from discord.ext import bridge, commands
 from datetime import timedelta
 
@@ -21,6 +22,7 @@ class EpicShopCog(commands.Cog):
     @commands.Cog.listener()
     async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
         """Runs when a message is edited in a channel."""
+        if message_after.author.id not in [settings.EPIC_RPG_ID, settings.TESTY_ID]: return
         if message_before.pinned != message_after.pinned: return
         embed_data_before = await functions.parse_embed(message_before)
         embed_data_after = await functions.parse_embed(message_after)
@@ -80,8 +82,8 @@ class EpicShopCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_epic_shop.enabled: return
-                current_time = datetime.utcnow()
-                midnight_today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+                current_time = utils.utcnow()
+                midnight_today = current_time.replace(hour=0, minute=0, second=0, microsecond=0)
                 midnight_tomorrow = midnight_today + timedelta(days=1)
                 reminder_created = False
                 for field in message.embeds[0].fields:
@@ -101,6 +103,10 @@ class EpicShopCog(commands.Cog):
                             pass
                         continue
                     time_left_timestring = await functions.parse_timestring_to_timedelta(timestring)
+                    bot_answer_time = message.edited_at if message.edited_at else message.created_at
+                    current_time = utils.utcnow()
+                    time_elapsed = current_time - bot_answer_time
+                    time_left_timestring -= time_elapsed
                     time_left = midnight_tomorrow - current_time + timedelta(seconds=random.randint(0, 600))
                     if time_left_timestring >= timedelta(days=1):
                         time_left = time_left + timedelta(days=time_left_timestring.days)
@@ -128,6 +134,8 @@ class EpicShopCog(commands.Cog):
                 'maxed the purchases', #All languages
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
+                interaction = await functions.get_interaction(message)
+                if interaction is not None: return
                 user_command_message = None
                 user = message.mentions[0]
                 user_command_message = (
@@ -166,5 +174,5 @@ class EpicShopCog(commands.Cog):
                     
 
 # Initialization
-def setup(bot):
+def setup(bot: bridge.AutoShardedBot):
     bot.add_cog(EpicShopCog(bot))

@@ -6,6 +6,7 @@ import random
 import re
 
 import discord
+from discord import utils
 from discord.ext import bridge, commands
 
 from cache import messages
@@ -44,6 +45,7 @@ class ChristmasCog(commands.Cog):
     @commands.Cog.listener()
     async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
         """Runs when a message is edited in a channel."""
+        if message_after.author.id not in [settings.EPIC_RPG_ID, settings.TESTY_ID]: return
         if message_before.pinned != message_after.pinned: return
         embed_data_before = await functions.parse_embed(message_before)
         embed_data_after = await functions.parse_embed(message_after)
@@ -130,7 +132,7 @@ class ChristmasCog(commands.Cog):
                 '— advent calendar', #All languages
             ]
             if any(search_string in message_author.lower() for search_string in search_strings):
-                current_time = datetime.utcnow().replace(microsecond=0)
+                current_time = utils.utcnow()
                 stephans_day = datetime(year=current_time.year, month=12, day=26, hour=0, minute=0, second=0)
                 if current_time >= stephans_day: return
                 user_id = user_name = None
@@ -162,8 +164,8 @@ class ChristmasCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_advent.enabled: return
-                current_time = datetime.utcnow().replace(microsecond=0)
-                midnight_today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+                current_time = utils.utcnow()
+                midnight_today = current_time.replace(hour=0, minute=0, second=0, microsecond=0)
                 end_time = midnight_today + timedelta(days=1, seconds=random.randint(60, 300))
                 time_left = end_time - current_time
                 user_command = await functions.get_slash_command(user_settings, 'xmas calendar')
@@ -284,7 +286,6 @@ class ChristmasCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_chimney.enabled: return
-                current_time = datetime.utcnow().replace(microsecond=0)
                 time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'chimney')
                 if time_left < timedelta(0): return
                 user_command = await functions.get_slash_command(user_settings, 'xmas chimney')
@@ -340,7 +341,7 @@ class ChristmasCog(commands.Cog):
                 if not user_settings.bot_enabled: return
                 if not user_settings.christmas_area_enabled:
                     await user_settings.update(christmas_area_enabled=True)
-                    await reminders.reduce_reminder_time_percentage(user.id, 10, ACTIVITIES_AFFECTED_BY_A0, user_settings)
+                    await reminders.reduce_reminder_time_percentage(user_settings, 10, ACTIVITIES_AFFECTED_BY_A0)
                     await message.reply(
                         CHRISTMAS_AREA_ENABLED.format(cd=await functions.get_slash_command(user_settings, 'cd'))
                     )
@@ -384,7 +385,7 @@ class ChristmasCog(commands.Cog):
                 if not user_settings.bot_enabled: return
                 if user_settings.christmas_area_enabled:
                     await user_settings.update(christmas_area_enabled=False)
-                    await reminders.increase_reminder_time_percentage(user.id, 10, ACTIVITIES_AFFECTED_BY_A0, user_settings)
+                    await reminders.increase_reminder_time_percentage(user_settings, 10, ACTIVITIES_AFFECTED_BY_A0)
                     await message.reply(
                         CHRISTMAS_AREA_DISABLED.format(cd=await functions.get_slash_command(user_settings, 'cd'))
                     )
@@ -409,6 +410,7 @@ class ChristmasCog(commands.Cog):
                 event_mobs = [
                    'christmas slime',
                    'bunny slime', 
+                   'horslime', 
                 ]
                 if any(mob in message_content.lower() for mob in event_mobs): return
                 user_id = user_name = partner_name = None
@@ -482,13 +484,13 @@ class ChristmasCog(commands.Cog):
                         break
                 if not user_settings.christmas_area_enabled and christmas_area_enabled:
                     await user_settings.update(christmas_area_enabled=True)
-                    await reminders.reduce_reminder_time_percentage(user.id, 10, ACTIVITIES_AFFECTED_BY_A0, user_settings)
+                    await reminders.reduce_reminder_time_percentage(user_settings, 10, ACTIVITIES_AFFECTED_BY_A0)
                     await message.reply(
                         CHRISTMAS_AREA_ENABLED.format(cd=await functions.get_slash_command(user_settings, 'cd'))
                     )
                 if user_settings.christmas_area_enabled and not christmas_area_enabled:
                     await user_settings.update(christmas_area_enabled=False)
-                    await reminders.increase_reminder_time_percentage(user.id, 10, ACTIVITIES_AFFECTED_BY_A0, user_settings)
+                    await reminders.increase_reminder_time_percentage(user_settings, 10, ACTIVITIES_AFFECTED_BY_A0)
                     await message.reply(
                         CHRISTMAS_AREA_DISABLED.format(cd=await functions.get_slash_command(user_settings, 'cd'))
                     )
@@ -556,6 +558,9 @@ class ChristmasCog(commands.Cog):
                 if not user_settings.bot_enabled or not user_settings.alert_eternal_present.enabled: return
                 timestring_match = re.search(r"for \*\*(.+?)\*\*", message_content.lower())
                 time_left = await functions.parse_timestring_to_timedelta(timestring_match.group(1))
+                bot_answer_time = message.edited_at if message.edited_at else message.created_at
+                time_elapsed = utils.utcnow() - bot_answer_time
+                time_left -= time_elapsed
                 if time_left < timedelta(0): return
                 user_command = await functions.get_slash_command(user_settings, 'xmas open')
                 reminder_message = user_settings.alert_eternal_present.message.replace('{command}', user_command)
@@ -568,5 +573,5 @@ class ChristmasCog(commands.Cog):
 
 
 # Initialization
-def setup(bot):
+def setup(bot: bridge.AutoShardedBot):
     bot.add_cog(ChristmasCog(bot))

@@ -18,6 +18,7 @@ class HelperHealCog(commands.Cog):
     @commands.Cog.listener()
     async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
         """Runs when a message is edited in a channel."""
+        if message_after.author.id not in [settings.EPIC_RPG_ID, settings.TESTY_ID]: return
         if message_before.pinned != message_after.pinned: return
         embed_data_before = await functions.parse_embed(message_before)
         embed_data_after = await functions.parse_embed(message_after)
@@ -196,7 +197,7 @@ class HelperHealCog(commands.Cog):
                     'mas perdeu a luta', #Portuguese 2
                     'mas perdeu a luta', #TODO: Portuguese 3
                 ]
-                if all(search_string not in message_content for search_string in search_strings):
+                if all(search_string not in message_content.lower() for search_string in search_strings):
                     await functions.add_warning_reaction(message)
                     await errors.log_error('Health not found in hunt/adventure message for heal warning.', message)
                     return
@@ -290,5 +291,5 @@ class HelperHealCog(commands.Cog):
 
 
 # Initialization
-def setup(bot):
+def setup(bot: bridge.AutoShardedBot):
     bot.add_cog(HelperHealCog(bot))

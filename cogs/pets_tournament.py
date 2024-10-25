@@ -1,11 +1,12 @@
 # pets_tournament.py
 
 import asyncio
-from datetime import datetime, timedelta
+from datetime import timedelta
 import random
 import re
 
 import discord
+from discord import utils
 from discord.ext import bridge, commands
 
 from cache import messages
@@ -21,6 +22,7 @@ class PetsTournamentCog(commands.Cog):
     @commands.Cog.listener()
     async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
         """Runs when a message is edited in a channel."""
+        if message_after.author.id not in [settings.EPIC_RPG_ID, settings.TESTY_ID]: return
         if message_before.pinned != message_after.pinned: return
         embed_data_before = await functions.parse_embed(message_before)
         embed_data_after = await functions.parse_embed(message_after)
@@ -46,7 +48,6 @@ class PetsTournamentCog(commands.Cog):
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
                 user_command_message = None
-                slash_command = True if user is not None else False
                 if user is None:
                     user_command_message = (
                         await messages.find_message(message.channel.id, regex.COMMAND_PETS_TOURNAMENT)
@@ -135,9 +136,9 @@ class PetsTournamentCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_pet_tournament.enabled: return
-                current_time = datetime.utcnow().replace(microsecond=0, tzinfo=None)
-                today_20pm = datetime.utcnow().replace(hour=20, minute=0, second=0, microsecond=0)
-                today_8am = datetime.utcnow().replace(hour=8, minute=0, second=0, microsecond=0)
+                current_time = utils.utcnow()
+                today_20pm = current_time.replace(hour=20, minute=0, second=0, microsecond=0)
+                today_8am = current_time.replace(hour=8, minute=0, second=0, microsecond=0)
                 tomorrow_8am = today_8am + timedelta(days=1)
                 if today_8am > current_time:
                     time_left = today_8am - current_time
@@ -155,5 +156,5 @@ class PetsTournamentCog(commands.Cog):
                 await functions.add_reminder_reaction(message, reminder, user_settings)
 
 # Initialization
-def setup(bot):
+def setup(bot: bridge.AutoShardedBot):
     bot.add_cog(PetsTournamentCog(bot))

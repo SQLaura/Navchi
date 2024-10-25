@@ -18,14 +18,14 @@ class FeedbackCog(commands.Cog):
         self.bot = bot        
 
     # Commands
-    @bridge.bridge_command(name='complaint', aliases=('complain',), description='Sends a complaint about Navchi to the owner.')
+    @bridge.bridge_command(name='complaint', aliases=('complain',), description='Sends a complaint about Navi to the owner.')
     async def complaint(
         self,
         ctx: bridge.BridgeContext,
         *,
         message: BridgeOption(str, description='Complaint you want to send', max_length=2000)
     ) -> None:
-        """Sends a complaint about Navchi to the owner."""
+        """Sends a complaint about Navi to the owner."""
         ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
         embed = discord.Embed(
             title = f'**{ctx.author.name}** has a complaint',
@@ -73,7 +73,7 @@ class FeedbackCog(commands.Cog):
         else:
             await ctx.send(answer)
             
-    @bridge.bridge_command(name='suggestion', aliases=('suggest',), description='Sends a suggestion about Navchi to the owner.')
+    @bridge.bridge_command(name='suggestion', aliases=('suggest',), description='Sends a suggestion about Navchi to the dev.')
     async def suggestion(
         self,
         ctx: bridge.BridgeContext,
@@ -130,5 +130,5 @@ class FeedbackCog(commands.Cog):
 
 
 # Initialization
-def setup(bot):
+def setup(bot: bridge.AutoShardedBot):
     bot.add_cog(FeedbackCog(bot))

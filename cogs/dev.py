@@ -3,21 +3,26 @@
 """Internal dev commands"""
 
 import asyncio
-from datetime import datetime
 import importlib
 import os
 import re
+import shutil
 import sqlite3
 import sys
-from typing import List
+from typing import List, TextIO, TYPE_CHECKING
 
 import discord
+from discord import utils
 from discord.ext import bridge, commands
 from discord.ext.bridge import BridgeOption
 from humanfriendly import format_timespan
 
-from database import cooldowns
-from resources import emojis, exceptions, logs, settings, views
+from database import cooldowns, users
+from database import settings as settings_db
+from resources import emojis, exceptions, functions, logs, settings, views
+
+if TYPE_CHECKING:
+    from datetime import datetime, timedelta
 
 
 EVENT_REDUCTION_TYPES = [
@@ -51,9 +56,11 @@ class DevCog(commands.Cog):
             f'{emojis.BP} `{ctx.prefix}dev leave-server <server id>`\n'
             f'{emojis.BP} `{ctx.prefix}dev post-message`, `pm` `<message id> <channel id> <embed title>`\n'
             f'{emojis.BP} `{ctx.prefix}dev reload <modules>`\n'
+            f'{emojis.BP} `{ctx.prefix}dev seasonal-event`, `se`\n'
             f'{emojis.BP} `{ctx.prefix}dev server-list`\n'
             f'{emojis.BP} `{ctx.prefix}dev support`\n'
             f'{emojis.BP} `{ctx.prefix}dev shutdown`\n'
+            f'{emojis.BP} `{ctx.prefix}dev user-settings <user id>`\n'
         )
 
     @dev_group.command(name='reload', description='Reloads cogs or modules', guild_ids=settings.DEV_GUILDS)
@@ -125,8 +132,8 @@ class DevCog(commands.Cog):
         else:
             description = (
                 '- _Invalid emojis have an error in their definition in `emojis.py`._\n'
-                '- _Missing emojis are valid but not found on Discord. Upload them to a server Navchi can see and set '
-                'the correct IDs in `emojis.py`._\n'
+                '- _Missing emojis are valid but not found on Discord. Upload them to a server Navi can see, run '
+                ' `/dev emoji-update` and restart the bot._\n\n'
             )
         if invalid_emojis:
             description = f'{description}\n\n**Invalid emojis**'
@@ -145,6 +152,116 @@ class DevCog(commands.Cog):
         await ctx.respond(embed=embed)
 
 
+    @dev_group.command(name='emoji-update', aliases=('emojiupdate','emojis-update','update-emojis','update-emoji'),
+                       description='Update all emojis in emojis.py to your uploaded emojis.', guild_ids=settings.DEV_GUILDS)
+    @commands.bot_has_permissions(send_messages=True, embed_links=True)
+    async def dev_emoji_update(self, ctx: bridge.BridgeContext) -> None:
+        """Update all emojis in emojis.py to your uploaded emojis."""
+        if ctx.author.id not in settings.DEV_IDS:
+            if ctx.is_app: await ctx.respond(MSG_NOT_DEV, ephemeral=True)
+            return
+
+        ctx_author_name: str = ctx.author.global_name if ctx.author.global_name else ctx.author.name
+        view: views.ConfirmCancelView = views.ConfirmCancelView(ctx, styles=[discord.ButtonStyle.blurple, discord.ButtonStyle.grey])
+        interaction = await ctx.respond(
+            f'This command will execute the following actions:\n'
+            f'{emojis.BP} Create a backup of your `resources/emojis.py` as `resources/emojis.py.backup`\n'
+            f'{emojis.BP} Update all emojis in `resources/emojis.py` with the emojis in your emoji servers\n'
+            f'{emojis.DETAIL} This only detects emojis **with the same name**!\n',
+            view=view,
+        )
+        view.interaction_message = interaction
+        await view.wait()
+        match view.value:
+            case None:
+                await interaction.edit(content=f'**{ctx_author_name}**, you didn\'t answer in time.')
+            case 'confirm':
+                start_time: datetime = utils.utcnow()
+                await interaction.edit(view=None)
+                interaction = await ctx.respond('Starting update...')
+                old_emoji_file_path: str = os.path.join(settings.BOT_DIR, 'resources/emojis.py')
+                old_emoji_backup_file_path: str = os.path.join(settings.BOT_DIR, 'resources/emojis.py.backup')
+                new_emoji_file_path: str = os.path.join(settings.BOT_DIR, 'resources/emojis.py.new')
+
+                # Read old emojis.py
+                old_emoji_file: TextIO = open(old_emoji_file_path, 'r', encoding='utf-8')
+                old_emoji_file_content: list[str] = old_emoji_file.readlines()
+                old_emoji_file.close()
+
+                # Create backup file
+                shutil.copy(old_emoji_file_path, old_emoji_backup_file_path)
+
+                # Read all emojis from emoji servers                
+                guild_id: int
+                server_emojis: list[discord.Emoji] = []
+                for guild_id in settings.EMOJI_GUILDS:
+                    server_emojis += self.bot.get_guild(guild_id).emojis
+
+                # Create the new emoji file
+                new_emoji_file: TextIO = open(new_emoji_file_path, 'a', encoding='utf-8')
+                new_emoji_file.truncate(0)
+
+                # Go through all lines in the old emoji file and update emojis when necessary
+                try:
+                    missing_emojis: dict[str, str] = {}
+                    line: str
+                    for line in old_emoji_file_content:
+                        emoji_data_match: re.Match = re.match(r'^\b([\w_]+)\b.+<a?:(\w+):', line.strip())
+                        if not emoji_data_match:
+                            new_emoji_file.write(line)
+                        else:
+                            attribute_name: str
+                            emoji_name: str
+                            attribute_name, emoji_name = emoji_data_match.groups()
+                            
+                            server_emoji: discord.Emoji
+                            emoji_found: bool = False
+                            for server_emoji in server_emojis:
+                                if emoji_name.lower() == server_emoji.name.lower():
+                                    new_emoji_file.write(
+                                        f'{attribute_name.upper()}: Final[str] = \'{str(server_emoji)}\'\n'
+                                    )
+                                    emoji_found = True
+                                    break
+                                
+                            if not emoji_found:
+                                missing_emojis[attribute_name] = emoji_name
+                                new_emoji_file.write(f'{line.strip('\n')} # /dev emoji-update: Emoji not found\n')
+                except:
+                    raise
+                else:
+                    new_emoji_file.close()
+
+                # Replace old file with new one
+                shutil.move(new_emoji_file_path, old_emoji_file_path)
+
+                # Send report
+                time_taken: timedelta = utils.utcnow() - start_time
+                description: str = (
+                    f'_Update completed after {format_timespan(time_taken)}._\n'
+                    f'_➜ Please run `/dev emoji-check` to make sure all emojis are present._'
+                )
+                
+                if missing_emojis:
+                    description = (
+                        f'{description}\n\n'
+                        f'{emojis.WARNING} **Could not find the following emojis:**'
+                    )
+                    attribute_name: str
+                    emoji_name: str
+                    for attribute_name, emoji_name in missing_emojis.items():
+                        description = f'{description}\n{emojis.BP} `{attribute_name.upper()}` (emoji name `{emoji_name}`)'
+                        
+                if len(description) >= 4096:
+                    description = f'{description[:4050]}\n- ... too many missing emojis, what are you even doing?'
+                    
+                embed: discord.Embed = discord.Embed(title='Emoji Update', description=description)
+                await interaction.edit(content=None, embed=embed)
+                
+            case _:
+                await interaction.edit(content='Updating aborted.', view=None)
+
+
     @dev_group.command(name='event-reductions', aliases=('er',), description='Manage global event reductions',
                        guild_ids=settings.DEV_GUILDS)
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
@@ -159,17 +276,17 @@ class DevCog(commands.Cog):
         interaction = await ctx.respond(embed=embed, view=view)
         view.interaction = interaction
 
-    @dev_group.command(name='backup', description='Manually backup the database of Navchi', guild_ids=settings.DEV_GUILDS)
+    @dev_group.command(name='backup', description='Manually backup the database of Navi', guild_ids=settings.DEV_GUILDS)
     @commands.bot_has_permissions(send_messages=True)
     async def dev_backup(self, ctx: bridge.BridgeContext) -> None:
-        """Manually backup the database of Navchi"""
+        """Manually backup the database of Navi"""
         ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
         if ctx.author.id not in settings.DEV_IDS:
             if ctx.is_app: await ctx.respond(MSG_NOT_DEV, ephemeral=True)
             return
         view = views.ConfirmCancelView(ctx, styles=[discord.ButtonStyle.blurple, discord.ButtonStyle.grey])
         interaction = await ctx.respond(
-            f'This will back up the database to `navchi_db_backup.db`. You can continue using Navchi while doing this.\n'
+            f'This will back up the database to `navchi_db_backup.db`. You can continue using Navi while doing this.\n'
             f'**If the target file exists, it will be overwritten!**\n\n'
             f'Proceed?',
             view=view,
@@ -177,18 +294,17 @@ class DevCog(commands.Cog):
         view.interaction_message = interaction
         await view.wait()
         if view.value is None:
-            await interaction.edit(f'**{ctx_author_name}**, you didn\'t answer in time.')
+            await interaction.edit(content=f'**{ctx_author_name}**, you didn\'t answer in time.')
         elif view.value != 'confirm':
-            await interaction.edit(view=None)
-            await interaction.edit('Backup aborted.')
+            await interaction.edit(content='Backup aborted.', view=None)
         else:
-            start_time = datetime.utcnow()
+            start_time = utils.utcnow()
             interaction = await ctx.respond('Starting backup...')
             backup_db_file = os.path.join(settings.BOT_DIR, 'database/navchi_db_backup.db')
             navchi_backup_db = sqlite3.connect(backup_db_file)
             settings.NAVCHI_DB.backup(navchi_backup_db)
             navchi_backup_db.close()
-            time_taken = datetime.utcnow() - start_time
+            time_taken = utils.utcnow() - start_time
             await interaction.edit(f'Backup finished after {format_timespan(time_taken)}')
 
     @dev_group.command(name='post-message', aliases=('pm',),
@@ -267,7 +383,7 @@ class DevCog(commands.Cog):
             if ctx.is_app: await ctx.respond(MSG_NOT_DEV, ephemeral=True)
             return
         await ctx.respond(
-            f'Got some issues or questions running Navchi? Feel free to join the Navchi dev support server:\n'
+            f'Got some issues or questions running Navi? Feel free to join the Navi dev support server:\n'
             f'https://discord.gg/Kz2Vz2K4gy'
         )
 
@@ -299,12 +415,12 @@ class DevCog(commands.Cog):
             interaction = await ctx.respond(f'{answer} `[yes/no]`')
             try:
                 answer = await self.bot.wait_for('message', check=check, timeout=30)
+                if answer.content.lower() in ['yes','y']:
+                    confirmed = True
+                else:
+                    aborted = True
             except asyncio.TimeoutError:
                 timeout = True
-            if answer.content.lower() in ['yes','y']:
-                confirmed = True
-            else:
-                aborted = True
         if timeout:
             await interaction.edit(interaction, content=f'**{ctx_author_name}**, you didn\'t answer in time.', view=None)
         elif confirmed:
@@ -368,8 +484,8 @@ class DevCog(commands.Cog):
         from datetime import datetime
         import asyncio
         from humanfriendly import format_timespan
-        from database import tracking, users
-        start_time = datetime.utcnow().replace(microsecond=0)
+        from database import tracking
+        start_time = utils.utcnow()
         log_entry_count = 0
         try:
             old_log_entries = await tracking.get_old_log_entries(28)
@@ -385,25 +501,25 @@ class DevCog(commands.Cog):
             log_entry_count += 1
         for key, amount in entries.items():
             user_id, guild_id, command, date_time = key
-            summary_log_entry = await tracking.insert_log_summary(user_id, guild_id, command, date_time, amount)
+            await tracking.insert_log_summary(user_id, guild_id, command, date_time, amount)
             date_time_min = date_time.replace(hour=0, minute=0, second=0, microsecond=0)
             date_time_max = date_time.replace(hour=23, minute=59, second=59, microsecond=999999)
             await tracking.delete_log_entries(user_id, guild_id, command, date_time_min, date_time_max)
             await asyncio.sleep(0.01)
         cur = settings.NAVCHI_DB.cursor()
         cur.execute('VACUUM')
-        end_time = datetime.utcnow().replace(microsecond=0)
+        end_time = utils.utcnow()
         time_passed = end_time - start_time
         logs.logger.info(f'Consolidated {log_entry_count:,} log entries in {format_timespan(time_passed)} manually.')
         await ctx.respond(f'Consolidated {log_entry_count:,} log entries in {format_timespan(time_passed)}.')
 
-    @dev_group.command(name='leave-server', description='Removes Navchi from a specific guild', guild_ids=settings.DEV_GUILDS)
+    @dev_group.command(name='leave-server', description='Removes Navi from a specific guild', guild_ids=settings.DEV_GUILDS)
     async def dev_leave_server(
         self,
         ctx: bridge.BridgeContext,
         guild_id: BridgeOption(str, description='ID of the server you want to leave'),
     ) -> None:
-        """Removes Navchi from a specific guild"""
+        """Removes Navi from a specific guild"""
         if ctx.author.id not in settings.DEV_IDS:
             if ctx.is_app: await ctx.respond(MSG_NOT_DEV, ephemeral=True)
             return
@@ -418,7 +534,7 @@ class DevCog(commands.Cog):
             return
         view = views.ConfirmCancelView(ctx, styles=[discord.ButtonStyle.blurple, discord.ButtonStyle.grey])
         interaction = await ctx.respond(
-            f'Remove Navchi from **{guild_to_leave.name}** (`{guild_to_leave.id}`)?',
+            f'Remove Navi from **{guild_to_leave.name}** (`{guild_to_leave.id}`)?',
             view=view
         )
         view.interaction_message = interaction
@@ -433,13 +549,63 @@ class DevCog(commands.Cog):
                     f'Leaving the server failed with the following error:\n'
                     f'```\n{error}\n```'
                 )
-            await interaction.edit(content=f'Removed Navchi from **{guild_to_leave.name}** (`{guild_to_leave.id}`).',
+            await interaction.edit(content=f'Removed Navi from **{guild_to_leave.name}** (`{guild_to_leave.id}`).',
                                    view=None)
         else:
             await interaction.edit(content='Aborted.', view=None)
 
 
-def setup(bot):
+    @dev_group.command(name='seasonal-event', aliases=('se','seasonal'), description='Manage the active seasonal event',
+                       guild_ids=settings.DEV_GUILDS)
+    @commands.bot_has_permissions(send_messages=True, embed_links=True)
+    async def dev_seasonal_event(self, ctx: bridge.BridgeContext) -> None:
+        """Manage seasonal event"""
+        if ctx.author.id not in settings.DEV_IDS:
+            if ctx.is_app: await ctx.respond(MSG_NOT_DEV, ephemeral=True)
+            return
+        all_settings = await settings_db.get_settings()
+        view = views.DevSeasonalEventView(ctx, self.bot, all_settings['seasonal_event'], embed_dev_seasonal_event)
+        embed = await embed_dev_seasonal_event(self.bot)
+        interaction = await ctx.respond(embed=embed, view=view)
+        view.interaction = interaction
+        
+
+    @dev_group.command(name='user-settings', aliases=('user',),
+                       description='Returns settings of a user', guild_ids=settings.DEV_GUILDS)
+    @commands.bot_has_permissions(send_messages=True, attach_files=True)
+    async def dev_user_settings(self, ctx: bridge.BridgeContext, user_id: str) -> None:
+        """Lists user settings of a given user"""
+        if ctx.author.id not in settings.DEV_IDS:
+            if ctx.is_app: await ctx.respond(MSG_NOT_DEV, ephemeral=True)
+            return
+
+        try:
+            user_id_int: int = int(user_id)
+        except:
+            await ctx.respond('Invalid user ID.')
+            return
+
+        try:
+            user_settings: users.User = await users.get_user(user_id_int)
+        except exceptions.FirstTimeUserError:
+            await ctx.respond(f'This user is not registered with Navi.')
+            return
+
+        line: str
+        file_content: str = ''
+        text_file_path: str = 'dev_user_settings.py'
+        for line in str(user_settings).split(')'):
+            file_content = f'{file_content.strip()}\n{line.strip(', \n')})'
+        text_file: TextIO = open(text_file_path, 'w')
+        text_file.write(file_content.strip(') '))
+        text_file.close()
+        
+        await ctx.respond(content=f'**User settings for `{user_id}`**', file=discord.File(text_file_path))
+
+        os.remove(text_file_path)
+
+
+def setup(bot: bridge.AutoShardedBot):
     bot.add_cog(DevCog(bot))
 
 
@@ -464,4 +630,31 @@ async def embed_dev_event_reductions(all_cooldowns: List[cooldowns.Cooldown]) ->
     )
     embed.add_field(name='SLASH COMMANDS', value=reductions_slash, inline=False)
     embed.add_field(name='TEXT & MENTION COMMANDS', value=reductions_text, inline=False)
+    return embed
+
+
+async def embed_dev_seasonal_event(bot: bridge.AutoShardedBot) -> discord.Embed:
+    """Seasonal event embed"""
+
+    all_settings: dict[str, str] = await settings_db.get_settings()
+    active_event: str = all_settings['seasonal_event'].replace('_', ' ').title()
+    field_active_event = f'{emojis.BP} **{active_event}**'
+    field_command_list = (
+        f'{emojis.BP} Celebration: `cel dailyquest`, `cel multiply`, `cel sacrifice`\n'
+        f'{emojis.BP} Christmas: `xmas advent-calendar`, `xmas chimney`, `open eternal present`\n'
+        f'{emojis.BP} Halloween: `hal boo`\n'
+        f'{emojis.BP} Horse Festival: `hf megarace`, `hf minirace`\n'
+        f'{emojis.BP} Valentine: `love share`'
+    )
+
+    embed = discord.Embed(
+        color = settings.EMBED_COLOR,
+        title = 'SEASONAL EVENT SETTINGS',
+        description = (
+            f'_The currently active event controls whether the corresponding event commands will show up in '
+            f'{await functions.get_navchi_slash_command(bot, 'ready')}._'
+        )
+    )
+    embed.add_field(name='CURRENTLY ACTIVE EVENT', value=field_active_event, inline=False)
+    embed.add_field(name='AFFECTED COMMANDS', value=field_command_list, inline=False)
     return embed

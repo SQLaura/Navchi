@@ -1,9 +1,10 @@
 # events.py
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 import re
 
 import discord
+from discord import utils
 from discord.ext import bridge, commands
 
 from cache import messages
@@ -19,6 +20,7 @@ class EventsCog(commands.Cog):
     @commands.Cog.listener()
     async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
         """Runs when a message is edited in a channel."""
+        if message_after.author.id not in [settings.EPIC_RPG_ID, settings.TESTY_ID]: return
         if message_before.pinned != message_after.pinned: return
         embed_data_before = await functions.parse_embed(message_before)
         embed_data_after = await functions.parse_embed(message_after)
@@ -108,7 +110,6 @@ class EventsCog(commands.Cog):
                         await functions.add_warning_reaction(message)
                         await errors.log_error('Horse race cooldown not found in event message.', message)
                         return
-                current_time = datetime.utcnow().replace(microsecond=0)
                 updated_reminder = False
                 for cooldown in cooldowns:
                     cd_activity = cooldown[0]
@@ -120,8 +121,12 @@ class EventsCog(commands.Cog):
                         continue
                     updated_reminder = True
                     time_left = await functions.parse_timestring_to_timedelta(cd_timestring)
+                    bot_answer_time = message.edited_at if message.edited_at else message.created_at
+                    current_time = utils.utcnow()
+                    time_elapsed = current_time - bot_answer_time
+                    time_left -= time_elapsed
                     if cd_activity == 'pet-tournament': time_left += timedelta(minutes=1)
-                    bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
+                    bot_answer_time = message.edited_at if message.edited_at else message.created_at
                     time_elapsed = current_time - bot_answer_time
                     time_left = time_left - time_elapsed
                     if time_left < timedelta(0): continue
@@ -137,5 +142,5 @@ class EventsCog(commands.Cog):
 
 
 # Initialization
-def setup(bot):
+def setup(bot: bridge.AutoShardedBot):
     bot.add_cog(EventsCog(bot))

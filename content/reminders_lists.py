@@ -1,14 +1,16 @@
 # reminders_lists.py
 """Contains reminder list commands"""
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional, Union
 
 import discord
+from discord import utils
 from discord.ext import bridge, commands
 
 from content import settings as settings_cmd
 from database import clans, reminders, users
+from database import settings as settings_db
 from resources import emojis, functions, exceptions, settings, strings, views
 
 
@@ -121,8 +123,7 @@ async def embed_reminders_list(bot: bridge.AutoShardedBot, user: discord.User,
         except:
             pass
 
-    current_time = datetime.utcnow().replace(microsecond=0)
-    local_time_difference = datetime.now().replace(microsecond=0) - current_time
+    current_time = utils.utcnow()
     reminders_commands_list = []
     reminders_events_list = []
     reminders_boosts_list = []
@@ -170,11 +171,11 @@ async def embed_reminders_list(bot: bridge.AutoShardedBot, user: discord.User,
         embed.description = f'{emojis.BP} You have no active reminders'
     if reminders_commands_list:
         field_command_reminders = ''
+        reminder: reminders.Reminder
         for reminder in reminders_commands_list:
             if show_timestamps:
-                end_time = reminder.end_time + local_time_difference
-                flag = 'T' if end_time.day == current_time.day else 'f'
-                reminder_time = f'<t:{int(end_time.timestamp())}:{flag}>'
+                flag = 'T' if reminder.end_time.day == current_time.day else 'f'
+                reminder_time = utils.format_dt(reminder.end_time, flag)
             else:
                 time_left = reminder.end_time - current_time
                 timestring = await functions.parse_timedelta_to_timestring(time_left)
@@ -195,9 +196,8 @@ async def embed_reminders_list(bot: bridge.AutoShardedBot, user: discord.User,
         field_event_reminders = ''
         for reminder in reminders_events_list:
             if show_timestamps:
-                end_time = reminder.end_time + local_time_difference
-                flag = 'T' if end_time.day == current_time.day else 'f'
-                reminder_time = f'<t:{int(end_time.timestamp())}:{flag}>'
+                flag = 'T' if reminder.end_time.day == current_time.day else 'f'
+                reminder_time = utils.format_dt(reminder.end_time, flag)
             else:
                 time_left = reminder.end_time - current_time
                 timestring = await functions.parse_timedelta_to_timestring(time_left)
@@ -212,9 +212,8 @@ async def embed_reminders_list(bot: bridge.AutoShardedBot, user: discord.User,
         field_boosts_reminders = ''
         for reminder in reminders_boosts_list:
             if show_timestamps:
-                end_time = reminder.end_time + local_time_difference
-                flag = 'T' if end_time.day == current_time.day else 'f'
-                reminder_time = f'<t:{int(end_time.timestamp())}:{flag}>'
+                flag = 'T' if reminder.end_time.day == current_time.day else 'f'
+                reminder_time = utils.format_dt(reminder.end_time, flag)
             else:
                 time_left = reminder.end_time - current_time
                 timestring = await functions.parse_timedelta_to_timestring(time_left)
@@ -229,9 +228,8 @@ async def embed_reminders_list(bot: bridge.AutoShardedBot, user: discord.User,
         field_epic_shop_reminders = ''
         for reminder in reminders_epic_shop_list:
             if show_timestamps:
-                end_time = reminder.end_time + local_time_difference
-                flag = 'T' if end_time.day == current_time.day else 'f'
-                reminder_time = f'<t:{int(end_time.timestamp())}:{flag}>'
+                flag = 'T' if reminder.end_time.day == current_time.day else 'f'
+                reminder_time = utils.format_dt(reminder.end_time, flag)
             else:
                 time_left = reminder.end_time - current_time
                 timestring = await functions.parse_timedelta_to_timestring(time_left)
@@ -248,9 +246,8 @@ async def embed_reminders_list(bot: bridge.AutoShardedBot, user: discord.User,
         if clan.quest_user_id is not None:
             if clan.quest_user_id != user.id: time_left = time_left + timedelta(minutes=5)
         if show_timestamps:
-            end_time = reminder.end_time + local_time_difference
-            flag = 'T' if end_time.day == current_time.day else 'f'
-            reminder_time = f'<t:{int(end_time.timestamp())}:{flag}>'
+            flag = 'T' if reminder.end_time.day == current_time.day else 'f'
+            reminder_time = utils.format_dt(reminder.end_time, flag)
         else:
             time_left = reminder.end_time - current_time
             timestring = await functions.parse_timedelta_to_timestring(time_left)
@@ -263,9 +260,9 @@ async def embed_reminders_list(bot: bridge.AutoShardedBot, user: discord.User,
         pet_fields = {field_no: ''}
         for time_left_seconds, pet_ids in field_pets_list.items():
             if show_timestamps:
-                end_time = current_time + timedelta(seconds=time_left_seconds) + local_time_difference
-                flag = 'T' if end_time.day == current_time.day else 'f'
-                reminder_time = f'<t:{int(end_time.timestamp())}:{flag}>'
+                end_time = current_time + timedelta(seconds=time_left_seconds)
+                flag = 'T' if reminder.end_time.day == current_time.day else 'f'
+                reminder_time = utils.format_dt(reminder.end_time, flag)
             else:
                 timestring = await functions.parse_timedelta_to_timestring(timedelta(seconds=time_left_seconds))
                 reminder_time = f'**{timestring}**'
@@ -284,9 +281,8 @@ async def embed_reminders_list(bot: bridge.AutoShardedBot, user: discord.User,
         field_custom_reminders = ''
         for reminder in reminders_custom_list:
             if show_timestamps:
-                end_time = reminder.end_time + local_time_difference
-                flag = 'T' if end_time.day == current_time.day else 'f'
-                reminder_time = f'<t:{int(end_time.timestamp())}:{flag}>'
+                flag = 'T' if reminder.end_time.day == current_time.day else 'f'
+                reminder_time = utils.format_dt(reminder.end_time, flag)
             else:
                 time_left = reminder.end_time - current_time
                 timestring = await functions.parse_timedelta_to_timestring(time_left)
@@ -354,6 +350,9 @@ async def embed_ready(bot: bridge.AutoShardedBot, user: discord.User, auto_ready
             command = '`chimney unstuck lol`'
         elif activity == 'maintenance':
             command = '`maintenance`'
+        elif activity == 'hunt-partner':
+            command = await functions.get_slash_command(user_settings, 'hunt', False)
+            command = f'{command} `({user_settings.partner_name})`'
         else:
             command = await functions.get_slash_command(user_settings, strings.ACTIVITIES_SLASH_COMMANDS[activity], False)
 
@@ -393,7 +392,9 @@ async def embed_ready(bot: bridge.AutoShardedBot, user: discord.User, auto_ready
         command_upgrade = await functions.get_slash_command(user_settings, 'guild upgrade', False)
         command_raid = await functions.get_slash_command(user_settings, 'guild raid', False)
         clan_command = f"{command_upgrade} or {command_raid}"
-    ready_command_activities = list(strings.ACTIVITIES_COMMANDS[:])
+
+    all_settings: dict[str, str] = await settings_db.get_settings()
+    ready_command_activities = await functions.get_ready_command_activities(all_settings['seasonal_event'])
     ready_event_activities = list(strings.ACTIVITIES_EVENTS[:])
     active_pet_reminders = False
     for reminder in user_reminders:
@@ -405,9 +406,23 @@ async def embed_ready(bot: bridge.AutoShardedBot, user: discord.User, auto_ready
             active_pet_reminders = True
     if not active_pet_reminders or user_settings.ready_pets_claim_active:
         ready_command_activities.append('pets')
-    current_time = datetime.utcnow().replace(microsecond=0)
+    current_time = utils.utcnow()
     if 'hunt' in ready_command_activities and user_settings.partner_hunt_end_time > current_time:
         ready_command_activities.remove('hunt')
+    if 'hunt-partner' in ready_command_activities:
+        if user_settings.partner_id is not None:
+            try:
+                partner_hunt_reminder: reminders.Reminder = await reminders.get_user_reminder(user_settings.partner_id, 'hunt')
+                ready_command_activities.remove('hunt-partner')
+            except exceptions.NoDataFoundError:
+                pass
+        try:
+            if user_settings.hunt_reminders_combined:
+                ready_command_activities.remove('hunt-partner')
+            if user_settings.partner_name is None:
+                ready_command_activities.remove('hunt-partner')
+        except ValueError:
+            pass
     if 'farm' in ready_command_activities and not user_settings.ascended and user_settings.current_area in [1,2,3]:
         ready_command_activities.remove('farm')
     if 'training' in ready_command_activities and not user_settings.ascended and user_settings.current_area == 1:
@@ -575,16 +590,18 @@ async def embed_ready(bot: bridge.AutoShardedBot, user: discord.User, auto_ready
         )
     if user_settings.ready_trade_daily_visible and user_settings.top_hat_unlocked:
         if user_settings.trade_daily_total == 0:
-            trade_daily_total = trade_daily_total_str = '?'
+            trade_daily_total = 0
+            trade_daily_total_str = '?'
             trade_daily_left = ''
         else:
             trade_daily_total = user_settings.trade_daily_total
             trade_daily_total_str = f'{trade_daily_total:,}'
-            trade_daily_left = f'(`{user_settings.trade_daily_total - user_settings.trade_daily_done:,}` left)'
-        if (user_settings.trade_daily_done != trade_daily_total
-            or user_settings.trade_daily_done == trade_daily_total and user_settings.ready_trade_daily_completed_visible):
+            trade_daily_left = user_settings.trade_daily_total - user_settings.trade_daily_done
+            if trade_daily_left < 0: trade_daily_left = 0
+        if (user_settings.trade_daily_done < trade_daily_total
+            or (user_settings.trade_daily_done >= trade_daily_total and user_settings.ready_trade_daily_completed_visible)):
             field_trade_daily = (
-                f'{emojis.BP} `{user_settings.trade_daily_done:,}`/`{trade_daily_total_str}` {trade_daily_left}'
+                f'{emojis.BP} `{user_settings.trade_daily_done:,}`/`{trade_daily_total_str}` (`{trade_daily_left:,}` left)'
             ).strip()
             if user_settings.trade_daily_total == 0:
                 trade_command = await functions.get_slash_command(user_settings, 'trade list')
@@ -605,7 +622,7 @@ async def embed_ready(bot: bridge.AutoShardedBot, user: discord.User, auto_ready
             active_reminders = []
         if active_reminders:
             field_up_next = ''
-            current_time = datetime.utcnow().replace(microsecond=0)
+            current_time = utils.utcnow()
             for reminder in active_reminders:
                 if 'pets' in reminder.activity: continue
                 if (reminder.activity in strings.ACTIVITIES_BOOSTS or reminder.activity in strings.BOOSTS_ALIASES
@@ -615,9 +632,7 @@ async def embed_ready(bot: bridge.AutoShardedBot, user: discord.User, auto_ready
                     alert_settings = getattr(user_settings, strings.ACTIVITIES_COLUMNS[reminder.activity])
                     if not alert_settings.visible: continue
                 if user_settings.ready_up_next_as_timestamp:
-                    local_time_difference = datetime.now().replace(microsecond=0) - current_time
-                    end_time = reminder.end_time + local_time_difference
-                    up_next_time = f'<t:{int(end_time.timestamp())}:R>'
+                    up_next_time = utils.format_dt(reminder.end_time, 'R')
                 else:
                     time_left = reminder.end_time - current_time
                     timestring = await functions.parse_timedelta_to_timestring(time_left)
@@ -637,5 +652,8 @@ async def embed_ready(bot: bridge.AutoShardedBot, user: discord.User, auto_ready
                 )
     if auto_ready:
         embed.set_footer(text=f"See '/ready' if you want to disable this message.")
+
+    if all_settings['seasonal_event'] in strings.SEASONAL_EVENTS:
+        embed.set_footer(text=f'{all_settings["seasonal_event"].replace("_"," ").capitalize()} event mode active.')
 
     return (embed, answer)

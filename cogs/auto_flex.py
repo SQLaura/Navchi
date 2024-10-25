@@ -16,10 +16,11 @@ FLEX_TITLES = {
     'artifacts': strings.FLEX_TITLES_ARTIFACTS,
     'artifacts_bunny_mask': strings.FLEX_TITLES_ARTIFACTS,
     'artifacts_claus_belt': strings.FLEX_TITLES_ARTIFACTS,
+    'artifacts_cowboy_boots': strings.FLEX_TITLES_ARTIFACTS,
     'brew_electronical': strings.FLEX_TITLES_BREW_ELECTRONICAL,
     'card_drop': strings.FLEX_TITLES_CARD_DROP,
     'card_drop_partner': strings.FLEX_TITLES_CARD_DROP_PARTNER,
-    'card_hand': strings.FLEX_TITLES_CARD_HAND,
+    'card_golden': strings.FLEX_TITLES_CARD_GOLDEN,
     'card_slots': strings.FLEX_TITLES_CARD_SLOTS,
     'epic_berry': strings.FLEX_TITLES_EPIC_BERRY,
     'epic_berry_partner': strings.FLEX_TITLES_EPIC_BERRY_PARTNER,
@@ -34,10 +35,13 @@ FLEX_TITLES = {
     'lb_a18': strings.FLEX_TITLES_LB_A18,
     'lb_a18_partner': strings.FLEX_TITLES_LB_A18_PARTNER,
     'lb_edgy_ultra': strings.FLEX_TITLES_EDGY_ULTRA,
+    'lb_eternal': strings.FLEX_TITLES_LB_ETERNAL,
+    'lb_eternal_partner': strings.FLEX_TITLES_LB_ETERNAL_PARTNER,
     'lb_godly': strings.FLEX_TITLES_LB_GODLY,
     'lb_godly_partner': strings.FLEX_TITLES_LB_GODLY_PARTNER,
     'lb_godly_tt': strings.FLEX_TITLES_GODLY_VOID_TT,
     'lb_void_tt': strings.FLEX_TITLES_GODLY_VOID_TT,
+    'lb_eternal_tt': strings.FLEX_TITLES_GODLY_VOID_TT,
     'lb_omega_multiple': strings.FLEX_TITLES_LB_OMEGA_MULTIPLE,
     'lb_omega_no_hardmode': strings.FLEX_TITLES_LB_OMEGA_NOHARDMODE,
     'lb_omega_partner': strings.FLEX_TITLES_LB_OMEGA_PARTNER,
@@ -94,10 +98,11 @@ FLEX_THUMBNAILS = {
     'artifacts': strings.FLEX_THUMBNAILS_ARTIFACTS,
     'artifacts_bunny_mask': strings.FLEX_THUMBNAILS_ARTIFACTS_BUNNY_MASK,
     'artifacts_claus_belt': strings.FLEX_THUMBNAILS_ARTIFACTS_CLAUS_BELT,
+    'artifacts_cowboy_boots': strings.FLEX_THUMBNAILS_ARTIFACTS_COWBOY_BOOTS,
     'brew_electronical': strings.FLEX_THUMBNAILS_BREW_ELECTRONICAL,
     'card_drop': strings.FLEX_THUMBNAILS_CARD_DROP,
     'card_drop_partner': strings.FLEX_THUMBNAILS_CARD_DROP_PARTNER,
-    'card_hand': strings.FLEX_THUMBNAILS_CARD_HAND,
+    'card_golden': strings.FLEX_THUMBNAILS_CARD_GOLDEN,
     'card_slots': strings.FLEX_THUMBNAILS_CARD_SLOTS,
     'epic_berry': strings.FLEX_THUMBNAILS_EPIC_BERRY,
     'epic_berry_partner': strings.FLEX_THUMBNAILS_EPIC_BERRY_PARTNER,
@@ -112,10 +117,13 @@ FLEX_THUMBNAILS = {
     'lb_a18': strings.FLEX_THUMBNAILS_LB_A18,
     'lb_a18_partner': strings.FLEX_THUMBNAILS_LB_A18_PARTNER,
     'lb_edgy_ultra': strings.FLEX_THUMBNAILS_EDGY_ULTRA,
+    'lb_eternal': strings.FLEX_THUMBNAILS_LB_ETERNAL,
+    'lb_eternal_partner': strings.FLEX_THUMBNAILS_LB_ETERNAL_PARTNER,
     'lb_godly': strings.FLEX_THUMBNAILS_LB_GODLY,
     'lb_godly_partner': strings.FLEX_THUMBNAILS_LB_GODLY_PARTNER,
     'lb_godly_tt': strings.FLEX_THUMBNAILS_GODLY_VOID_TT,
     'lb_void_tt': strings.FLEX_THUMBNAILS_GODLY_VOID_TT,
+    'lb_eternal_tt': strings.FLEX_THUMBNAILS_GODLY_VOID_TT,
     'lb_omega_multiple': strings.FLEX_THUMBNAILS_LB_OMEGA_MULTIPLE,
     'lb_omega_no_hardmode': strings.FLEX_THUMBNAILS_LB_OMEGA_NOHARDMODE,
     'lb_omega_partner': strings.FLEX_THUMBNAILS_LB_OMEGA_PARTNER,
@@ -172,14 +180,18 @@ FLEX_THUMBNAILS = {
 FLEX_COLUMNS = {
     'artifacts_bunny_mask': 'artifacts',
     'artifacts_claus_belt': 'artifacts',
+    'artifacts_cowboy_boots': 'artifacts',
     'card_drop_partner': 'card_drop',
     'epic_berry_partner': 'epic_berry',
     'lb_a18_partner': 'lb_a18',
+    'lb_eternal_partner': 'lb_eternal',
+    'lb_eternal_tt': 'lb_godly_tt',
     'lb_godly_partner': 'lb_godly',
     'lb_omega_multiple': 'lb_omega',
     'lb_omega_no_hardmode': 'lb_omega',
     'lb_omega_partner': 'lb_omega',
     'lb_void_partner': 'lb_void',
+    'lb_void_tt': 'lb_godly_tt',
     'time_travel_1': 'time_travel',
     'time_travel_3': 'time_travel',
     'time_travel_5': 'time_travel',
@@ -277,10 +289,12 @@ class AutoFlexCog(commands.Cog):
         embed_data_after = await functions.parse_embed(message_after)
         if (message_before.content == message_after.content and embed_data_before == embed_data_after
             and message_before.components == message_after.components): return
+        """
         if message_after.embeds:
             if message_after.embeds[0].author is not None:
                 if 'card hand' in message_after.embeds[0].author.name.lower():
                     allow_disabled_components = True
+        """
         if not allow_disabled_components:
             for row in message_after.components:
                 for component in row.children:
@@ -321,6 +335,10 @@ class AutoFlexCog(commands.Cog):
                     event = 'lb_omega_ultra'
                 elif 'godly lootbox' in embed_field0_name.lower() and '<:timecapsule' in embed_field0_value.lower():
                     event = 'lb_godly_tt'
+                elif 'void lootbox' in embed_field0_name.lower() and '<:timecapsule' in embed_field0_value.lower():
+                    event = 'lb_void_tt'
+                elif 'eternal lootbox' in embed_field0_name.lower() and '<:timecapsule' in embed_field0_value.lower():
+                    event = 'lb_eternal_tt'
                 elif 'void lootbox' in embed_field0_name.lower() and '<:timecapsule' in embed_field0_value.lower():
                     event = 'lb_void_tt'
                 elif '<:partypopper' in embed_field0_value.lower():
@@ -400,6 +418,18 @@ class AutoFlexCog(commands.Cog):
                         f'**{user.name}** decided to not contribue their {emojis.LB_VOID} VOID lootbox and open it.\n'
                         f'They should be ashamed.\n'
                         f'Okay, they probably are not, because they got **{amount}** {emojis.TIME_CAPSULE} **time capsule** as a reward for their deceit.'
+                    )
+                elif event == 'lb_eternal_tt':
+                    match = re.search(r'\+(.+?) (.+?) time capsule', embed_field0_value.lower())
+                    if not match:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Time capsule amount not found in auto flex eternal lootbox message.', message)
+                        return
+                    amount = match.group(1)
+                    description = (
+                        f'Others would be happy with even finding one, but **{user.name}** decided to take it a notch higher '
+                        f'and get **{amount}** bloody {emojis.TIME_CAPSULE} **time capsule** from their {emojis.LB_ETERNAL} ETERNAL lootbox.\n'
+                        f'Time to call the EPIC guard.'
                     )
                 elif event == 'lb_party_popper':
                     match = re.search(r'\+(.+?) (.+?) party popper', embed_field0_value.lower())
@@ -591,54 +621,6 @@ class AutoFlexCog(commands.Cog):
                 await self.send_auto_flex_message(message, guild_settings, user_settings, user, 'event_coinflip',
                                                   description)
 
-            # Update time travel count from profile
-            search_strings = [
-                "— profile", #All languages
-                "— progress", #All languages
-            ]
-            if (any(search_string in embed_autor.lower() for search_string in search_strings)
-                and not 'epic npc' in embed_autor.lower()):
-                guild_settings: guilds.Guild = await guilds.get_guild(message.guild.id)
-                if not guild_settings.auto_flex_enabled: return
-                user = await functions.get_interaction_user(message)
-                if user is None:
-                    user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
-                    if user_id_match:
-                        user_id = int(user_id_match.group(1))
-                        user = message.guild.get_member(user_id)
-                    if user is None:
-                        user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, embed_autor)
-                        if user_name_match:
-                            user_name = user_name_match.group(1)
-                            user_command_message = (
-                                await messages.find_message(message.channel.id, regex.COMMAND_PROFILE_PROGRESS,
-                                                            user_name=user_name)
-                            )
-                        if not user_name_match or user_command_message is None:
-                            await functions.add_warning_reaction(message)
-                            return
-                        user = user_command_message.author
-                try:
-                    user_settings: users.User = await users.get_user(user.id)
-                except exceptions.FirstTimeUserError:
-                    return
-                if not user_settings.bot_enabled or not user_settings.auto_flex_enabled: return
-                if len(embed_field0_value.split('\n')) < 4:
-                    time_travel_count = 0
-                else:
-                    search_patterns = [
-                        'time travels\*\*: (.+?)(?:$|\n)', #English
-                        'el tiempo\*\*: (.+?)(?:$|\n)', #Spanish
-                        'no tempo\*\*: (.+?)(?:$|\n)', #Portuguese
-                    ]
-                    tt_match = await functions.get_match_from_patterns(search_patterns, embed_field0_value)
-                    if not tt_match:
-                        await functions.add_warning_reaction(message)
-                        await errors.log_error('Time travel count not found in profile or progress message.', message)
-                        return
-                    time_travel_count = int(tt_match.group(1))
-                await user_settings.update(time_travel_count=time_travel_count)
-
             # Update time travel count from time travel message
             search_strings = [
                 "— time travel", #All languages
@@ -689,12 +671,12 @@ class AutoFlexCog(commands.Cog):
                     else:
                         next_tt = False
                     search_patterns = [
-                        'time travels\*\*: (.+?)\n', #English
-                        'extra pet slots\*\*: (.+?)\n', #English
-                        'viajes en el tiempo\*\*: (.+?)\n', #Spanish
-                        'espacio adicional para mascotas\*\*: (.+?)\n', #Spanish
-                        'viagem no tempo\*\*: (.+?)\n', #Portuguese
-                        'espaços extras para pets\*\*: (.+?)\n', #Portuguese
+                        r'time travels\*\*: (.+?)\n', #English
+                        r'extra pet slots\*\*: (.+?)\n', #English
+                        r'viajes en el tiempo\*\*: (.+?)\n', #Spanish
+                        r'espacio adicional para mascotas\*\*: (.+?)\n', #Spanish
+                        r'viagem no tempo\*\*: (.+?)\n', #Portuguese
+                        r'espaços extras para pets\*\*: (.+?)\n', #Portuguese
                     ]
                     tt_match = await functions.get_match_from_patterns(search_patterns, embed_description)
                     if tt_match:
@@ -702,7 +684,8 @@ class AutoFlexCog(commands.Cog):
                         if next_tt: time_travel_count -= 1
                     else:
                         return
-                await user_settings.update(time_travel_count=time_travel_count)
+                trade_daily_total = floor(100 * (time_travel_count + 1) ** 1.35)
+                await user_settings.update(time_travel_count=time_travel_count, trade_daily_total=trade_daily_total)
 
             # Time travel
             search_strings = [
@@ -1135,56 +1118,6 @@ class AutoFlexCog(commands.Cog):
                 )
                 await self.send_auto_flex_message(message, guild_settings, user_settings, user, 'card_slots', description)
 
-            # High winning hand in card hand
-            search_strings = [
-                "— card hand", #All languages
-            ]
-            search_strings_hand = [
-                'full house',
-                'game of kings',
-                'four of a kind',
-                'straight flush',
-                'ace gala',
-                'royal flush',
-                'royal hearted flush',
-                'ace extravaganza',
-            ]
-            if (any(search_string in embed_autor.lower() for search_string in search_strings)
-                and any(search_string in embed_field0_name.lower() for search_string in search_strings_hand)
-                and '`hands`' in embed_description.lower()):
-                guild_settings: guilds.Guild = await guilds.get_guild(message.guild.id)
-                if not guild_settings.auto_flex_enabled: return
-                user = await functions.get_interaction_user(message)
-                if user is None:
-                    user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
-                    if user_id_match:
-                        user_id = int(user_id_match.group(1))
-                        user = message.guild.get_member(user_id)
-                    if user is None:
-                        user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, embed_autor)
-                        if user_name_match:
-                            user_name = user_name_match.group(1)
-                            user_command_message = (
-                                await messages.find_message(message.channel.id, regex.COMMAND_CARD_HAND, user_name=user_name)
-                            )
-                        if not user_name_match or user_command_message is None:
-                            await functions.add_warning_reaction(message)
-                            await errors.log_error('User not found in auto flex card hand message.', message)
-                            return
-                        user = user_command_message.author
-                try:
-                    user_settings: users.User = await users.get_user(user.id)
-                except exceptions.FirstTimeUserError:
-                    return
-                if not user_settings.bot_enabled or not user_settings.auto_flex_enabled: return
-                hand_name = re.search(r'(.+?) \|', embed_field0_name).group(1)
-                description = (
-                    f'**{user.name}** played ~~video poker~~ `card hand` and got a **{hand_name}**!\n'
-                    f'It\'s all rather sus, really.\n'
-                    f'Did you know they used to tar and feather people cheating at cards back in the day?'
-                )
-                await self.send_auto_flex_message(message, guild_settings, user_settings, user, 'card_hand', description)
-
         if not message.embeds:
             message_content = message.content
 
@@ -1240,7 +1173,13 @@ class AutoFlexCog(commands.Cog):
                         f'This looks a little silly, dear, but sure, wear it.\n'
                         f'We won\'t judge.'
                     )
-                    event = 'artifacts_bunny_mask'    
+                    event = 'artifacts_bunny_mask'
+                elif artifact_name == 'cowboy boots':
+                    description = (
+                        f'Ew **{user.name}**. Really? Now you\'re crafting old {artifact_emoji} **{artifact_name}**? What\'s next? Old Roman socks?\n'
+                        f'Well, you do you.'
+                    )
+                    event = 'artifacts_cowboy_boots'
                 else:
                     description = (
                         f'**{user.name}** found some dusty old parts and crafted a {artifact_emoji} **{artifact_name}** '
@@ -1512,6 +1451,7 @@ class AutoFlexCog(commands.Cog):
                 'omega lootbox',
                 'godly lootbox',
                 'void lootbox',
+                'eternal lootbox',
                 'wolf skin',
                 'zombie eye',
                 'unicorn horn',
@@ -1596,10 +1536,12 @@ class AutoFlexCog(commands.Cog):
                     'OMEGA lootbox': emojis.LB_OMEGA,
                     'GODLY lootbox': emojis.LB_GODLY,
                     'VOID lootbox': emojis.LB_VOID,
+                    'ETERNAL lootbox': emojis.LB_ETERNAL,
                 }
                 lootboxes_user_lost = {
                     'GODLY lootbox': emojis.LB_GODLY,
                     'VOID lootbox': emojis.LB_VOID,
+                    'ETERNAL lootbox': emojis.LB_ETERNAL,
                 }
                 if message.guild.id != 713541415099170836:
                     lootboxes_user_lost['OMEGA lootbox'] = emojis.LB_OMEGA
@@ -1607,10 +1549,12 @@ class AutoFlexCog(commands.Cog):
                     'OMEGA lootbox': emojis.LB_OMEGA,
                     'GODLY lootbox': emojis.LB_GODLY,
                     'VOID lootbox': emojis.LB_VOID,
+                    'ETERNAL lootbox': emojis.LB_ETERNAL,
                 }
                 lootboxes_partner_lost = {
                     'GODLY lootbox': emojis.LB_GODLY,
                     'VOID lootbox': emojis.LB_VOID,
+                    'ETERNAL lootbox': emojis.LB_ETERNAL,
                 }
                 if message.guild.id != 713541415099170836:
                     lootboxes_partner_lost['OMEGA lootbox'] = emojis.LB_OMEGA
@@ -1646,10 +1590,13 @@ class AutoFlexCog(commands.Cog):
 
                 if together:
                     search_patterns_together_new = [
-                        fr"\+(.+?) (.+?)", #All languages
+                        fr"\+(.+?) (.+?)", #All languages, slash
+                        fr"got (.+?) (.+?)", #English, prefix
+                        fr"cons(?:e|i)gui(?:ó|u) (.+?) (.+?)", #Spanish, Portuguese, prefix
                     ]
                     search_patterns_together_new_lost = [
-                        fr"\-(.+?) (.+?)", #All languages
+                        fr"\-(.+?) (.+?)", #All languages, slash
+                        fr"lost (.+?) (.+?)", #English, prefix
                     ]
                     search_patterns_together_old_partner = [
                         fr"{re.escape(partner_name)}\*\* got (.+?) (.+?)", #English
@@ -1764,11 +1711,13 @@ class AutoFlexCog(commands.Cog):
                         'OMEGA lootbox': 'lb_omega',
                         'GODLY lootbox': 'lb_godly',
                         'VOID lootbox': 'lb_void',
+                        'ETERNAL lootbox': 'lb_eternal',
                     }
                     events_partner = {
                         'OMEGA lootbox': 'lb_omega_partner',
                         'GODLY lootbox': 'lb_godly_partner',
                         'VOID lootbox': 'lb_void_partner',
+                        'ETERNAL lootbox': 'lb_eternal_partner',
                     }
                     description = event = ''
                     if lootbox_user_found:
@@ -1779,6 +1728,12 @@ class AutoFlexCog(commands.Cog):
                                 f'Everbody rejoice because **{user_name}** did something almost impossible and found '
                                 f'**{amount}** {lootboxes_user[name]} **{name}**!\n'
                                 f'We are all so happy for you and not at all jealous.'
+                            )
+                        elif event == 'lb_eternal':
+                            description = (
+                                f'Shiny! **{user_name}** just found something... blue? Might this be '
+                                f'**{amount}** {lootboxes_user[name]} **{name}**??\n'
+                                f'This would also be a good excuse for a giveaway, you know.'
                             )
                         elif event == 'lb_omega':
                             if not hardmode and int(amount) >= lb_omega_non_hm_amount:
@@ -1833,6 +1788,12 @@ class AutoFlexCog(commands.Cog):
                                     f'**{user_name}** just found their partner **{partner_name}**... **{amount}** '
                                     f'{lootboxes_partner[name]} **{name}**.\n'
                                     f'Yes, you read that right.'
+                                )
+                            elif event == 'lb_eternal_partner':
+                                description = (
+                                    f'Of course it is **{partner_name}**, who else would be brave and lucky enough to steal '
+                                    f'**{amount}** {lootboxes_partner[name]} **{name}** from their partner?\n'
+                                    f'**{user_name}** might need emotional support after this.'
                                 )
                             elif int(amount) >= lb_omega_partner_amount:
                                 description = (
@@ -2412,7 +2373,6 @@ class AutoFlexCog(commands.Cog):
 
             # Card drops
             search_strings = [
-                'rare card',
                 'epic card',
                 'omega card',
                 'godly card',
@@ -2425,6 +2385,8 @@ class AutoFlexCog(commands.Cog):
                 user = await functions.get_interaction_user(message)
                 if user is None:
                     user_name_match = re.search(regex.NAME_FROM_MESSAGE_START, message_content)
+                    if not user_name_match:
+                        user_name_match = re.search(r'__\*\*(.+?)\*\* ', message_content)
                     if user_name_match:
                         user_name = user_name_match.group(1)
                     else:
@@ -2473,9 +2435,51 @@ class AutoFlexCog(commands.Cog):
                     )
                 await self.send_auto_flex_message(message, guild_settings, user_settings, user, event,
                                                   description)
+
+                
+            # Golden cards
+            search_strings = [
+                'goldened these cards!',
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings):
+                guild_settings: guilds.Guild = await guilds.get_guild(message.guild.id)
+                if not guild_settings.auto_flex_enabled: return
+                user = await functions.get_interaction_user(message)
+                if user is None:
+                    user_name_match = re.search(regex.NAME_FROM_MESSAGE_START, message_content)
+                    if not user_name_match:
+                        user_name_match = re.search(r'^\*\*(.+?)\*\* ', message_content)
+                    if user_name_match:
+                        user_name = user_name_match.group(1)
+                    else:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Couldn\'t find a user for autoflex golden card message.', message)
+                        return
+                    user_command_message = (
+                        await messages.find_message(message.channel.id, user_name=user_name)
+                    )
+                    if user_command_message is None:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Couldn\'t find a command for the autoflex golden card message.',
+                                               message)
+                        return
+                    user = user_command_message.author
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled or not user_settings.auto_flex_enabled: return
+                
+                description = (
+                    f'**{user.name}** played some poker, won (clearly cheated) and goldened all their cards.\n'
+                    f'These EPIC RPG players get more decadent every day.'
+                )
+                
+                await self.send_auto_flex_message(message, guild_settings, user_settings, user, 'card_golden',
+                                                  description)
                     
 
 
 # Initialization
-def setup(bot):
+def setup(bot: bridge.AutoShardedBot):
     bot.add_cog(AutoFlexCog(bot))

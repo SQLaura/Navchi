@@ -5,12 +5,12 @@ from datetime import timedelta
 import re
 
 import discord
+from discord import utils
 from discord.ext import bridge, commands
 
 from cache import messages
 from database import errors, reminders, users
 from resources import exceptions, functions, regex, settings
-
 
 class CardsCog(commands.Cog):
     """Cog that contains the card detection commands"""
@@ -20,11 +20,33 @@ class CardsCog(commands.Cog):
     @commands.Cog.listener()
     async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
         """Runs when a message is edited in a channel."""
+        if message_after.author.id not in [settings.EPIC_RPG_ID, settings.TESTY_ID]: return
         if message_before.pinned != message_after.pinned: return
         embed_data_before = await functions.parse_embed(message_before)
         embed_data_after = await functions.parse_embed(message_after)
         if (message_before.content == message_after.content and embed_data_before == embed_data_after
             and message_before.components == message_after.components): return
+        if message_before.edited_at == message_after.edited_at: return
+        if message_after.channel.id == 1018269454641156147:
+            await errors.log_error(
+                f'Before Message ID: {message_before.id}\n'
+                f'Before Message edit time: {message_before.edited_at}\n'
+                f'Before Message flags: {message_before.flags}\n'
+                f'Before Message embed data: {embed_data_before}\n'
+                f'Before Message reference: {message_before.reference}\n'
+                f'Before Message components: {message_before.components}\n'
+                f'Before Message attachments: {message_before.attachments}\n'
+                f'Before Message content: {message_before.content}\n'
+                f'---\n'
+                f'After Message ID: {message_after.id}\n'
+                f'After Message edit time: {message_after.edited_at}\n'
+                f'After Message flags: {message_after.flags}\n'
+                f'After Message embed data: {embed_data_after}\n'
+                f'After Message reference: {message_after.reference}\n'
+                f'After Message components: {message_after.components}\n'
+                f'After Message attachments: {message_after.attachments}\n'
+                f'After Message content: {message_after.content}\n'
+            )
         await self.on_message(message_after)
 
     @commands.Cog.listener()
@@ -85,9 +107,12 @@ class CardsCog(commands.Cog):
                 timestring = timestring_match.group(1)
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring)
                 if time_left < timedelta(0): return
+                activity: str = 'card-hand'
+                if user_settings.multiplier_management_enabled:
+                    await user_settings.update_multiplier(activity, time_left)
                 reminder_message = user_settings.alert_card_hand.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
-                    await reminders.insert_user_reminder(user.id, 'card-hand', time_left,
+                    await reminders.insert_user_reminder(user.id, activity, time_left,
                                                          message.channel.id, reminder_message)
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
@@ -184,5 +209,5 @@ class CardsCog(commands.Cog):
 
 
 # Initialization
-def setup(bot):
+def setup(bot: bridge.AutoShardedBot):
     bot.add_cog(CardsCog(bot))

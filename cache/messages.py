@@ -3,17 +3,17 @@
 
 import asyncio
 from argparse import ArgumentError
-from datetime import datetime, timedelta
+from datetime import timedelta
 import re
 from typing import Optional, Union
 
 import discord
+from discord import utils
 
 from resources import functions, logs, settings
 
 
 _MESSAGE_CACHE = {}
-
 
 async def find_message(channel_id: int, regex: Union[str, re.Pattern] = None,
                       user: Optional[discord.User] = None, user_name: Optional[str] = None) -> discord.Message:
@@ -80,11 +80,12 @@ async def delete_old_messages(timespan: timedelta) -> int:
     -------
     Amount of messages deleted: int
     """
-    current_time = datetime.utcnow()
+    current_time = utils.utcnow()
     message_count = 0
     for channel_id, channel_messages in _MESSAGE_CACHE.items():
         for message in channel_messages:
-            if message.created_at.replace(tzinfo=None) < (current_time - timespan):
+            message_time = message.edited_at if message.edited_at else message.created_at
+            if message_time < (current_time - timespan):
                 _MESSAGE_CACHE[channel_id].remove(message)
                 message_count += 1
     if message_count > 0:
