@@ -117,9 +117,9 @@ class ClanCog(commands.Cog):
                     )
                     if reminder.record_exists:
                         if user_settings is None:
-                            await message.add_reaction(emojis.NAVI)
+                            await message.add_reaction(emojis.NAVCHI)
                         else:
-                            if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
+                            if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVCHI)
                     else:
                         if settings.DEBUG_MODE: await message.add_reaction(emojis.CROSS)
                 if (user_alert_enabled
@@ -212,9 +212,9 @@ class ClanCog(commands.Cog):
                     )
                     if clan_reminder.record_exists:
                         if user_settings is None:
-                            await message.add_reaction(emojis.NAVI)
+                            await message.add_reaction(emojis.NAVCHI)
                         else:
-                            if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
+                            if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVCHI)
                     else:
                         if settings.DEBUG_MODE: await message.add_reaction(emojis.CROSS)
                         return
@@ -311,7 +311,7 @@ class ClanCog(commands.Cog):
                     if reminder.record_exists:
                         user_reactions_enabled = getattr(user_settings, 'reactions_enabled', True)
                         if user_reactions_enabled:
-                            await message.add_reaction(emojis.NAVI)
+                            await message.add_reaction(emojis.NAVCHI)
                             if clan.stealth_current >= clan.stealth_threshold:
                                 await message.add_reaction(emojis.YAY)
                             if clan.stealth_current == clan_stealth_before:
@@ -422,9 +422,9 @@ class ClanCog(commands.Cog):
                     )
                     if reminder.record_exists:
                         if user_settings is None:
-                            await message.add_reaction(emojis.NAVI)
+                            await message.add_reaction(emojis.NAVCHI)
                         else:
-                            if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
+                            if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVCHI)
                     else:
                         if settings.DEBUG_MODE: await message.channel.send(strings.MSG_ERROR)
                 if (user_alert_enabled

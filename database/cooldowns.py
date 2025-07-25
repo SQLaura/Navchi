@@ -103,7 +103,7 @@ async def get_cooldown(activity: str) -> Cooldown:
     function_name = 'get_cooldown'
     sql = f'SELECT * FROM {table} WHERE activity=?'
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         cur.execute(sql, (activity,))
         record = cur.fetchone()
     except sqlite3.Error as error:
@@ -139,7 +139,7 @@ async def get_all_cooldowns() -> tuple[Cooldown, ...]:
     function_name = 'get_all_cooldowns'
     sql = f'SELECT * FROM {table} ORDER BY activity ASC'
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         cur.execute(sql)
         records = cur.fetchall()
     except sqlite3.Error as error:
@@ -188,7 +188,7 @@ async def _update_cooldown(activity: str, **updated_settings) -> None:
         )
         raise exceptions.NoArgumentsError('You need to specify at least one keyword argument.')
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         sql = f'UPDATE {table} SET'
         for updated_setting in updated_settings:
             sql = f'{sql} {updated_setting} = :{updated_setting},'

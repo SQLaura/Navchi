@@ -55,6 +55,6 @@ async def command_custom_reminder(ctx: Union[discord.ApplicationContext, command
     )
     if reminder.record_exists:
         if isinstance(ctx, commands.Context):
-            await ctx.message.add_reaction(emojis.NAVI)
+            await ctx.message.add_reaction(emojis.NAVCHI)
         else:
             await ctx.respond(f'Done. I will remind you in {format_timespan(time_left)} for **{message}**.')

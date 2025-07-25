@@ -78,7 +78,7 @@ class PatreonCog(commands.Cog):
                     if partner_settings.partner_donor_tier != donor_tier:
                         await partner_settings.update(partner_donor_tier=donor_tier)
                 if user_settings.reactions_enabled:
-                    await message.add_reaction(emojis.NAVI)
+                    await message.add_reaction(emojis.NAVCHI)
 
 
 # Initialization

@@ -64,16 +64,16 @@ async def command_about(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext) -
     interaction = await ctx.respond('Testing API latency...')
     end_time: datetime = utils.utcnow()
     api_latency: timedelta = end_time - start_time
-    img_navi = discord.File
+    img_navchi = discord.File
     embed = discord.Embed
-    img_navi, embed = await embed_about(bot, ctx, api_latency)
+    img_navchi, embed = await embed_about(bot, ctx, api_latency)
     view: LinksView = LinksView()
     if ctx.guild is not None:
         channel_permissions = ctx.channel.permissions_for(ctx.guild.me)
         if not channel_permissions.attach_files:
             await interaction.edit(content=None, embed=embed, view=view)
         else:
-            await interaction.edit(content=None, embed=embed, view=view, file=img_navi)
+            await interaction.edit(content=None, embed=embed, view=view, file=img_navchi)
     else:
         await interaction.edit(content=None, embed=embed, view=view)
 
@@ -97,9 +97,9 @@ async def embed_event_reductions(bot: bridge.AutoShardedBot, ctx: bridge.BridgeC
         color = settings.EMBED_COLOR,
         title = 'ACTIVE EVENT REDUCTIONS',
         description = (
-            f'_Event reductions are set by your Navi bot owner._\n'
+            f'_Event reductions are set by your Navchi bot owner._\n'
             f'_You can set additional personal multipliers with '
-            f'{await functions.get_navi_slash_command(bot, "settings multipliers")} or `{prefix}multi`_\n'
+            f'{await functions.get_navchi_slash_command(bot, "settings multipliers")} or `{prefix}multi`_\n'
         )
     )
     embed.add_field(name='SLASH COMMANDS', value=reductions_slash, inline=False)
@@ -113,86 +113,86 @@ async def embed_help(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext | dis
     title_link = 'https://youtu.be/SB4sDPTZPYM'
     reminder_settings = (
         f'{emojis.BP} **[Check active reminders]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "list")}, `{prefix}cd`\n'
+        f'{await functions.get_navchi_slash_command(bot, "list")}, `{prefix}cd`\n'
         f'{emojis.BP} **[Add custom reminder]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "custom-reminder")}, `{prefix}rm`\n'
+        f'{await functions.get_navchi_slash_command(bot, "custom-reminder")}, `{prefix}rm`\n'
         f'{emojis.BP} **[Manage reminders]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "settings reminders")}, `{prefix}srm`\n'
+        f'{await functions.get_navchi_slash_command(bot, "settings reminders")}, `{prefix}srm`\n'
         f'{emojis.BP} **[Manage reminder messages]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "settings messages")}, `{prefix}sm`\n'
+        f'{await functions.get_navchi_slash_command(bot, "settings messages")}, `{prefix}sm`\n'
     )
     ready_settings = (
         f'{emojis.BP} **[Check ready commands]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "ready")}, `{prefix}rd`\n'
+        f'{await functions.get_navchi_slash_command(bot, "ready")}, `{prefix}rd`\n'
         f'{emojis.BP} **[Manage ready list]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "settings ready")}, `{prefix}srd`\n'
+        f'{await functions.get_navchi_slash_command(bot, "settings ready")}, `{prefix}srd`\n'
     )
     stats = (
         f'{emojis.BP} **[Check stats]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "stats")}, `{prefix}st`\n'
+        f'{await functions.get_navchi_slash_command(bot, "stats")}, `{prefix}st`\n'
         f'{emojis.BP} **[Manage tracking settings]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "settings user")}, `{prefix}s`\n'
+        f'{await functions.get_navchi_slash_command(bot, "settings user")}, `{prefix}s`\n'
     )
     user_settings = (
-        f'{emojis.BP} **[Enable Navi]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "on")}, `{prefix}on`\n'
-        f'{emojis.BP} **[Disable Navi]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "off")}, `{prefix}off`\n'
+        f'{emojis.BP} **[Enable Navchi]({title_link})**: '
+        f'{await functions.get_navchi_slash_command(bot, "on")}, `{prefix}on`\n'
+        f'{emojis.BP} **[Disable Navchi]({title_link})**: '
+        f'{await functions.get_navchi_slash_command(bot, "off")}, `{prefix}off`\n'
         f'{emojis.BP} **[Manage user settings]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "settings user")}, `{prefix}s`\n'
+        f'{await functions.get_navchi_slash_command(bot, "settings user")}, `{prefix}s`\n'
     )
     helper_settings = (
         f'{emojis.BP} **[Manage helper settings]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "settings helpers")}, `{prefix}sh`\n'
+        f'{await functions.get_navchi_slash_command(bot, "settings helpers")}, `{prefix}sh`\n'
     )
     partner_settings = (
         f'{emojis.BP} **[Manage alts]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "settings alts")}, `{prefix}sa`\n'
+        f'{await functions.get_navchi_slash_command(bot, "settings alts")}, `{prefix}sa`\n'
         f'{emojis.BP} **[Manage partner]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "settings partner")}, `{prefix}sp`\n'
+        f'{await functions.get_navchi_slash_command(bot, "settings partner")}, `{prefix}sp`\n'
     )
     guild_settings = (
         f'{emojis.BP} **[Check weekly leaderboard]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "guild leaderboard")}, `{prefix}glb`\n'
+        f'{await functions.get_navchi_slash_command(bot, "guild leaderboard")}, `{prefix}glb`\n'
         f'{emojis.BP} **[Manage guild settings]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "settings guild")}, `{prefix}sg`\n'
+        f'{await functions.get_navchi_slash_command(bot, "settings guild")}, `{prefix}sg`\n'
         f'{emojis.BP} **[Add or update your guild]({title_link})**: '
         f'{strings.SLASH_COMMANDS["guild list"]}, `rpg guild list`\n'
     )
     multiplier_settings = (
         f'{emojis.BP} **[Check event reductions]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "event-reductions")}, `{prefix}er`\n'
+        f'{await functions.get_navchi_slash_command(bot, "event-reductions")}, `{prefix}er`\n'
         f'{emojis.BP} **[Manage multipliers]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "settings multipliers")}, `{prefix}multi`\n'
+        f'{await functions.get_navchi_slash_command(bot, "settings multipliers")}, `{prefix}multi`\n'
     )
     portal_settings = (
         f'{emojis.BP} **[Check your portals]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "portals")}, `{prefix}pt`\n'
+        f'{await functions.get_navchi_slash_command(bot, "portals")}, `{prefix}pt`\n'
         f'{emojis.BP} **[Manage your portals]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "settings portals")}, `{prefix}spt`\n'
+        f'{await functions.get_navchi_slash_command(bot, "settings portals")}, `{prefix}spt`\n'
     )
     misc_settings = (
         f'{emojis.BP} **[Speed enable settings]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "enable")}, `{prefix}e`\n'
+        f'{await functions.get_navchi_slash_command(bot, "enable")}, `{prefix}e`\n'
         f'{emojis.BP} **[Speed disable settings]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "disable")}, `{prefix}d`\n'
+        f'{await functions.get_navchi_slash_command(bot, "disable")}, `{prefix}d`\n'
         f'{emojis.BP} **[Purge your data]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "purge")}, `{prefix}purge`\n'
+        f'{await functions.get_navchi_slash_command(bot, "purge")}, `{prefix}purge`\n'
         f'{emojis.BP} **[Slash command overview]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "slashboard")}, `{prefix}sb`\n'
+        f'{await functions.get_navchi_slash_command(bot, "slashboard")}, `{prefix}sb`\n'
         f'{emojis.BP} **[Calculator]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "calculator")}, `{prefix}calc`\n'
-        f'{emojis.BP} **[About Navi]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "about")}, `{prefix}about`\n'
+        f'{await functions.get_navchi_slash_command(bot, "calculator")}, `{prefix}calc`\n'
+        f'{emojis.BP} **[About Navchi]({title_link})**: '
+        f'{await functions.get_navchi_slash_command(bot, "about")}, `{prefix}about`\n'
     )
     server_settings = (
         f'_Requires `Manage server` permission._\n'
         f'{emojis.BP} **[Manage server settings]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "server-settings main")}, `{prefix}ss`\n'
+        f'{await functions.get_navchi_slash_command(bot, "server-settings main")}, `{prefix}ss`\n'
         f'{emojis.BP} **[Manage auto-flex settings]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "server-settings auto-flex")}, `{prefix}ssa`\n'
+        f'{await functions.get_navchi_slash_command(bot, "server-settings auto-flex")}, `{prefix}ssa`\n'
         f'{emojis.BP} **[Manage event-ping settings]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "server-settings event-pings")}, `{prefix}sse`\n'
+        f'{await functions.get_navchi_slash_command(bot, "server-settings event-pings")}, `{prefix}sse`\n'
     )
     supported_languages = (
         f'{emojis.BP} :flag_us: English\n'
@@ -203,7 +203,7 @@ async def embed_help(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext | dis
     ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
-        title = 'NAVI' if not settings.LITE_MODE else 'NAVI LITE',
+        title = 'NAVCHI' if not settings.LITE_MODE else 'NAVI LITE',
         description =   (
             f'_Hey! **{ctx_author_name}**! Hello!_\n'
         )
@@ -251,7 +251,7 @@ async def embed_about(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext, api
             f'{emojis.BP} `{round(api_latency.total_seconds() * 1000):,}` ms API latency'
         )
     app_process: psutil.Process = psutil.Process(os.getpid())
-    navi_memory: float = app_process.memory_info().vms / (1024 ** 2)
+    navchi_memory: float = app_process.memory_info().vms / (1024 ** 2)
     system_memory = psutil.virtual_memory()
     system_memory_total = round(system_memory[0] / (1024 ** 2)) # TODO: Typing
     system_memory_available: int = round(system_memory[1] / (1024 ** 2))
@@ -261,7 +261,7 @@ async def embed_about(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext, api
         f'{emojis.BP} Version: `{settings.VERSION}`\n'
         f'{emojis.BP} Language: Python `{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}`\n'
         f'{emojis.BP} Library: Pycord `{discord.__version__}`\n'
-        f'{emojis.BP} Navi RAM usage: `{navi_memory:,.2f}` MB\n'
+        f'{emojis.BP} Navchi RAM usage: `{navchi_memory:,.2f}` MB\n'
         f'{emojis.BP} System CPU usage: `{psutil.cpu_percent():g}`%\n'
         f'{emojis.BP} System RAM usage: `{system_memory[2]}`% (`{system_memory_used:,}` / `{system_memory_total:,}` MB)\n'
     )
@@ -286,11 +286,11 @@ async def embed_about(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext, api
         'The Raspberry Pi Foundation',
         'Mom',
     ]
-    img_navi: discord.File = discord.File(settings.IMG_NAVI, filename='navi.png')
-    image_url: str = 'attachment://navi.png'
+    img_navchi: discord.File = discord.File(settings.IMG_NAVCHI, filename='navchi.png')
+    image_url: str = 'attachment://navchi.png'
     embed: discord.Embed = discord.Embed(
         color = settings.EMBED_COLOR,
-        title = 'ABOUT NAVI' if not settings.LITE_MODE else 'ABOUT NAVI LITE',
+        title = 'ABOUT NAVCHI' if not settings.LITE_MODE else 'ABOUT NAVI LITE',
         description = 'I am as free as a fairy.'
     )
     embed.add_field(name='BOT STATS', value=general, inline=False)
@@ -300,4 +300,4 @@ async def embed_about(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext, api
     embed.add_field(name='DEV STUFF', value=dev_stuff, inline=False)
     embed.add_field(name='SPECIAL THANKS TO', value=f'{emojis.BP} {random.choice(thanks_to)}', inline=False)
     embed.set_thumbnail(url=image_url)
-    return (img_navi, embed)
+    return (img_navchi, embed)

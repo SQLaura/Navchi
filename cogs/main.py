@@ -35,7 +35,7 @@ class MainCog(commands.Cog):
         """Main help command"""
         await main.command_help(self.bot, ctx)
 
-    @bridge.bridge_command(name='about', description='Some info and links about Navi', aliases=('info','ping'))
+    @bridge.bridge_command(name='about', description='Some info and links about Navchi', aliases=('info','ping'))
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
     async def about(self, ctx: bridge.BridgeContext) -> None:
         """About command"""
@@ -43,7 +43,7 @@ class MainCog(commands.Cog):
 
     # Slash commands
     if settings.LINK_INVITE:
-        @slash_command(name='invite', description='Invite Navi to your server!')
+        @slash_command(name='invite', description='Invite Navchi to your server!')
         async def invite(self, ctx: discord.ApplicationContext) -> None:
             """Sends an invite link"""
             await ctx.respond(f'Click [here]({settings.LINK_INVITE}) to invite me!')
@@ -58,11 +58,11 @@ class MainCog(commands.Cog):
                 f'Click [here]({settings.LINK_INVITE}) to invite me!'
             )
         else:
-            navi_lite_invite: str = 'https://canary.discord.com/api/oauth2/authorize?client_id=1213487623688167494&permissions=378944&scope=bot'
+            navchi_lite_invite: str = 'https://canary.discord.com/api/oauth2/authorize?client_id=1213487623688167494&permissions=378944&scope=bot'
             answer: str = (
                 f'Sorry, you can\'t invite this Navi.\n\n'
                 f'However, you can:\n'
-                f'1. [Invite Navi Lite]({navi_lite_invite}), a global version of Navi with a few limitations.\n'
+                f'1. [Invite Navi Lite]({navchi_lite_invite}), a global version of Navchi with a few limitations.\n'
                 f'2. [Run Navi yourself](https://github.com/MirielCH/Navi). Navi is free and open source.\n'
             )
         await ctx.reply(answer)
@@ -74,7 +74,7 @@ class MainCog(commands.Cog):
         Interesting errors get written to the database for further review.
         """
         command_name: str = f'{ctx.command.full_parent_name} {ctx.command.name}'.strip()
-        command_name = await functions.get_navi_slash_command(self.bot, command_name)
+        command_name = await functions.get_navchi_slash_command(self.bot, command_name)
         async def send_error() -> None:
             """Sends error message as embed"""
             embed: discord.Embed = discord.Embed(title='An error occured')
@@ -114,7 +114,7 @@ class MainCog(commands.Cog):
             ctx_author_name: str = ctx.author.global_name if ctx.author.global_name else ctx.author.name
             await ctx.respond(
                 f'Hey! **{ctx_author_name}**, looks like I don\'t know you yet.\n'
-                f'Use {await functions.get_navi_slash_command(self.bot, "on")} or `{ctx.prefix}on` to activate me first.',
+                f'Use {await functions.get_navchi_slash_command(self.bot, "on")} or `{ctx.prefix}on` to activate me first.',
                 ephemeral=True
             )
         elif isinstance(error, commands.NotOwner):
@@ -176,7 +176,7 @@ class MainCog(commands.Cog):
         elif isinstance(error, exceptions.FirstTimeUserError):
             await ctx.reply(
                 f'**{ctx_author_name}**, looks like I don\'t know you yet.\n'
-                f'Use {await functions.get_navi_slash_command(self.bot, "on")} or `{ctx.prefix}on` to activate me first.',
+                f'Use {await functions.get_navchi_slash_command(self.bot, "on")} or `{ctx.prefix}on` to activate me first.',
             )
         elif isinstance(error, (commands.UnexpectedQuoteError, commands.InvalidEndOfQuotedStringError,
                                 commands.ExpectedClosingQuoteError)):
@@ -228,7 +228,7 @@ class MainCog(commands.Cog):
             welcome_message: str = (
                 f'Hey! **{guild.name}**! I\'m here to remind you to do your EPIC RPG commands!\n\n'
                 f'Note that reminders are off by default. If you want to get reminded, please use '
-                f'{await functions.get_navi_slash_command(self.bot, "on")} or `{guild_settings.prefix}on` to activate me.'
+                f'{await functions.get_navchi_slash_command(self.bot, "on")} or `{guild_settings.prefix}on` to activate me.'
             )
             await guild.system_channel.send(welcome_message)
         except:

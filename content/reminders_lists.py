@@ -457,12 +457,12 @@ async def embed_ready(bot: bridge.AutoShardedBot, user: discord.User, auto_ready
     if user_settings.cmd_ready_visible:
         field_other = (
             f'{field_other}\n'
-            f'{emojis.BP} {await functions.get_navi_slash_command(bot, "ready")}'
+            f'{emojis.BP} {await functions.get_navchi_slash_command(bot, "ready")}'
         )
     if user_settings.cmd_slashboard_visible:
         field_other = (
             f'{field_other}\n'
-            f'{emojis.BP} {await functions.get_navi_slash_command(bot, "slashboard")}'
+            f'{emojis.BP} {await functions.get_navchi_slash_command(bot, "slashboard")}'
         )
     user_global_name = user.global_name if user.global_name is not None else user.name
     embed = discord.Embed(

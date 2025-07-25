@@ -25,7 +25,7 @@ async def get_alts(user_id: int) -> tuple[int, ...]:
     function_name = 'get_alts'
     sql = f'SELECT user1_id, user2_id FROM {table} WHERE user1_id=? OR user2_id=? ORDER BY sort_index ASC'
     try:
-        cur=settings.NAVI_DB.cursor()
+        cur=settings.NAVCHI_DB.cursor()
         cur.execute(sql, (user_id, user_id))
         records = cur.fetchall()
     except sqlite3.Error as error:
@@ -54,7 +54,7 @@ async def insert_alt(user_id: int, alt_id: int) -> None:
     table = 'alts'
     sql = f'INSERT INTO {table} (user1_id, user2_id) VALUES (?, ?)'
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         cur.execute(sql, (user_id, alt_id))
     except sqlite3.Error as error:
         await errors.log_error(
@@ -75,7 +75,7 @@ async def delete_alt(user_id: int, alt_id: int) -> None:
     function_name = 'delete_alt'
     sql = f'DELETE FROM {table} WHERE (user1_id=? AND user2_id=?) OR (user1_id=? AND user2_id=?)'
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         cur.execute(sql, (user_id, alt_id, alt_id, user_id))
     except sqlite3.Error as error:
         await errors.log_error(

@@ -128,7 +128,7 @@ class HuntCog(commands.Cog):
                 if user_settings.hunt_reminders_combined:
                     try:
                         hunt_reminder = await reminders.get_user_reminder(interaction_user.id, 'hunt')
-                        if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
+                        if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVCHI)
                         return
                     except exceptions.NoDataFoundError:
                         pass

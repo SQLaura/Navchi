@@ -578,7 +578,7 @@ class QuestCog(commands.Cog):
                         except exceptions.NoDataFoundError:
                             continue
                         await user_clan_reminder.update(end_time=(user_clan_reminder.end_time - timedelta(minutes=5)))
-                    if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
+                    if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVCHI)
 
 
 # Initialization

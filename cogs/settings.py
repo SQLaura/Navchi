@@ -18,16 +18,16 @@ class SettingsCog(commands.Cog):
         self.bot = bot
 
     # Bridge commands
-    @bridge.bridge_command(name='on', description='Turn on Navi', aliases=('register', 'activate', 'start'))
+    @bridge.bridge_command(name='on', description='Turn on Navchi', aliases=('register', 'activate', 'start'))
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
     async def on(self, ctx: bridge.BridgeContext) -> None:
-        """Turn on Navi"""
+        """Turn on Navchi"""
         await settings_cmd.command_on(self.bot, ctx)
 
-    @bridge.bridge_command(name='off', description='Turn off Navi', aliases=('deactivate','stop'))
+    @bridge.bridge_command(name='off', description='Turn off Navchi', aliases=('deactivate','stop'))
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
     async def off(self, ctx: bridge.BridgeContext) -> None:
-        """Turn off Navi"""
+        """Turn off Navchi"""
         await settings_cmd.command_off(self.bot, ctx)
 
     @bridge.bridge_command(name='enable', aliases=('e',))
@@ -60,7 +60,7 @@ class SettingsCog(commands.Cog):
 
     @bridge.bridge_command()
     async def purge(self, ctx: bridge.BridgeContext) -> None:
-        """Purges user data from Navi"""
+        """Purges user data from Navchi"""
         await settings_cmd.command_purge_data(self.bot, ctx)
 
     @bridge.bridge_group(name='settings', aliases=('setting','set', 's'), invoke_without_command=True)
@@ -310,7 +310,7 @@ class SettingsCog(commands.Cog):
                 if not clan.record_exists:
                     if settings.DEBUG_MODE: await message_after.channel.send(strings.MSG_ERROR)
                     return
-                await message_after.add_reaction(emojis.NAVI)
+                await message_after.add_reaction(emojis.NAVCHI)
 
 
 # Initialization

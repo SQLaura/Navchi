@@ -17,7 +17,7 @@ from resources import logs, settings
 def get_user_version() -> int:
     """Returns the current user version from the database"""
     try:
-        cur: sqlite3.Cursor = settings.NAVI_DB.cursor()
+        cur: sqlite3.Cursor = settings.NAVCHI_DB.cursor()
         cur.execute('PRAGMA user_version')
         record: Any = cur.fetchone()
         return int(dict(record)['user_version'])
@@ -29,18 +29,18 @@ def get_user_version() -> int:
 
 def update_database() -> bool:
     """Updates the database. Returns True if the db_version after the update equals NACVI_DB_VERSION."""
-    cur: sqlite3.Cursor = settings.NAVI_DB.cursor()
+    cur: sqlite3.Cursor = settings.NAVCHI_DB.cursor()
     db_version: int = get_user_version()
     logs.logger.info(f'Database: Current database version: {db_version}')
-    logs.logger.info(f'Database: Target database version: {settings.NAVI_DB_VERSION}')
-    if db_version == settings.NAVI_DB_VERSION:
+    logs.logger.info(f'Database: Target database version: {settings.NAVCHI_DB_VERSION}')
+    if db_version == settings.NAVCHI_DB_VERSION:
         logs.logger.info('Database Update: Nothing to do, exiting.')
         return True
-    logs.logger.info('Database: Backing up database to /database/navi_db_backup.db...')
-    backup_db_file: str = os.path.join(settings.BOT_DIR, 'database/navi_db_backup.db')
-    navi_backup_db: sqlite3.Connection = sqlite3.connect(backup_db_file)
-    settings.NAVI_DB.backup(navi_backup_db)
-    navi_backup_db.close()
+    logs.logger.info('Database: Backing up database to /database/navchi_db_backup.db...')
+    backup_db_file: str = os.path.join(settings.BOT_DIR, 'database/navchi_db_backup.db')
+    navchi_backup_db: sqlite3.Connection = sqlite3.connect(backup_db_file)
+    settings.NAVCHI_DB.backup(navchi_backup_db)
+    navchi_backup_db.close()
     logs.logger.info('Database: Starting database update...')
 
     # Recreate users table if database was never updated yet to make sure everything is as it should be
@@ -637,7 +637,7 @@ def update_database() -> bool:
                 raise
 
     # Set DB version, vaccum, integrity check
-    cur.execute(f'PRAGMA user_version = {settings.NAVI_DB_VERSION}')
+    cur.execute(f'PRAGMA user_version = {settings.NAVCHI_DB_VERSION}')
     db_version = get_user_version()
     logs.logger.info(f'Database: Updated database to version {db_version}.')
     logs.logger.info('Database: Vacuuming...')
@@ -646,4 +646,4 @@ def update_database() -> bool:
     cur.execute('PRAGMA integrity_check')
     logs.logger.info(f"Database: Check result: {dict(cur.fetchone())['integrity_check']}")
 
-    return db_version == settings.NAVI_DB_VERSION
+    return db_version == settings.NAVCHI_DB_VERSION

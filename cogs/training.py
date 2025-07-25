@@ -263,7 +263,7 @@ class TrainingCog(commands.Cog):
                                                          message.channel.id, reminder_message)
                 )
                 asyncio.ensure_future(functions.call_ready_command(self.bot, message, user, user_settings, 'training'))
-                if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
+                if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVCHI)
 
             # Training reset from ultraining shop
             search_strings = [
@@ -297,7 +297,7 @@ class TrainingCog(commands.Cog):
                     await functions.add_warning_reaction(message)
                     await errors.log_error(f'Had an error deleting the training reminder in training reset.', message)
                     return
-                if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
+                if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVCHI)
 
 
 # Initialization

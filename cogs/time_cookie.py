@@ -86,7 +86,7 @@ class TimeCookieCog(commands.Cog):
             minutes: int = int(time_match.group(1))
             await reminders.reduce_reminder_time(user_settings, timedelta(minutes=minutes), strings.TIME_COOKIE_AFFECTED_ACTIVITIES)
             asyncio.ensure_future(functions.call_ready_command(self.bot, message, user, user_settings, 'time-cookie'))
-            if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
+            if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVCHI)
 
 
 # Initialization

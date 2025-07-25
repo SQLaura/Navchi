@@ -25,7 +25,7 @@ class SettingsGuildCog(commands.Cog):
         message_syntax = (
             f'{strings.MSG_SYNTAX.format(syntax=syntax)}\n\n'
             f'{"Tip: If you want to include a space, use quotation marks."}\n'
-            f'Examples:\n• `{prefix}prefix "navi "`\n• `{prefix}prefix &`'
+            f'Examples:\n• `{prefix}prefix "navchi "`\n• `{prefix}prefix &`'
         )
         if args:
             if len(args) > 1:

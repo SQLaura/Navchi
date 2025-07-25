@@ -132,7 +132,7 @@ class DevCog(commands.Cog):
         else:
             description = (
                 '- _Invalid emojis have an error in their definition in `emojis.py`._\n'
-                '- _Missing emojis are valid but not found on Discord. Upload them to a server Navi can see, run '
+                '- _Missing emojis are valid but not found on Discord. Upload them to a server Navchi can see, run '
                 ' `/dev emoji-update` and restart the bot._\n\n'
             )
         if invalid_emojis:
@@ -276,17 +276,17 @@ class DevCog(commands.Cog):
         interaction = await ctx.respond(embed=embed, view=view)
         view.interaction = interaction
 
-    @dev_group.command(name='backup', description='Manually backup the database of Navi', guild_ids=settings.DEV_GUILDS)
+    @dev_group.command(name='backup', description='Manually backup the database of Navchi', guild_ids=settings.DEV_GUILDS)
     @commands.bot_has_permissions(send_messages=True)
     async def dev_backup(self, ctx: bridge.BridgeContext) -> None:
-        """Manually backup the database of Navi"""
+        """Manually backup the database of Navchi"""
         ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
         if ctx.author.id not in settings.DEV_IDS:
             if ctx.is_app: await ctx.respond(MSG_NOT_DEV, ephemeral=True)
             return
         view = views.ConfirmCancelView(ctx, styles=[discord.ButtonStyle.blurple, discord.ButtonStyle.grey])
         interaction = await ctx.respond(
-            f'This will back up the database to `navi_db_backup.db`. You can continue using Navi while doing this.\n'
+            f'This will back up the database to `navchi_db_backup.db`. You can continue using Navchi while doing this.\n'
             f'**If the target file exists, it will be overwritten!**\n\n'
             f'Proceed?',
             view=view,
@@ -300,10 +300,10 @@ class DevCog(commands.Cog):
         else:
             start_time = utils.utcnow()
             interaction = await ctx.respond('Starting backup...')
-            backup_db_file = os.path.join(settings.BOT_DIR, 'database/navi_db_backup.db')
-            navi_backup_db = sqlite3.connect(backup_db_file)
-            settings.NAVI_DB.backup(navi_backup_db)
-            navi_backup_db.close()
+            backup_db_file = os.path.join(settings.BOT_DIR, 'database/navchi_db_backup.db')
+            navchi_backup_db = sqlite3.connect(backup_db_file)
+            settings.NAVCHI_DB.backup(navchi_backup_db)
+            navchi_backup_db.close()
             time_taken = utils.utcnow() - start_time
             await interaction.edit(f'Backup finished after {format_timespan(time_taken)}')
 
@@ -383,7 +383,7 @@ class DevCog(commands.Cog):
             if ctx.is_app: await ctx.respond(MSG_NOT_DEV, ephemeral=True)
             return
         await ctx.respond(
-            f'Got some issues or questions running Navi? Feel free to join the Navi dev support server:\n'
+            f'Got some issues or questions running Navchi? Feel free to join the Navchi dev support server:\n'
             f'https://discord.gg/Kz2Vz2K4gy'
         )
 
@@ -506,20 +506,20 @@ class DevCog(commands.Cog):
             date_time_max = date_time.replace(hour=23, minute=59, second=59, microsecond=999999)
             await tracking.delete_log_entries(user_id, guild_id, command, date_time_min, date_time_max)
             await asyncio.sleep(0.01)
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         cur.execute('VACUUM')
         end_time = utils.utcnow()
         time_passed = end_time - start_time
         logs.logger.info(f'Consolidated {log_entry_count:,} log entries in {format_timespan(time_passed)} manually.')
         await ctx.respond(f'Consolidated {log_entry_count:,} log entries in {format_timespan(time_passed)}.')
 
-    @dev_group.command(name='leave-server', description='Removes Navi from a specific guild', guild_ids=settings.DEV_GUILDS)
+    @dev_group.command(name='leave-server', description='Removes Navchi from a specific guild', guild_ids=settings.DEV_GUILDS)
     async def dev_leave_server(
         self,
         ctx: bridge.BridgeContext,
         guild_id: BridgeOption(str, description='ID of the server you want to leave'),
     ) -> None:
-        """Removes Navi from a specific guild"""
+        """Removes Navchi from a specific guild"""
         if ctx.author.id not in settings.DEV_IDS:
             if ctx.is_app: await ctx.respond(MSG_NOT_DEV, ephemeral=True)
             return
@@ -534,7 +534,7 @@ class DevCog(commands.Cog):
             return
         view = views.ConfirmCancelView(ctx, styles=[discord.ButtonStyle.blurple, discord.ButtonStyle.grey])
         interaction = await ctx.respond(
-            f'Remove Navi from **{guild_to_leave.name}** (`{guild_to_leave.id}`)?',
+            f'Remove Navchi from **{guild_to_leave.name}** (`{guild_to_leave.id}`)?',
             view=view
         )
         view.interaction_message = interaction
@@ -549,7 +549,7 @@ class DevCog(commands.Cog):
                     f'Leaving the server failed with the following error:\n'
                     f'```\n{error}\n```'
                 )
-            await interaction.edit(content=f'Removed Navi from **{guild_to_leave.name}** (`{guild_to_leave.id}`).',
+            await interaction.edit(content=f'Removed Navchi from **{guild_to_leave.name}** (`{guild_to_leave.id}`).',
                                    view=None)
         else:
             await interaction.edit(content='Aborted.', view=None)
@@ -588,7 +588,7 @@ class DevCog(commands.Cog):
         try:
             user_settings: users.User = await users.get_user(user_id_int)
         except exceptions.FirstTimeUserError:
-            await ctx.respond(f'This user is not registered with Navi.')
+            await ctx.respond(f'This user is not registered with Navchi.')
             return
 
         line: str
@@ -653,7 +653,7 @@ async def embed_dev_seasonal_event(bot: bridge.AutoShardedBot) -> discord.Embed:
         title = 'SEASONAL EVENT SETTINGS',
         description = (
             f'_The currently active event controls whether the corresponding event commands will show up in '
-            f'{await functions.get_navi_slash_command(bot, 'ready')}._'
+            f'{await functions.get_navchi_slash_command(bot, 'ready')}._'
         )
     )
     embed.add_field(name='CURRENTLY ACTIVE EVENT', value=field_active_event, inline=False)

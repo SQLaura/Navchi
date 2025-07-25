@@ -76,16 +76,16 @@ class FunCog(commands.Cog):
 
         if not message.embeds and not message.author.bot:
             message_content = message.content
-            if message_content.lower() == 'navi lit':
+            if message_content.lower() == 'navchi lit':
                 await message.reply('https://tenor.com/view/betty-white-dab-mood-gif-5044603')
-            if message_content.lower() in ['navi dead', 'navi ded', 'navi down', 'navi offline']:
+            if message_content.lower() in ['navchi dead', 'navchi ded', 'navchi down', 'navchi offline']:
                 await message.reply('https://media.tenor.com/4CX-pXSoV18AAAAC/oh-really.gif')
-            if message_content.lower() in ['navi thanks', 'navi thanks!', 'navi thank', 'navi ty', 'navi thx']:
+            if message_content.lower() in ['navchi thanks', 'navchi thanks!', 'navchi thank', 'navchi ty', 'navchi thx']:
                 await message.reply('https://media.tenor.com/kcMj0Wfo3j8AAAAC/young-link-fly.gif')
-            if message_content.lower() in ['navi good', 'navi great', 'navi nice', 'navi amazing', 'navi useful',
-                                           'navi best', 'navi good bot', 'navi best bot', 'navi better', 'navi good good',
-                                           'navi nice bot', 'navi pro', 'navi smart', 'navi love', 'navi op', 'navi hug',
-                                           'navi gud', 'navi gud gud', 'navi pro pro',]:
+            if message_content.lower() in ['navchi good', 'navchi great', 'navchi nice', 'navchi amazing', 'navchi useful',
+                                           'navchi best', 'navchi good bot', 'navchi best bot', 'navchi better', 'navchi good good',
+                                           'navchi nice bot', 'navchi pro', 'navchi smart', 'navchi love', 'navchi op', 'navchi hug',
+                                           'navchi gud', 'navchi gud gud', 'navchi pro pro',]:
                 gifs = [
                     'https://media.tenor.com/3EBDKiYgw4kAAAAC/zelda-botw.gif',
                     'https://media.tenor.com/J7mhG4v0y4QAAAAd/zelda-lasagneman-lasagneman.gif',
@@ -93,8 +93,8 @@ class FunCog(commands.Cog):
                     'https://media.tenor.com/rjQ6lnlWWtEAAAAC/the-legend-of-zelda-the-wind-waker.gif',
                 ]
                 await message.reply(random.choice(gifs))
-            if message_content.lower() in ['navi bad', 'navi trash', 'navi bad!', 'navi trash!', 'navi bad bot',
-                                           'navi trash bot', 'navi stupid', 'navi dumb', 'navi useless', 'navi bad bad']:
+            if message_content.lower() in ['navchi bad', 'navchi trash', 'navchi bad!', 'navchi trash!', 'navchi bad bot',
+                                           'navchi trash bot', 'navchi stupid', 'navchi dumb', 'navchi useless', 'navchi bad bad']:
                 gifs = [
                     'https://media.tenor.com/wwql567dp98AAAAC/link-zelda.gif',
                     'https://media.tenor.com/yfFdPms-9AMAAAAC/zelda-angry.gif',
@@ -105,15 +105,15 @@ class FunCog(commands.Cog):
                     'https://media.tenor.com/qOmVSXsUp6gAAAAd/ezlo-minish.gif',
                 ]
                 await message.reply(random.choice(gifs))
-            if message_content.lower() in ['navi shut up', 'navi shut it', 'navi shut up!', 'navi shut']:
+            if message_content.lower() in ['navchi shut up', 'navchi shut it', 'navchi shut up!', 'navchi shut']:
                 await message.reply('https://media.tenor.com/CQ12y9spOP4AAAAd/link-sassy.gif')
-            if message_content.lower() == 'navi zelda':
+            if message_content.lower() == 'navchi zelda':
                 await message.reply('https://www.youtube.com/watch?v=SB4sDPTZPYM')
-            if message_content.lower() == 'navi slap':
+            if message_content.lower() == 'navchi slap':
                 await message.reply('https://media.tenor.com/8gp7ckTUwqgAAAAC/zelda-link.gif')
-            if message_content.lower() == 'navi smol':
+            if message_content.lower() == 'navchi smol':
                 await message.reply('https://media.tenor.com/egoI4UZYzaIAAAAd/legend-of-zelda-minish-cap.gif')
-            if message_content.lower() == 'navi big':
+            if message_content.lower() == 'navchi big':
                 await message.reply('https://media.tenor.com/-_XHSdRBjJwAAAAd/legend-of-zelda-minish-cap.gif')
 
         if not message.embeds and message.author.id in [settings.EPIC_RPG_ID, settings.TESTY_ID]:

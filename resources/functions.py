@@ -132,9 +132,9 @@ async def get_discord_channel(bot: bridge.AutoShardedBot, channel_id: int | None
 
 # --- Reactions
 async def add_reminder_reaction(message: discord.Message, reminder: reminders.Reminder,  user_settings: users.User) -> None:
-    """Adds a Navi reaction if the reminder was created, otherwise add a warning and send the error if debug mode is on"""
+    """Adds a Navchi reaction if the reminder was created, otherwise add a warning and send the error if debug mode is on"""
     if reminder.record_exists:
-        if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
+        if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVCHI)
     else:
         if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
             await message.add_reaction(emojis.WARNING)
@@ -1055,8 +1055,8 @@ async def get_slash_command(user_settings: users.User, command_name: str, includ
         return f'`{command}`' if include_prefix else f'`{command.replace("rpg ", "")}`'
 
 
-async def get_navi_slash_command(bot: bridge.AutoShardedBot, command_name: str) -> str:
-    """Gets a slash command from Navi. If found, returns the slash mention. If not found, just returns /command.
+async def get_navchi_slash_command(bot: bridge.AutoShardedBot, command_name: str) -> str:
+    """Gets a slash command from Navchi. If found, returns the slash mention. If not found, just returns /command.
     Note that slash mentions only work with GLOBAL commands."""
     main_command: str
     sub_commands: list[str]

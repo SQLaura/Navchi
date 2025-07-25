@@ -141,7 +141,7 @@ class EventsCog(commands.Cog):
                         if not reminder.record_exists:
                             await message.channel.send(strings.MSG_ERROR)
                             return
-                if updated_reminder and user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
+                if updated_reminder and user_settings.reactions_enabled: await message.add_reaction(emojis.NAVCHI)
 
 
 # Initialization

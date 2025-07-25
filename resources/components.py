@@ -178,7 +178,7 @@ class ToggleEventPingsSelect(discord.ui.Select):
                 channel_permissions = self.view.ctx.channel.permissions_for(self.view.ctx.guild.me)
                 if not channel_permissions.mention_everyone:
                     await interaction.response.send_message(
-                        f'Enabling event pings requires Navi to have the `Mention everyone, here and all roles` '
+                        f'Enabling event pings requires Navchi to have the `Mention everyone, here and all roles` '
                         f'permission first.',
                         ephemeral=True
                     )
@@ -198,7 +198,7 @@ class ToggleEventPingsSelect(discord.ui.Select):
                 channel_permissions = self.view.ctx.channel.permissions_for(self.view.ctx.guild.me)
                 if not channel_permissions.mention_everyone:
                     await interaction.response.send_message(
-                        f'Enabling event pings requires Navi to have the `Mention everyone, here and all roles` '
+                        f'Enabling event pings requires Navchi to have the `Mention everyone, here and all roles` '
                         f'permission first.',
                         ephemeral=True
                     )
@@ -1030,8 +1030,8 @@ class AddAltSelect(discord.ui.Select):
             new_alt_settings = await users.get_user(new_alt.id)
         except exceptions.FirstTimeUserError:
             await interaction.response.send_message(
-                f'**{alt_global_name}** is not registered with Navi yet. They need to do '
-                f'{await functions.get_navi_slash_command(self.view.bot, "on")} first.',
+                f'**{alt_global_name}** is not registered with Navchi yet. They need to do '
+                f'{await functions.get_navchi_slash_command(self.view.bot, "on")} first.',
                 ephemeral=True
             )
             await update_message()
@@ -1051,9 +1051,9 @@ class AddAltSelect(discord.ui.Select):
             f'_Alts have the following benefits:_\n'
             f'{emojis.BP} _Alts are allowed to ping each other in reminders_\n'
             f'{emojis.BP} _You can quickly switch to alts in '
-            f'{await functions.get_navi_slash_command(self.view.bot, "ready")}, '
-            f'{await functions.get_navi_slash_command(self.view.bot, "list")}'
-            f'and {await functions.get_navi_slash_command(self.view.bot, "stats")}._',
+            f'{await functions.get_navchi_slash_command(self.view.bot, "ready")}, '
+            f'{await functions.get_navchi_slash_command(self.view.bot, "list")}'
+            f'and {await functions.get_navchi_slash_command(self.view.bot, "stats")}._',
             view=view
         )
         view.interaction = interaction
@@ -1111,8 +1111,8 @@ class AddPartnerSelect(discord.ui.Select):
             new_partner_settings: users.User = await users.get_user(new_partner.id)
         except exceptions.FirstTimeUserError:
             await interaction.response.send_message(
-                f'**{partner_global_name}** is not registered with Navi yet. They need to do '
-                f'{await functions.get_navi_slash_command(self.view.bot, "on")} first.',
+                f'**{partner_global_name}** is not registered with Navchi yet. They need to do '
+                f'{await functions.get_navchi_slash_command(self.view.bot, "on")} first.',
                 ephemeral=True
             )
             await update_message()
@@ -1296,7 +1296,7 @@ class SetReminderMessageButton(discord.ui.Button):
                     followup_message = await interaction.followup.send(
                         content=(
                             f'Aborted. You are only allowed to ping yourself and your alts set in '
-                            f'{await functions.get_navi_slash_command(self.view.bot, "settings alts")} in reminders.'
+                            f'{await functions.get_navchi_slash_command(self.view.bot, "settings alts")} in reminders.'
                         ),
                     )
                     await followup_message.delete(delay=5)

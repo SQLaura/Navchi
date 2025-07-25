@@ -138,7 +138,7 @@ class HorseFestivalCog(commands.Cog):
                     )
                 asyncio.ensure_future(functions.call_ready_command(self.bot, message, user, user_settings, 'horse'))
                 if user_settings.reactions_enabled:
-                    await message.add_reaction(emojis.NAVI)
+                    await message.add_reaction(emojis.NAVCHI)
                     await message.add_reaction(emojis.KIRBY_RUN)
 
             # Megarace

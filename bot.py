@@ -160,7 +160,7 @@ if __name__ == '__main__':
     python_version: float = float(f'{sys.version_info.major}.{sys.version_info.minor}')
     if python_version != settings.PYTHON_VERSION:
         error_message: str = (
-            f'Navi requires Python {settings.PYTHON_VERSION} to run.\n'
+            f'Navchi requires Python {settings.PYTHON_VERSION} to run.\n'
             f'Your current version is {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}.'
         )
         print(error_message)
@@ -169,14 +169,14 @@ if __name__ == '__main__':
 
     # Check if database is up to date
     try:
-        cur: sqlite3.Cursor = settings.NAVI_DB.cursor()
+        cur: sqlite3.Cursor = settings.NAVCHI_DB.cursor()
         db_version: int = update_database.get_user_version()
-        if db_version != settings.NAVI_DB_VERSION:
+        if db_version != settings.NAVCHI_DB_VERSION:
             logs.logger.info('Database: Database structure is outdated. Running update...')
             correct_version: bool = update_database.update_database()
             if not correct_version:
                 db_version: int = update_database.get_user_version()
-                error_message: str = f'Database: Database version mismatch after update, should be {settings.NAVI_DB_VERSION}, '
+                error_message: str = f'Database: Database version mismatch after update, should be {settings.NAVCHI_DB_VERSION}, '
                 f'is {db_version}. Exiting. Please check the database manually.'
                 logs.logger.error(error_message)
                 print(error_message)

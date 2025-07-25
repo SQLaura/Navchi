@@ -2053,7 +2053,7 @@ FLEX_THUMBNAILS_EVENT_ENCHANT: Final[tuple[str, ...]] = (
     'https://media.giphy.com/media/ef4gyEAxktrF3cWO5g/giphy.gif',
     'https://media.tenor.com/oTpEgUkQjngAAAAC/vibing-dancing.gif',
     'https://media.tenor.com/9-b0gUv-HokAAAAC/enchanted-sword-enchanted-iron-sword.gif',
-    'https://media.tenor.com/Z3mgGQaNQt4AAAAC/legendofzelda-navi.gif',
+    'https://media.tenor.com/Z3mgGQaNQt4AAAAC/legendofzelda-navchi.gif',
 )
 
 FLEX_THUMBNAILS_EVENT_FARM: Final[tuple[str, ...]] = (

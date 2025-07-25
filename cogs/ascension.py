@@ -90,7 +90,7 @@ class AscensionCog(commands.Cog):
                 ascended = False if '100' in embed_footer.lower() else True
                 if user_settings.ascended != ascended:
                     await user_settings.update(ascended=ascended)
-                    if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
+                    if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVCHI)
 
             search_strings = [
                 "unlocked the ascended skill", #English
@@ -116,7 +116,7 @@ class AscensionCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled: return
                 await user_settings.update(ascended=True)
-                if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
+                if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVCHI)
 
             search_strings = [
                 "— ready", #All languages, ready

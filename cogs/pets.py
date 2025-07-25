@@ -151,7 +151,7 @@ class PetsCog(commands.Cog):
                             f'{utils.utcnow()}: Had an error deleting the pet reminder with activity '
                             f'{activity}.'
                         )
-                if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
+                if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVCHI)
 
             # Pets claim when no pets are on adventures
             search_strings = [
@@ -323,7 +323,7 @@ class PetsCog(commands.Cog):
                         await reminders.insert_user_reminder(user.id, f'pets-{pet_id}', time_left,
                                                              message.channel.id, reminder_message)
                     )
-                if reminder_created and user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
+                if reminder_created and user_settings.reactions_enabled: await message.add_reaction(emojis.NAVCHI)
                 search_patterns = [
                     r'adventure__\*\*: (\d+?)/\d+\n', #English
                     r'aventura__\*\*: (\d+?)/\d+\n', #Spanish & Portuguese
@@ -451,7 +451,7 @@ class PetsCog(commands.Cog):
                                 await reminders.insert_user_reminder(user.id, f'pets-{timestring_type.upper()}',
                                                                      time_left, message.channel.id, reminder_message)
                             )
-                        if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
+                        if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVCHI)
                 if user_settings.ready_pets_claim_active and not user_settings.ready_pets_claim_after_every_pet:
                     search_patterns = [
                         r'claim\*\*: (\d+?)/(\d+?)\n', #English

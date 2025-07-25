@@ -341,7 +341,7 @@ class CooldownsCog(commands.Cog):
                 if reminder.record_exists:
                     await functions.add_warning_reaction(message)
                     await errors.log_error(f'Had an error deleting the reminder with activity "{activity}".', message)
-            if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
+            if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVCHI)
 
         # Ready
         search_strings = [
@@ -427,7 +427,7 @@ class CooldownsCog(commands.Cog):
                 if reminder.record_exists:
                     await functions.add_warning_reaction(message)
                     await errors.log_error(f'Had an error deleting the reminder with activity "{activity}".', message)
-            if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
+            if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVCHI)
 
 
 # Initialization

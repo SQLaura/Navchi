@@ -154,7 +154,7 @@ class BoostsCog(commands.Cog):
                     except exceptions.NoDataFoundError:
                         continue
                 if user_settings.reactions_enabled and user_settings.alert_boosts.enabled:
-                    await message.add_reaction(emojis.NAVI)
+                    await message.add_reaction(emojis.NAVCHI)
 
             # Tell user whether time potion is active on super time travel
             search_strings_author = [

@@ -937,7 +937,7 @@ async def get_user(user_id: int) -> User:
     function_name: str = 'get_user'
     sql: str = f'SELECT * FROM {table} WHERE user_id=?'
     try:
-        cur: sqlite3.Cursor = settings.NAVI_DB.cursor()
+        cur: sqlite3.Cursor = settings.NAVCHI_DB.cursor()
         cur.execute(sql, (user_id,))
         record: Any = cur.fetchone()
     except sqlite3.Error as error:
@@ -972,7 +972,7 @@ async def get_all_users() -> tuple[User,...]:
     function_name: str = 'get_all_users'
     sql: str = f'SELECT * FROM {table}'
     try:
-        cur: sqlite3.Cursor = settings.NAVI_DB.cursor()
+        cur: sqlite3.Cursor = settings.NAVCHI_DB.cursor()
         cur.execute(sql)
         records: list[Any] = cur.fetchall()
     except sqlite3.Error as error:
@@ -1007,7 +1007,7 @@ async def get_user_count() -> int:
     function_name: str = 'get_user_count'
     sql: str = f'SELECT COUNT(user_id) FROM {table}'
     try:
-        cur: sqlite3.Cursor = settings.NAVI_DB.cursor()
+        cur: sqlite3.Cursor = settings.NAVCHI_DB.cursor()
         cur.execute(sql)
         record: Any = cur.fetchone()
     except sqlite3.Error as error:
@@ -1276,7 +1276,7 @@ async def _update_user(user: User, **updated_settings) -> None:
         )
         raise exceptions.NoArgumentsError('You need to specify at least one keyword argument.')
     try:
-        cur: sqlite3.Cursor = settings.NAVI_DB.cursor()
+        cur: sqlite3.Cursor = settings.NAVCHI_DB.cursor()
         sql: str = f'UPDATE {table} SET'
         for updated_setting in updated_settings:
             sql = f'{sql} {updated_setting} = :{updated_setting},'
@@ -1325,7 +1325,7 @@ async def insert_user(user_id: int) -> User:
         sql = f'{sql}?,'
     sql = f'{sql.strip(",")})'
     try:
-        cur: sqlite3.Cursor = settings.NAVI_DB.cursor()
+        cur: sqlite3.Cursor = settings.NAVCHI_DB.cursor()
         cur.execute(sql, values)
     except sqlite3.Error as error:
         await errors.log_error(

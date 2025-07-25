@@ -125,7 +125,7 @@ class ArtifactsCog(commands.Cog):
                                 await partner_settings.update(partner_pocket_watch_multiplier=1)
                             except exceptions.FirstTimeUserError:
                                 pass
-                if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
+                if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVCHI)
 
 
 # Initialization

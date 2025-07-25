@@ -1,5 +1,5 @@
 # data.py
-"""Contains the Navi data command"""
+"""Contains the Navchi data command"""
 
 import discord
 from discord import utils
@@ -15,7 +15,7 @@ async def command_data(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext, us
     try:
         user_settings: users.User = await users.get_user(user.id)
     except exceptions.FirstTimeUserError:
-        await ctx.respond('This user is not registered with Navi.')
+        await ctx.respond('This user is not registered with Navchi.')
         return
     embed = await embed_data(bot, ctx, user, user_settings)
     await ctx.respond(embed=embed)
@@ -30,7 +30,7 @@ async def embed_data(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext,
         color = settings.EMBED_COLOR,
         title = f'{user_name}\'s TRACKED EPIC RPG DATA'.upper(),
         description = (
-            '_This embed shows the EPIC RPG data Navi currently tracks to do its job._\n'
+            '_This embed shows the EPIC RPG data Navchi currently tracks to do its job._\n'
             '_You can use this to check for incorrect values._\n'
         ),
     )

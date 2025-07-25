@@ -104,7 +104,7 @@ async def get_portal(user_id: int, channel_id: int) -> Portal:
     function_name = 'get_portal'
     sql = f'SELECT * FROM {table} WHERE user_id=? AND channel_id=?'
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         cur.execute(sql, (user_id, channel_id))
         record = cur.fetchone()
     except sqlite3.Error as error:
@@ -143,7 +143,7 @@ async def get_portals(user_id: int) -> tuple[Portal, ...]:
     function_name = 'get_portals'
     sql = f'SELECT * FROM {table} WHERE user_id=? ORDER BY sort_index ASC'
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         cur.execute(sql, (user_id,))
         records = cur.fetchall()
     except sqlite3.Error as error:
@@ -176,7 +176,7 @@ async def _delete_portal(portal: Portal) -> None:
     table = 'users_portals'
     sql = f'DELETE FROM {table} WHERE user_id=? AND channel_id=?'
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         cur.execute(sql, (portal.user_id, portal.channel_id))
     except sqlite3.Error as error:
         await errors.log_error(
@@ -211,7 +211,7 @@ async def _update_portal(portal: Portal, **updated_settings) -> None:
     updated_settings['user_id_old'] = portal.user_id
     updated_settings['channel_id_old'] = portal.channel_id
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         sql = f'UPDATE {table} SET'
         for updated_setting in updated_settings:
             sql = f'{sql} {updated_setting} = :{updated_setting},'
@@ -244,7 +244,7 @@ async def insert_portal(user_id: int, channel_id: int) -> Portal:
     """
     function_name = 'insert_portal'
     table = 'users_portals'
-    cur = settings.NAVI_DB.cursor()
+    cur = settings.NAVCHI_DB.cursor()
     sql = f'INSERT INTO {table} (user_id, channel_id) VALUES (?, ?)'
     try:
         cur.execute(sql, (user_id, channel_id))

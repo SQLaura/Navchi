@@ -15,7 +15,7 @@ async def command_leaderboard_clan(ctx: bridge.BridgeContext) -> None:
         clan_settings: clans.Clan = await clans.get_clan_by_user_id(ctx.author.id)
     except exceptions.NoDataFoundError:
         await ctx.respond(
-            f'Your guild is not registered with Navi. If you are in a guild, use '
+            f'Your guild is not registered with Navchi. If you are in a guild, use '
             f'{strings.SLASH_COMMANDS["guild list"]} or `rpg guild list` to add it.'
         )
         return

@@ -17,13 +17,13 @@ ENV_VARIABLE_MISSING: Final[str] = (
 )
 
 PYTHON_VERSION: Final[float] = 3.12
-NAVI_DB_VERSION: Final[int] = 30
+NAVCHI_DB_VERSION: Final[int] = 30
 
 # Files and directories
 BOT_DIR: Final[str] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DB_FILE: Final[str] = os.path.join(BOT_DIR, 'database/navi_db.db')
+DB_FILE: Final[str] = os.path.join(BOT_DIR, 'database/navchi_db.db')
 LOG_FILE: Final[str] = os.path.join(BOT_DIR, 'logs/discord.log')
-IMG_NAVI: Final[str] = os.path.join(BOT_DIR, 'images/navi.png')
+IMG_NAVCHI: Final[str] = os.path.join(BOT_DIR, 'images/navchi.png')
 _VERSION_FILE: Final[str] = os.path.join(BOT_DIR, 'VERSION')
 
 # Database connection
@@ -51,11 +51,11 @@ sqlite3.register_converter("date", convert_date)
 sqlite3.register_converter("datetime", convert_datetime)
 
 if os.path.isfile(DB_FILE):
-    NAVI_DB: Final[sqlite3.Connection] = sqlite3.connect(DB_FILE, isolation_level=None, detect_types=sqlite3.PARSE_DECLTYPES)
+    NAVCHI_DB: Final[sqlite3.Connection] = sqlite3.connect(DB_FILE, isolation_level=None, detect_types=sqlite3.PARSE_DECLTYPES)
 else:
     print(f'Database {DB_FILE} does not exist. Please follow the setup instructions in the README first.')
     sys.exit()
-NAVI_DB.row_factory = sqlite3.Row
+NAVCHI_DB.row_factory = sqlite3.Row
 
 
 # Load .env variables
@@ -179,7 +179,7 @@ EPIC_RPG_ID: Final[int] = 555955826880413696
 TESTY_ID: Final[int] = 1050765002950332456 # Miriel's test bot to test triggers
 
 
-DEFAULT_PREFIX: Final[str] = 'navi '
+DEFAULT_PREFIX: Final[str] = 'navchi '
 
 INTERACTION_TIMEOUT: Final[int] = 300
 

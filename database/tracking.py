@@ -280,7 +280,7 @@ async def get_log_entry(user_id: int, guild_id: int, command: str, date_time: da
     function_name = 'get_log_entry'
     sql = f'SELECT * FROM {table} WHERE user_id=? AND guild_id=? AND command=? AND date_time=? AND type=?'
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         cur.execute(sql, (user_id, guild_id, command, date_time, entry_type))
         record = cur.fetchone()
     except sqlite3.Error as error:
@@ -328,7 +328,7 @@ async def get_log_entries(user_id: int, command: str, timeframe: timedelta,
     date_time = utils.utcnow() - timeframe
     if guild_id is not None: sql = f'{sql} AND guild_id=?'
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         if guild_id is None:
             cur.execute(sql, (user_id, date_time, command))
         else:
@@ -375,7 +375,7 @@ async def get_all_log_entries(user_id: int) -> tuple[LogEntry, ...]:
         f'SELECT * FROM {table} WHERE user_id=?'
     )
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         cur.execute(sql, (user_id,))
         records = cur.fetchall()
     except sqlite3.Error as error:
@@ -422,7 +422,7 @@ async def get_old_log_entries(days: int) -> tuple[LogEntry, ...]:
     date_time = utils.utcnow() - timedelta(days=days)
     date_time = date_time.replace(hour=0, minute=0, second=0)
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         cur.execute(sql, (date_time, 'single'))
         records = cur.fetchall()
     except sqlite3.Error as error:
@@ -463,7 +463,7 @@ async def get_log_report(user_id: int, timeframe: timedelta,
     if guild_id is not None: sql = f'{sql} AND guild_id=?'
     sql = f'{sql} GROUP BY command'
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         if guild_id is None:
             cur.execute(sql, (user_id, date_time))
         else:
@@ -526,7 +526,7 @@ async def get_log_leaderboard_user(user_id: int, guild_id: int, command: str) ->
     function_name = 'get_log_leaderboard_user'
     sql = f'SELECT * FROM {table} WHERE user_id=? AND guild_id=? AND command=?'
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         cur.execute(sql, (user_id, guild_id, command))
         record = cur.fetchone()
     except sqlite3.Error as error:
@@ -568,7 +568,7 @@ async def get_log_leaderboard(command: str, guild_id: Optional[int] = None) -> t
     sql = f'SELECT * FROM {table} WHERE command=?'
     if guild_id is not None: sql = f'{sql} AND guild_id=?'
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         cur.execute(sql, (command,)) if guild_id is None else cur.execute(sql, (command, guild_id))
         records = cur.fetchall()
     except sqlite3.Error as error:
@@ -602,7 +602,7 @@ async def _delete_log_entry(log_entry: LogEntry) -> None:
     function_name = '_delete_log_entry'
     sql = f'DELETE FROM {table} WHERE user_id=? AND guild_id=? AND command=? AND date_time=? AND type=?'
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         cur.execute(sql, (log_entry.user_id, log_entry.guild_id, log_entry.command, log_entry.date_time,
                           log_entry.entry_type))
     except sqlite3.Error as error:
@@ -647,7 +647,7 @@ async def _update_log_leaderboard_user(log_leaderboard_user: LogLeaderboardUser,
     if 'updated' not in updated_settings:
         updated_settings['updated'] = utils.utcnow()
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         sql = f'UPDATE {table} SET'
         for updated_setting in updated_settings:
             sql = f'{sql} {updated_setting} = :{updated_setting},'
@@ -692,7 +692,7 @@ async def _update_log_entry(log_entry: LogEntry, **updated_settings) -> None:
         )
         raise exceptions.NoArgumentsError('You need to specify at least one keyword argument.')
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         sql = f'UPDATE {table} SET'
         for updated_setting in updated_settings:
             sql = f'{sql} {updated_setting} = :{updated_setting},'
@@ -732,7 +732,7 @@ async def insert_log_entry(user_id: int, guild_id: int,
         f'INSERT INTO {table} (user_id, guild_id, command, command_count, date_time) VALUES (?, ?, ?, ?, ?)'
     )
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         cur.execute(sql, (user_id, guild_id, command, 1, date_time))
     except sqlite3.Error as error:
         await errors.log_error(
@@ -770,7 +770,7 @@ async def insert_log_summary(user_id: int, guild_id: int, command: str, date_tim
             f'INSERT INTO {table} (user_id, guild_id, command, command_count, date_time, type) VALUES (?, ?, ?, ?, ?, ?)'
         )
         try:
-            cur = settings.NAVI_DB.cursor()
+            cur = settings.NAVCHI_DB.cursor()
             cur.execute(sql, (user_id, guild_id, command, amount, date_time, 'summary'))
         except sqlite3.Error as error:
             await errors.log_error(
@@ -813,7 +813,7 @@ async def insert_log_leaderboard_user(user_id: int, guild_id: int, command: str,
             f'INSERT INTO {table} (user_id, guild_id, command, command_count, date_time) VALUES (?, ?, ?, ?, ?)'
         )
         try:
-            cur = settings.NAVI_DB.cursor()
+            cur = settings.NAVCHI_DB.cursor()
             cur.execute(sql, (user_id, guild_id, command, all_time, last_1h, last_12h, last_24h, last_7d, last_4w,
                             last_12h, updated))
         except sqlite3.Error as error:
@@ -840,7 +840,7 @@ async def delete_log_entries(user_id: int, guild_id: int, command: str, date_tim
     function_name = '_delete_log_entries'
     sql = f'DELETE FROM {table} WHERE user_id=? AND guild_id=? AND command=? AND type=? AND date_time BETWEEN ? AND ?'
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         cur.execute(sql, (user_id, guild_id, command, 'single', date_time_min, date_time_max))
     except sqlite3.Error as error:
         await errors.log_error(

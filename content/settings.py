@@ -390,13 +390,13 @@ async def command_on(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext) -> N
         )
         field_settings = (
             f'You may want to have a look at my settings.\n'
-            f'Use {await functions.get_navi_slash_command(bot, "settings user")} or `{prefix}s` to get started.'
+            f'Use {await functions.get_navchi_slash_command(bot, "settings user")} or `{prefix}s` to get started.'
         )
         field_tracking = (
             f'I track the amount of some EPIC RPG commands you use. Check '
-            f'{await functions.get_navi_slash_command(bot, "stats")} or `{prefix}st` to see what commands are tracked.\n'
+            f'{await functions.get_navchi_slash_command(bot, "stats")} or `{prefix}st` to see what commands are tracked.\n'
             f'**__No personal data is processed or stored in any way!__**\n'
-            f'You can opt-out of command tracking in {await functions.get_navi_slash_command(bot, "stats")}, `{prefix}st` '
+            f'You can opt-out of command tracking in {await functions.get_navchi_slash_command(bot, "stats")}, `{prefix}st` '
             f'or in your user settings.\n\n'
         )
         field_auto_flex = (
@@ -406,15 +406,15 @@ async def command_on(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext) -> N
         )
         field_privacy = (
             f'To read more about what data is processed and why, feel free to check the privacy policy found in '
-            f'{await functions.get_navi_slash_command(bot, "help")} or `{prefix}help`.'
+            f'{await functions.get_navchi_slash_command(bot, "help")} or `{prefix}help`.'
         )
-        img_navi = discord.File(settings.IMG_NAVI, filename='navi.png')
-        image_url = 'attachment://navi.png'
+        img_navchi = discord.File(settings.IMG_NAVCHI, filename='navchi.png')
+        image_url = 'attachment://navchi.png'
         embed = discord.Embed(
             title = f'Hey! {ctx_author_name}! Hello!'.upper(),
             description = (
                 f'I am here to help you with your EPIC RPG commands!\n'
-                f'Have a look at {await functions.get_navi_slash_command(bot, "help")} or `{prefix}help` '
+                f'Have a look at {await functions.get_navchi_slash_command(bot, "help")} or `{prefix}help` '
                 f'for a list of my own commands.'
             ),
             color =  settings.EMBED_COLOR,
@@ -426,7 +426,7 @@ async def command_on(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext) -> N
         embed.add_field(name='PRIVACY POLICY', value=field_privacy, inline=False)
         embed.set_thumbnail(url=image_url)
         view = views.OneButtonView(ctx, discord.ButtonStyle.blurple, 'pressed', '➜ Settings')
-        interaction = await ctx.respond(embed=embed, file=img_navi, view=view)
+        interaction = await ctx.respond(embed=embed, file=img_navchi, view=view)
         view.interaction_message = interaction
         await view.wait()
         if view.value == 'pressed':
@@ -510,9 +510,9 @@ async def command_purge_data(bot: bridge.AutoShardedBot, ctx: bridge.BridgeConte
         f'{emojis.BP} Your complete command tracking history (!)\n'
         f'{emojis.BP} Your user portals\n'
         f'{emojis.BP} And finally, your user settings\n\n'
-        f'**THIS COMMAND IS NOT HERE TO FIX PROBLEMS WITH NAVI.**\n'
+        f'**THIS COMMAND IS NOT HERE TO FIX PROBLEMS WITH NAVCHI.**\n'
         f'**IF YOU HAVE ISSUES, STOP RIGHT NOW AND JOIN THE {support_server} INSTEAD.**\n\n'
-        f'You will be able to start using Navi again after purging, but you will start '
+        f'You will be able to start using Navchi again after purging, but you will start '
         f'from scratch.\n'
         f'Are you **SURE**?'
     )
@@ -535,7 +535,7 @@ async def command_purge_data(bot: bridge.AutoShardedBot, ctx: bridge.BridgeConte
         if view.value is None:
             await interaction.edit(content=answer_timeout, view=None)
         elif view.value == 'confirm':
-            cur = settings.NAVI_DB.cursor()
+            cur = settings.NAVCHI_DB.cursor()
             await interaction.edit(content='Purging user settings...', view=None)
             if user_settings.partner_id is not None:
                 try:
@@ -916,9 +916,9 @@ async def embed_settings_alts(bot: bridge.AutoShardedBot, ctx: discord.Applicati
         title = f'{ctx_author_name.upper()}\'S ALTS',
         description = (
             f'_You can ping alts in reminders and quickly view their status in '
-            f'{await functions.get_navi_slash_command(bot, "ready")}, '
-            f'{await functions.get_navi_slash_command(bot, "list")}'
-            f' and {await functions.get_navi_slash_command(bot, "stats")}._'
+            f'{await functions.get_navchi_slash_command(bot, "ready")}, '
+            f'{await functions.get_navchi_slash_command(bot, "list")}'
+            f' and {await functions.get_navchi_slash_command(bot, "stats")}._'
         )
     )
     embed.add_field(name=f'ALTS ({alt_count}/24)', value=alts, inline=False)
@@ -958,7 +958,7 @@ async def embed_settings_clan(bot: bridge.AutoShardedBot, ctx: discord.Applicati
         f'{emojis.DETAIL} _Reminders will always be sent to this channel._\n'
         f'{emojis.BP} **Reminder**: {reminder_enabled}\n'
         f'{emojis.BP} **Stealth threshold**: `{clan_settings.stealth_threshold}`\n'
-        f'{emojis.DETAIL} _Navi will tell you to upgrade below threshold and raid afterwards._\n'
+        f'{emojis.DETAIL} _Navchi will tell you to upgrade below threshold and raid afterwards._\n'
     )
     quests = (
         f'{emojis.BP} **Quests below stealth threshold**: {clan_upgrade_quests}\n'
@@ -976,7 +976,7 @@ async def embed_settings_clan(bot: bridge.AutoShardedBot, ctx: discord.Applicati
         color = settings.EMBED_COLOR,
         title = f'{clan_settings.clan_name} GUILD SETTINGS',
         description = (
-            f'_Settings to set up a guild reminder for the whole guild. Note that if you enable this reminder, Navi will '
+            f'_Settings to set up a guild reminder for the whole guild. Note that if you enable this reminder, Navchi will '
             f'ping **all guild members**.\n'
             f'If you just want to get reminded for the guild command yourself, there is a separate reminder for that in '
             f'`Reminders` below._'
@@ -1283,9 +1283,9 @@ async def embed_settings_ready(bot: bridge.AutoShardedBot, ctx: discord.Applicat
         f'{await bool_to_text(user_settings.cmd_cd_visible)}\n'
         f'{emojis.BP} **{strings.SLASH_COMMANDS["inventory"]} command**: '
         f'{await bool_to_text(user_settings.cmd_inventory_visible)}\n'
-        f'{emojis.BP} **{await functions.get_navi_slash_command(bot, "ready")} command**: '
+        f'{emojis.BP} **{await functions.get_navchi_slash_command(bot, "ready")} command**: '
         f'{await bool_to_text(user_settings.cmd_ready_visible)}\n'
-        f'{emojis.BP} **{await functions.get_navi_slash_command(bot, "slashboard")} command**: '
+        f'{emojis.BP} **{await functions.get_navchi_slash_command(bot, "slashboard")} command**: '
         f'{await bool_to_text(user_settings.cmd_slashboard_visible)}\n'
     )
     command_event_reminders = (
@@ -1295,7 +1295,7 @@ async def embed_settings_ready(bot: bridge.AutoShardedBot, ctx: discord.Applicat
         color = settings.EMBED_COLOR,
         title = f'{ctx_author_name.upper()}\'S READY LIST SETTINGS',
         description = (
-            f'_General settings for the {await functions.get_navi_slash_command(bot, "ready")} list._\n'
+            f'_General settings for the {await functions.get_navchi_slash_command(bot, "ready")} list._\n'
             f'_Note that the ready list does not list commands for reminders that are turned off._'
         )
     )
@@ -1390,7 +1390,7 @@ async def embed_settings_ready_reminders(bot: bridge.AutoShardedBot, ctx: discor
         color = settings.EMBED_COLOR,
         title = f'{ctx_author_name.upper()}\'S READY LIST REMINDER SETTINGS',
         description = (
-            f'_Settings to toggle visibility of reminders in {await functions.get_navi_slash_command(bot, "ready")}._\n'
+            f'_Settings to toggle visibility of reminders in {await functions.get_navchi_slash_command(bot, "ready")}._\n'
             f'_Hiding a reminder removes it from the ready list but does **not** disable the reminder itself._'
         )
     )
@@ -1411,11 +1411,11 @@ async def embed_settings_reminders(bot: bridge.AutoShardedBot, ctx: discord.Appl
         reminder_channel = f'<#{user_settings.reminder_channel_id}>'
     behaviour = (
         f'{emojis.BP} **DND mode**: {await functions.bool_to_text(user_settings.dnd_mode_enabled)}\n'
-        f'{emojis.DETAIL} _If DND mode is enabled, Navi won\'t ping you._\n'
+        f'{emojis.DETAIL} _If DND mode is enabled, Navchi won\'t ping you._\n'
         f'{emojis.BP} **Slash commands in reminders**: {await functions.bool_to_text(user_settings.slash_mentions_enabled)}\n'
         f'{emojis.BP} **Read cooldowns in area 20**: {await functions.bool_to_text(user_settings.area_20_cooldowns_enabled)}\n'
         f'{emojis.BP} **Combine hunt reminders**: {await functions.bool_to_text(user_settings.hunt_reminders_combined)}\n'
-        f'{emojis.DETAIL} _If enabled, Navi will never send or show the `hunt partner` reminder._\n'
+        f'{emojis.DETAIL} _If enabled, Navchi will never send or show the `hunt partner` reminder._\n'
         f'{emojis.DETAIL} _Instead the `hunt` reminder will be long enough for both players to be ready._\n'
         f'{emojis.BP} **Reminder channel**: {reminder_channel}\n'
         f'{emojis.DETAIL} _If a channel is set, all reminders are sent to that channel._\n'
@@ -1447,7 +1447,7 @@ async def embed_settings_reminders(bot: bridge.AutoShardedBot, ctx: discord.Appl
         f'{emojis.DETAIL} _Lootbox alerts are sent to this channel._\n'
         f'{emojis.DETAIL} _Requires a partner alert channel set in `Partner settings`._\n'
         f'{emojis.BP} **Pets**: {await functions.bool_to_text(user_settings.alert_pets.enabled)}\n'
-        f'{emojis.DETAIL} _Don\'t like Navi\'s pet reminders? Get _[Army Helper]({strings.LINK_ARMY_HELPER})_!_\n'
+        f'{emojis.DETAIL} _Don\'t like Navchi\'s pet reminders? Get _[Army Helper]({strings.LINK_ARMY_HELPER})_!_\n'
         f'{emojis.BP} **Quest**: {await functions.bool_to_text(user_settings.alert_quest.enabled)}\n'
         f'{emojis.BP} **Training**: {await functions.bool_to_text(user_settings.alert_training.enabled)}\n'
         f'{emojis.BP} **Vote**: {await functions.bool_to_text(user_settings.alert_vote.enabled)}\n'
@@ -1702,8 +1702,8 @@ async def embed_settings_user(bot: bridge.AutoShardedBot, ctx: bridge.BridgeCont
     partner_chocolate_box_unlocked = 'Yes' if user_settings.partner_chocolate_box_unlocked else 'No'
     field_bot = (
         f'{emojis.BP} **Bot**: {await functions.bool_to_text(user_settings.bot_enabled)}\n'
-        f'{emojis.DETAIL} _You can toggle this with {await functions.get_navi_slash_command(bot, "on")}'
-        f' and {await functions.get_navi_slash_command(bot, "off")} or `{prefix} on` and `off`_\n'
+        f'{emojis.DETAIL} _You can toggle this with {await functions.get_navchi_slash_command(bot, "on")}'
+        f' and {await functions.get_navchi_slash_command(bot, "off")} or `{prefix} on` and `off`_\n'
         f'{emojis.BP} **Reactions**: {await functions.bool_to_text(user_settings.reactions_enabled)}'
     )
     if settings.LITE_MODE:

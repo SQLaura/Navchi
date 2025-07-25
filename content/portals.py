@@ -26,7 +26,7 @@ async def embed_portals(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext,
     message_content = embed = None
     if ctx.is_app:
         footer_command = f'/settings portals'
-        description_command = await functions.get_navi_slash_command(bot, "settings portals")
+        description_command = await functions.get_navchi_slash_command(bot, "settings portals")
     else:
         footer_command = f'{ctx.prefix}set pt'
         description_command = f'`{footer_command}`'

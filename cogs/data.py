@@ -15,14 +15,14 @@ class DataCog(commands.Cog):
 
 
     # Bridge commands
-    @bridge.bridge_command(name='data', description='Shows your EPIC RPG data Navi tracks', aliases=('p',))
+    @bridge.bridge_command(name='data', description='Shows your EPIC RPG data Navchi tracks', aliases=('p',))
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
     async def data(
         self,
         ctx: bridge.BridgeContext,
         user: BridgeOption(discord.User, description='User to view the data of', default=None)
     ) -> None:
-        """Shows your EPIC RPG data Navi tracks"""
+        """Shows your EPIC RPG data Navchi tracks"""
         if not user:
             user = ctx.author
         if user.bot:

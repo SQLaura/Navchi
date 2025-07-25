@@ -305,7 +305,7 @@ async def get_prefix(ctx_or_message: Union[bridge.BridgeContext, discord.Message
         return settings.DEFAULT_PREFIX
     guild_id = ctx_or_message.guild.id
     try:
-        cur=settings.NAVI_DB.cursor()
+        cur=settings.NAVCHI_DB.cursor()
         cur.execute(sql, (guild_id,))
         record = cur.fetchone()
         prefix = record['prefix'].replace('"','') if record else settings.DEFAULT_PREFIX
@@ -335,7 +335,7 @@ async def get_all_prefixes(bot: bridge.AutoShardedBot, message: discord.Message)
     if message.guild is None: return commands.when_mentioned_or()(bot, message)
     guild_id = message.guild.id
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         cur.execute(sql, (guild_id,))
         record = cur.fetchone()
         prefixes = []
@@ -377,7 +377,7 @@ async def get_guild(guild_id: int) -> Guild:
     function_name = 'get_guild'
     sql_select = f'SELECT * FROM {table} WHERE guild_id=?'
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         cur.execute(sql_select, (guild_id,))
         record = cur.fetchone()
     except sqlite3.Error as error:
@@ -482,7 +482,7 @@ async def _update_guild(guild_id: int, **updated_settings) -> None:
         )
         raise exceptions.NoArgumentsError('You need to specify at least one keyword argument.')
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur = settings.NAVCHI_DB.cursor()
         sql = f'UPDATE {table} SET'
         for updated_setting in updated_settings:
             sql = f'{sql} {updated_setting} = :{updated_setting},'
