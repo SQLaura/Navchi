@@ -27,10 +27,13 @@ class TrainingCog(commands.Cog):
         embed_data_after = await functions.parse_embed(message_after)
         if (message_before.content == message_after.content and embed_data_before == embed_data_after
             and message_before.components == message_after.components): return
+        row: discord.Component
         for row in message_after.components:
-            for component in row.children:
-                if component.disabled:
-                    return
+            if isinstance(row, discord.ActionRow):
+                for component in row.children:
+                    if isinstance(component, (discord.Button, discord.SelectMenu)):
+                        if component.disabled:
+                            return
         await self.on_message(message_after)
 
     @commands.Cog.listener()
@@ -121,6 +124,9 @@ class TrainingCog(commands.Cog):
                 '**: well done, **', #English
                 '**: bien hecho, **', #Spanish
                 '**: muito bem, **', #Portuguese
+                '**: damn, that was fast!', #English, eternal tier 7
+                '**: damn, that was fast!', #TODO: Spanish, eternal tier 7
+                '**: damn, that was fast!', #TODO: Portuguese, eternal tier 7
             ]
             if (any(search_string in message_description.lower() for search_string in search_strings)
                 and any(search_string.lower() in message_description.lower() for search_string in strings.EPIC_NPC_NAMES)
@@ -136,7 +142,11 @@ class TrainingCog(commands.Cog):
                             await messages.find_message(message.channel.id, regex.COMMAND_ULTRAINING,
                                                         user_name=user_name)
                         )
-                    if not user_name_match or user_command_message is None:
+                    else:
+                        user_command_message = (
+                            await messages.find_message(message.channel.id, regex.COMMAND_ULTRAINING)
+                        )
+                    if user_command_message is None:
                         await functions.add_warning_reaction(message)
                         await errors.log_error('User not found in ultraining message.', message)
                         return

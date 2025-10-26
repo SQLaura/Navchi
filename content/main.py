@@ -1,13 +1,13 @@
 # main.py
 """Contains error handling and the help and about commands"""
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from humanfriendly import format_timespan
 import os
 import psutil
 import random
 import sys
-from typing import List, Union
+from typing import Union
 
 import discord
 from discord import utils
@@ -68,16 +68,19 @@ async def command_about(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext) -
     embed = discord.Embed
     img_navchi, embed = await embed_about(bot, ctx, api_latency)
     view: LinksView = LinksView()
-    channel_permissions = ctx.channel.permissions_for(ctx.guild.me) # TODO: Typing
-    if not channel_permissions.attach_files:
-        await interaction.edit(content=None, embed=embed, view=view)
+    if ctx.guild is not None:
+        channel_permissions = ctx.channel.permissions_for(ctx.guild.me)
+        if not channel_permissions.attach_files:
+            await interaction.edit(content=None, embed=embed, view=view)
+        else:
+            await interaction.edit(content=None, embed=embed, view=view, file=img_navchi)
     else:
-        await interaction.edit(content=None, embed=embed, view=view, file=img_navchi)
+        await interaction.edit(content=None, embed=embed, view=view)
 
 
 # --- Embeds ---
 async def embed_event_reductions(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext,
-                                 all_cooldowns: List[cooldowns.Cooldown]) -> discord.Embed:
+                                 all_cooldowns: list[cooldowns.Cooldown]) -> discord.Embed:
     """Event reductions embed"""
     reductions_slash = reductions_text = ''
     for cooldown in all_cooldowns:
@@ -104,7 +107,7 @@ async def embed_event_reductions(bot: bridge.AutoShardedBot, ctx: bridge.BridgeC
     return embed
 
 
-async def embed_help(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext) -> discord.Embed:
+async def embed_help(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext | discord.Message) -> discord.Embed:
     """Main menu embed"""
     prefix = await guilds.get_prefix(ctx)
     title_link = 'https://youtu.be/SB4sDPTZPYM'
@@ -223,11 +226,11 @@ async def embed_help(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext) -> d
     return embed
 
 
-async def embed_about(bot: bridge.AutoShardedBot, ctx: bridge.Context, api_latency: timedelta) -> tuple[discord.File, discord.Embed]:
+async def embed_about(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext, api_latency: timedelta) -> tuple[discord.File, discord.Embed]:
     """Bot info embed"""
     user_count: int = await users.get_user_count()
     all_settings: dict[str, str] = await settings_db.get_settings()
-    uptime: timedelta = utils.utcnow() - datetime.fromisoformat(all_settings['startup_time']).replace(tzinfo=timezone.utc)
+    uptime: timedelta = utils.utcnow() - datetime.fromisoformat(all_settings['startup_time'])
     uptime: timedelta = timedelta(seconds=round(uptime.total_seconds()))
 
     general: str = (
@@ -249,7 +252,7 @@ async def embed_about(bot: bridge.AutoShardedBot, ctx: bridge.Context, api_laten
         )
     app_process: psutil.Process = psutil.Process(os.getpid())
     navchi_memory: float = app_process.memory_info().vms / (1024 ** 2)
-    system_memory: psutil = psutil.virtual_memory()
+    system_memory = psutil.virtual_memory()
     system_memory_total = round(system_memory[0] / (1024 ** 2)) # TODO: Typing
     system_memory_available: int = round(system_memory[1] / (1024 ** 2))
     system_memory_used: int = system_memory_total - system_memory_available
@@ -287,7 +290,7 @@ async def embed_about(bot: bridge.AutoShardedBot, ctx: bridge.Context, api_laten
     image_url: str = 'attachment://navchi.png'
     embed: discord.Embed = discord.Embed(
         color = settings.EMBED_COLOR,
-        title = 'ABOUT NAVCHI' if not settings.LITE_MODE else 'ABOUT NAVCHI LITE',
+        title = 'ABOUT NAVCHI' if not settings.LITE_MODE else 'ABOUT NAVI LITE',
         description = 'I am as free as a fairy.'
     )
     embed.add_field(name='BOT STATS', value=general, inline=False)

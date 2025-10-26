@@ -1,7 +1,7 @@
 # reminders_lists.py
 """Contains reminder list commands"""
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from typing import Optional, Union
 
 import discord
@@ -117,11 +117,11 @@ async def embed_reminders_list(bot: bridge.AutoShardedBot, user: discord.User,
     except:
         user_reminders = []
     clan_reminders = []
-    if user_settings.clan_name is not None:
-        try:
-            clan_reminders = list(await reminders.get_active_clan_reminders(user_settings.clan_name))
-        except:
-            pass
+    try:
+        clan: clans.Clan = await clans.get_clan_by_user_id(user.id)
+        clan_reminders = list(await reminders.get_active_clan_reminders(clan.clan_name))
+    except exceptions.NoDataFoundError:
+        pass
 
     current_time = utils.utcnow()
     reminders_commands_list = []
@@ -306,12 +306,11 @@ async def embed_ready(bot: bridge.AutoShardedBot, user: discord.User, auto_ready
         user_reminders = []
     clan_reminders = []
     clan = None
-    if user_settings.clan_name is not None:
-        try:
-            clan: clans.Clan = await clans.get_clan_by_clan_name(user_settings.clan_name)
-            clan_reminders = await reminders.get_active_clan_reminders(user_settings.clan_name)
-        except exceptions.NoDataFoundError:
-            pass
+    try:
+        clan: clans.Clan = await clans.get_clan_by_user_id(user_settings.user_id)
+        clan_reminders = await reminders.get_active_clan_reminders(clan.clan_name)
+    except exceptions.NoDataFoundError:
+        pass
 
     async def get_command_from_activity(activity:str) -> str:
         if activity == 'dungeon-miniboss':
@@ -350,6 +349,8 @@ async def embed_ready(bot: bridge.AutoShardedBot, user: discord.User, auto_ready
             command = '`chimney unstuck lol`'
         elif activity == 'maintenance':
             command = '`maintenance`'
+        elif activity == 'eternity-sealing':
+            command = '`eternity sealing`'
         elif activity == 'hunt-partner':
             command = await functions.get_slash_command(user_settings, 'hunt', False)
             command = f'{command} `({user_settings.partner_name})`'
@@ -488,6 +489,7 @@ async def embed_ready(bot: bridge.AutoShardedBot, user: discord.User, auto_ready
             command = await get_command_from_activity(activity)
             ready_commands.append(command)
         for command in sorted(ready_commands):
+            if 'color tournament' in command and datetime.today().weekday() >= 5: continue
             field_ready_commands = (
                 f'{field_ready_commands}\n'
                 f'{emojis.BP} {command}'
@@ -497,6 +499,12 @@ async def embed_ready(bot: bridge.AutoShardedBot, user: discord.User, auto_ready
                 field_ready_commands = (
                     f'{field_ready_commands}\n'
                     f'{emojis.DETAIL} _Use {command_pets_list} to update reminders._'
+                )
+            elif 'color tournament' in command:
+                command_use_drink = await functions.get_slash_command(user_settings, 'smr drink')
+                field_ready_commands = (
+                    f'{field_ready_commands}\n'
+                    f'{emojis.DETAIL} _Use {command_use_drink} <drink> to join._'
                 )
             elif 'arena' in command and user_settings.ready_channel_arena is not None:
                 field_ready_commands = (
@@ -592,7 +600,7 @@ async def embed_ready(bot: bridge.AutoShardedBot, user: discord.User, auto_ready
         if user_settings.trade_daily_total == 0:
             trade_daily_total = 0
             trade_daily_total_str = '?'
-            trade_daily_left = ''
+            trade_daily_left = 0
         else:
             trade_daily_total = user_settings.trade_daily_total
             trade_daily_total_str = f'{trade_daily_total:,}'
@@ -615,6 +623,26 @@ async def embed_ready(bot: bridge.AutoShardedBot, user: discord.User, auto_ready
                 f'**DAILY TRADES**\n'
                 f'{field_trade_daily.strip()}'
             )
+    if user_settings.ready_eternity_visible:
+        for reminder in user_reminders:
+            if reminder.activity == 'eternity-sealing':
+                current_time = utils.utcnow()
+                if user_settings.ready_up_next_as_timestamp:
+                    seal_time = utils.format_dt(reminder.end_time, 'R')
+                else:
+                    time_left = reminder.end_time - current_time
+                    timestring = await functions.parse_timedelta_to_timestring(time_left)
+                    seal_time = f'in **{timestring}**'
+                field_eternity = (
+                    f'{emojis.DETAIL} Eternity will seal {seal_time}.'
+                )
+                embed.add_field(name='ETERNITY UNSEALED', value=field_eternity.strip(), inline=False)
+                answer = (
+                    f'{answer}\n'
+                    f'**ETERNITY UNSEALED**\n'
+                    f'{field_eternity.strip()}'
+                )
+                break
     if user_settings.ready_up_next_visible:
         try:
             active_reminders = await reminders.get_active_user_reminders(user.id)
@@ -650,9 +678,7 @@ async def embed_ready(bot: bridge.AutoShardedBot, user: discord.User, auto_ready
                     f'**UP NEXT**\n'
                     f'{field_up_next.strip()}'
                 )
-    if auto_ready:
-        embed.set_footer(text=f"See '/ready' if you want to disable this message.")
-
+                
     if all_settings['seasonal_event'] in strings.SEASONAL_EVENTS:
         embed.set_footer(text=f'{all_settings["seasonal_event"].replace("_"," ").capitalize()} event mode active.')
 

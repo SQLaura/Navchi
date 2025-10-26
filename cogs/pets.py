@@ -27,10 +27,13 @@ class PetsCog(commands.Cog):
         embed_data_after = await functions.parse_embed(message_after)
         if (message_before.content == message_after.content and embed_data_before == embed_data_after
             and message_before.components == message_after.components): return
+        row: discord.Component
         for row in message_after.components:
-            for component in row.children: # pyright: ignore
-                if component.disabled:
-                    return
+            if isinstance(row, discord.ActionRow):
+                for component in row.children:
+                    if isinstance(component, (discord.Button, discord.SelectMenu)):
+                        if component.disabled:
+                            return
         await self.on_message(message_after)
 
     @commands.Cog.listener()
@@ -219,7 +222,7 @@ class PetsCog(commands.Cog):
             if any(search_string in message_description.lower() for search_string in search_strings):
                 pet_names_emojis = {
                     'cat': emojis.PET_CAT,
-                    'voidog': emojis.PET_VOIDOG,
+                    'voidog': emojis.PET_VOIDOG, # Needs to be before "dog"!
                     'dog': emojis.PET_DOG,
                     'dragon': emojis.PET_DRAGON,
                     'golden bunny': emojis.PET_GOLDEN_BUNNY,
@@ -229,8 +232,9 @@ class PetsCog(commands.Cog):
                     'snowball': emojis.PET_SNOWBALL,
                     'pony': emojis.PET_PONY,
                     'panda': emojis.PET_PANDA,
-                    'snowman': emojis.PET_SNOWMAN,
                     'penguin': emojis.PET_PENGUIN,
+                    'snowman': emojis.PET_SNOWMAN,
+                    'turtle': emojis.PET_TURTLE,
                     'worker': emojis.PET_WORKER,
                 }
                 user_id = user_name = user_command_message = None
@@ -448,18 +452,22 @@ class PetsCog(commands.Cog):
                                                                      time_left, message.channel.id, reminder_message)
                             )
                         if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVCHI)
-                search_patterns = [
-                    r'claim\*\*: (\d+?)/\d+\n', #English
-                    r'reclamar\*\*: (\d+?)/\d+\n', #Spanish
-                    r'coletar\*\*: (\d+?)/\d+\n', #Portuguese
-                ]
-                pet_claim_amount_match = await functions.get_match_from_patterns(search_patterns, message_field_1_value)
-                if not pet_claim_amount_match:
-                    await functions.add_warning_reaction(message)
-                    await errors.log_error('Amount of claimable pets in pet summary not found.', message)
-                    return
-                if pet_claim_amount_match.group(1) == '0' and user_settings.ready_pets_claim_active:
-                    await user_settings.update(ready_pets_claim_active=False)
+                if user_settings.ready_pets_claim_active and not user_settings.ready_pets_claim_after_every_pet:
+                    search_patterns = [
+                        r'claim\*\*: (\d+?)/(\d+?)\n', #English
+                        r'reclamar\*\*: (\d+?)/(\d+?)\n', #Spanish
+                        r'coletar\*\*: (\d+?)/(\d+?)\n', #Portuguese
+                    ]
+                    pet_claim_amount_match = await functions.get_match_from_patterns(search_patterns, message_field_1_value)
+                    if not pet_claim_amount_match:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Amount of claimable pets in pet summary not found.', message)
+                        return
+                    pets_ready_to_claim = int(pet_claim_amount_match.group(1))
+                    pets_total = int(pet_claim_amount_match.group(2))
+
+                    if pets_ready_to_claim < pets_total:
+                        await user_settings.update(ready_pets_claim_active=False)
 
 # Initialization
 def setup(bot: bridge.AutoShardedBot):

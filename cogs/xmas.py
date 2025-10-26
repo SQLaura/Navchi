@@ -51,10 +51,13 @@ class ChristmasCog(commands.Cog):
         embed_data_after = await functions.parse_embed(message_after)
         if (message_before.content == message_after.content and embed_data_before == embed_data_after
             and message_before.components == message_after.components): return
+        row: discord.Component
         for row in message_after.components:
-            for component in row.children:
-                if component.disabled:
-                    return
+            if isinstance(row, discord.ActionRow):
+                for component in row.children:
+                    if isinstance(component, (discord.Button, discord.SelectMenu)):
+                        if component.disabled:
+                            return
         await self.on_message(message_after)
 
 
@@ -234,7 +237,7 @@ class ChristmasCog(commands.Cog):
                     user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, message_author)
                     if user_name_match:
                         user_name = user_name_match.group(1)
-                        embed_users = await functions.get_guild_member_by_name(message.guild, user_name)
+                        embed_users = await functions.get_member_by_name(self.bot, message.guild, user_name)
                     if not user_name_match or not embed_users:
                         await functions.add_warning_reaction(message)
                         return
@@ -311,7 +314,7 @@ class ChristmasCog(commands.Cog):
             # Turn on christmas area mode, gingerbread
             search_strings = [
                 'has teleported to the **christmas area**', #English
-                'se ha teletransportado al **área de navidad**', #Spanish
+                'se ha teletransportado al **área de navchidad**', #Spanish
                 'se teletransportou para a **zona de natal**', #Portuguese
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
@@ -411,6 +414,7 @@ class ChristmasCog(commands.Cog):
                    'christmas slime',
                    'bunny slime', 
                    'horslime', 
+                   'summer slime', 
                 ]
                 if any(mob in message_content.lower() for mob in event_mobs): return
                 user_id = user_name = partner_name = None

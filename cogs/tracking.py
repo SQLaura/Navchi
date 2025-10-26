@@ -40,12 +40,35 @@ class TrackingCog(commands.Cog):
                 break
         if ctx.message.mentions:
             user = ctx.message.mentions[0]
+        args = ' '.join(args)
+        if not user:
+            user_id_match = re.match(r'(\b[\d]{16,20}\b)', args)
+            if user_id_match:
+                user = self.bot.get_user(int(user_id_match.group(1)))
+                if not user:
+                    await ctx.reply(f'No user found with id `{user_id_match.group(1)}`.')
+                    return
+        if user:
             if user.bot:
                 await ctx.reply('Imagine trying to check the reminders of a bot.')
                 return
-        args = ''.join(args)
-        timestring = re.sub(r'<@!?[0-9]+>', '', args.lower())
-        if timestring == '': timestring = None
+        weeks_match = re.search(r'(\d+\s*w)', args.lower())
+        days_match = re.search(r'(\d+\s*d)', args.lower())
+        hours_match = re.search(r'(\d+\s*h)', args.lower())
+        minutes_match = re.search(r'(\d+\s*m)', args.lower())
+        seconds_match = re.search(r'(\d+\s*s)', args.lower())
+        timestring = ''
+        if weeks_match:
+            timestring = weeks_match.group(1)
+        if days_match:
+            timestring = f'{timestring}{days_match.group(1)}'
+        if hours_match:
+            timestring = f'{timestring}{hours_match.group(1)}'
+        if minutes_match:
+            timestring = f'{timestring}{minutes_match.group(1)}'
+        if seconds_match:
+            timestring = f'{timestring}{seconds_match.group(1)}'
+        if not timestring: timestring = None
         await tracking_cmd.command_stats(self.bot, ctx, timestring, user)
 
     # Events
@@ -58,10 +81,13 @@ class TrackingCog(commands.Cog):
         embed_data_after = await functions.parse_embed(message_after)
         if (message_before.content == message_after.content and embed_data_before == embed_data_after
             and message_before.components == message_after.components): return
+        row: discord.Component
         for row in message_after.components:
-            for component in row.children:
-                if component.disabled:
-                    return
+            if isinstance(row, discord.ActionRow):
+                for component in row.children:
+                    if isinstance(component, (discord.Button, discord.SelectMenu)):
+                        if component.disabled:
+                            return
         await self.on_message(message_after)
 
     @commands.Cog.listener()
@@ -171,8 +197,8 @@ class TrackingCog(commands.Cog):
                         return
                     if not user_settings.bot_enabled: return
                     tt_time = message.created_at
-                    kwargs = {
-                        'last_tt': tt_time.isoformat(sep=' '),
+                    updated_settings = {
+                        'last_tt': tt_time,
                         'inventory_bread': 0,
                         'inventory_carrot': 0,
                         'inventory_potato': 0,
@@ -181,7 +207,7 @@ class TrackingCog(commands.Cog):
                         'inventory_seed_carrot': 0,
                         'inventory_ruby': 0,
                     }
-                    await user_settings.update(**kwargs)
+                    await user_settings.update(**updated_settings)
                     try:
                         reminder: reminders.Reminder = await reminders.get_user_reminder(user.id, 'lottery')
                         await reminder.delete()

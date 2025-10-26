@@ -5,7 +5,6 @@
 from dataclasses import dataclass
 from math import ceil
 import sqlite3
-from typing import Tuple
 
 from database import errors
 from resources import exceptions, settings, strings
@@ -37,18 +36,18 @@ class Cooldown():
         self.event_reduction_mention = new_settings.event_reduction_mention
         self.event_reduction_slash = new_settings.event_reduction_slash
 
-    async def update(self, **kwargs) -> None:
+    async def update(self, **updated_settings) -> None:
         """Updates the cooldown record in the database. Also calls refresh().
 
         Arguments
         ---------
-        kwargs (column=value):
+        updated_settings (column=value):
             base_cooldown: int
             donor_affected: bool
             event_reduction_mention: float
             event_reduction_slash: float
         """
-        await _update_cooldown(self.activity, **kwargs)
+        await _update_cooldown(self.activity, **updated_settings)
         await self.refresh()
 
 
@@ -122,12 +121,12 @@ async def get_cooldown(activity: str) -> Cooldown:
     return cooldown
 
 
-async def get_all_cooldowns() -> Tuple[Cooldown]:
+async def get_all_cooldowns() -> tuple[Cooldown, ...]:
     """Gets the cooldown settings for all activities.
 
     Returns
     -------
-    Tuple[Cooldown]
+    Tuple[Cooldown, ...]
 
     Raises
     ------
@@ -163,13 +162,13 @@ async def get_all_cooldowns() -> Tuple[Cooldown]:
 
 
 # Write Data
-async def _update_cooldown(activity: str, **kwargs) -> None:
+async def _update_cooldown(activity: str, **updated_settings) -> None:
     """Updates cooldown record. Use Cooldown.update() to trigger this function.
 
     Arguments
     ---------
     activity: str
-    kwargs (column=value):
+    updated_settings (column=value):
         cooldown: int
         donor_affected: bool
         event_reduction_mention: float
@@ -178,12 +177,12 @@ async def _update_cooldown(activity: str, **kwargs) -> None:
     Raises
     ------
     sqlite3.Error if something happened within the database.
-    NoArgumentsError if no kwargs are passed (need to pass at least one).
+    NoArgumentsError if no updated_settings are passed (need to pass at least one).
     Also logs all errors to the database.
     """
     table = 'cooldowns'
     function_name = '_update_cooldown'
-    if not kwargs:
+    if not updated_settings:
         await errors.log_error(
             strings.INTERNAL_ERROR_NO_ARGUMENTS.format(table=table, function=function_name)
         )
@@ -191,12 +190,12 @@ async def _update_cooldown(activity: str, **kwargs) -> None:
     try:
         cur = settings.NAVCHI_DB.cursor()
         sql = f'UPDATE {table} SET'
-        for kwarg in kwargs:
-            sql = f'{sql} {kwarg} = :{kwarg},'
+        for updated_setting in updated_settings:
+            sql = f'{sql} {updated_setting} = :{updated_setting},'
         sql = sql.strip(",")
-        kwargs['activity'] = activity
+        updated_settings['activity'] = activity
         sql = f'{sql} WHERE activity = :activity'
-        cur.execute(sql, kwargs)
+        cur.execute(sql, updated_settings)
     except sqlite3.Error as error:
         await errors.log_error(
             strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)

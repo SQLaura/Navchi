@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from math import ceil
 import sqlite3
-from typing import Any, NamedTuple, Tuple
+from typing import Any, NamedTuple
 
 from discord import utils
 
@@ -47,12 +47,14 @@ class User():
     alert_cel_multiply: UserAlert
     alert_cel_sacrifice: UserAlert
     alert_chimney: UserAlert
+    alert_color_tournament: UserAlert
     alert_daily: UserAlert
     alert_duel: UserAlert
     alert_dungeon_miniboss: UserAlert
     alert_epic: UserAlert
     alert_epic_shop: UserAlert
     alert_eternal_present: UserAlert
+    alert_eternity_sealing: UserAlert
     alert_farm: UserAlert
     alert_guild: UserAlert
     alert_horse_breed: UserAlert
@@ -70,11 +72,12 @@ class User():
     alert_pet_tournament: UserAlert
     alert_pets: UserAlert
     alert_quest: UserAlert
+    alert_surf: UserAlert
     alert_training: UserAlert
     alert_vote: UserAlert
     alert_weekly: UserAlert
     alert_work: UserAlert
-    alts: Tuple[int]
+    alts: tuple[int, ...]
     ascended: bool
     area_20_cooldowns_enabled: bool
     auto_flex_enabled: bool
@@ -84,7 +87,6 @@ class User():
     auto_ready_enabled: bool
     bot_enabled: bool
     chocolate_box_unlocked: bool
-    clan_name: str
     christmas_area_enabled: bool
     cmd_cd_visible: bool
     cmd_inventory_visible: bool
@@ -93,6 +95,7 @@ class User():
     context_helper_enabled: bool
     current_area: int
     dnd_mode_enabled: bool
+    eternal_boosts_tier: int
     farm_helper_mode: int
     guild_quest_prompt_active: bool
     halloween_helper_enabled: bool
@@ -135,6 +138,7 @@ class User():
     ready_channel_dungeon: int
     ready_channel_horse: int
     ready_embed_color: str
+    ready_eternity_visible: bool
     ready_pets_claim_active: bool
     ready_pets_claim_after_every_pet: bool
     ready_other_on_top: bool
@@ -149,6 +153,7 @@ class User():
     ruby_counter_button_mode: bool
     ruby_counter_enabled: bool
     slash_mentions_enabled: bool
+    surf_helper_enabled: bool
     time_potion_warning_enabled: bool
     time_travel_count: int
     top_hat_unlocked: bool
@@ -186,12 +191,14 @@ class User():
         self.alert_cel_sacrifice = new_settings.alert_cel_sacrifice
         self.alert_chimney = new_settings.alert_chimney
         self.alert_big_arena = new_settings.alert_big_arena
+        self.alert_color_tournament = new_settings.alert_color_tournament
         self.alert_daily = new_settings.alert_daily
         self.alert_duel = new_settings.alert_duel
         self.alert_dungeon_miniboss = new_settings.alert_dungeon_miniboss
         self.alert_epic = new_settings.alert_epic
         self.alert_epic_shop = new_settings.alert_epic_shop
         self.alert_eternal_present = new_settings.alert_eternal_present
+        self.alert_eternity_sealing = new_settings.alert_eternity_sealing
         self.alert_farm = new_settings.alert_farm
         self.alert_guild = new_settings.alert_guild
         self.alert_horse_breed = new_settings.alert_horse_breed
@@ -209,6 +216,7 @@ class User():
         self.alert_pet_tournament = new_settings.alert_pet_tournament
         self.alert_pets = new_settings.alert_pets
         self.alert_quest = new_settings.alert_quest
+        self.alert_surf = new_settings.alert_surf
         self.alert_training = new_settings.alert_training
         self.alert_vote = new_settings.alert_vote
         self.alert_weekly = new_settings.alert_weekly
@@ -223,7 +231,6 @@ class User():
         self.auto_ready_enabled = new_settings.auto_ready_enabled
         self.bot_enabled = new_settings.bot_enabled
         self.chocolate_box_unlocked = new_settings.chocolate_box_unlocked
-        self.clan_name = new_settings.clan_name
         self.christmas_area_enabled = new_settings.christmas_area_enabled
         self.cmd_cd_visible = new_settings.cmd_cd_visible
         self.cmd_inventory_visible = new_settings.cmd_inventory_visible
@@ -232,6 +239,7 @@ class User():
         self.context_helper_enabled = new_settings.context_helper_enabled
         self.current_area = new_settings.current_area
         self.dnd_mode_enabled = new_settings.dnd_mode_enabled
+        self.eternal_boosts_tier = new_settings.eternal_boosts_tier
         self.farm_helper_mode = new_settings.farm_helper_mode
         self.guild_quest_prompt_active = new_settings.guild_quest_prompt_active
         self.halloween_helper_enabled = new_settings.halloween_helper_enabled
@@ -274,6 +282,7 @@ class User():
         self.ready_channel_dungeon = new_settings.ready_channel_dungeon
         self.ready_channel_horse = new_settings.ready_channel_horse
         self.ready_embed_color = new_settings.ready_embed_color
+        self.ready_eternity_visible = new_settings.ready_eternity_visible
         self.ready_pets_claim_active = new_settings.ready_pets_claim_active
         self.ready_pets_claim_after_every_pet = new_settings.ready_pets_claim_after_every_pet
         self.ready_other_on_top = new_settings.ready_other_on_top
@@ -288,6 +297,7 @@ class User():
         self.ruby_counter_button_mode = new_settings.ruby_counter_button_mode
         self.ruby_counter_enabled = new_settings.ruby_counter_enabled
         self.slash_mentions_enabled = new_settings.slash_mentions_enabled
+        self.surf_helper_enabled = new_settings.surf_helper_enabled
         self.time_potion_warning_enabled = new_settings.time_potion_warning_enabled
         self.time_travel_count = new_settings.time_travel_count
         self.top_hat_unlocked = new_settings.top_hat_unlocked
@@ -319,13 +329,13 @@ class User():
         await alts_db.delete_alt(self.user_id, alt_id)
         await self.refresh()
         
-    async def update(self, **kwargs) -> None:
+    async def update(self, **updated_settings) -> None:
         """Updates the user record in the database. Also calls refresh().
         If user_donor_tier is updated and a partner is set, the partner's partner_donor_tier is updated as well.
 
         Arguments
         ---------
-        kwargs (column=value):
+        updated_settings (column=value):
             alert_advent_enabled: bool
             alert_advent_message: str
             alert_advent_visible: bool
@@ -363,6 +373,10 @@ class User():
             alert_chimney_message: str
             alert_chimney_multiplier: float
             alert_chimney_visible: bool
+            alert_color_tournament_enabled: bool
+            alert_color_tournament_message: str
+            alert_color_tournament_multiplier: float
+            alert_color_tournament_visible: bool
             alert_daily_enabled: bool
             alert_daily_message: str
             alert_daily_multiplier: float
@@ -384,6 +398,8 @@ class User():
             alert_eternal_present_enabled: bool
             alert_eternal_present_message: str
             alert_eternal_present_visible: bool
+            alert_eternity_sealing_enabled: bool
+            alert_eternity_sealing_message: str
             alert_farm_enabled: bool
             alert_farm_message: str
             alert_farm_multiplier: float
@@ -439,6 +455,10 @@ class User():
             alert_quest_message: str
             alert_quest_multiplier: float
             alert_quest_visible: bool
+            alert_surf_enabled: bool
+            alert_surf_message: str
+            alert_surf_multiplier: float
+            alert_surf_visible: bool
             alert_training_enabled: bool
             alert_training_message: str
             alert_training_multiplier: float
@@ -463,7 +483,6 @@ class User():
             auto_ready_enabled: bool
             bot_enabled: bool
             chocolate_box_unlocked: bool
-            clan_name: str
             cmd_cd_visible: bool
             cmd_inventory_visible: bool
             cmd_cmd_ready_visible: bool
@@ -472,6 +491,7 @@ class User():
             context_helper_enabled: bool
             current_area: int
             dnd_mode_enabled: bool
+            eternal_boosts_tier: int
             farm_helper_mode: int
             guild_quest_prompt_active: bool
             halloween_helper_enabled: bool
@@ -521,6 +541,7 @@ class User():
             ready_channel_dungeon: int
             ready_channel_horse: int
             ready_embed_color: str
+            ready_eternity_visible: bool
             ready_pets_claim_active: bool
             ready_pets_claim_after_every_pet: bool
             ready_other_on_top: bool
@@ -535,6 +556,7 @@ class User():
             ruby_counter_button_mode: bool
             ruby_counter_enabled: bool
             slash_mentions_enabled: bool
+            surf_helper_enabled: bool
             time_potion_warning_enabled: bool
             time_travel_count: int
             top_hat_unlocked: bool
@@ -546,7 +568,7 @@ class User():
             user_donor_tier: int
             user_pocket_watch_multiplier: float
         """
-        await _update_user(self, **kwargs)
+        await _update_user(self, **updated_settings)
         await self.refresh()
 
     async def update_multiplier(self, activity: str, time_left: timedelta) -> None:
@@ -604,9 +626,9 @@ class User():
 
         # Update multiplier
         if current_multiplier != new_multiplier:
-            kwargs: dict[str, float] = {} 
-            kwargs[f'{strings.ACTIVITIES_COLUMNS[activity]}_multiplier'] = new_multiplier
-            await self.update(**kwargs)
+            updated_settings: dict[str, float] = {} 
+            updated_settings[f'{strings.ACTIVITIES_COLUMNS[activity]}_multiplier'] = new_multiplier
+            await self.update(**updated_settings)
 
 
 # Miscellaneous functions
@@ -657,6 +679,10 @@ async def _dict_to_user(record: dict[str, Any]) -> User:
                                       message=record['alert_chimney_message'],
                                       multiplier=record['alert_chimney_multiplier'],
                                       visible=bool(record['alert_chimney_visible'])),
+            alert_color_tournament = UserAlert(enabled=bool(record['alert_color_tournament_enabled']),
+                                      message=record['alert_color_tournament_message'],
+                                      multiplier=record['alert_color_tournament_multiplier'],
+                                      visible=bool(record['alert_color_tournament_visible'])),
             alert_big_arena = UserAlert(enabled=bool(record['alert_big_arena_enabled']),
                                         message=record['alert_big_arena_message'],
                                         multiplier=1.0,
@@ -697,6 +723,10 @@ async def _dict_to_user(record: dict[str, Any]) -> User:
                                               message=record['alert_eternal_present_message'],
                                               multiplier=1.0,
                                               visible=bool(record['alert_eternal_present_visible'])),
+            alert_eternity_sealing = UserAlert(enabled=bool(record['alert_eternity_sealing_enabled']),
+                                               message=record['alert_eternity_sealing_message'],
+                                               multiplier=1.0,
+                                               visible=False),
             alert_farm = UserAlert(enabled=bool(record['alert_farm_enabled']),
                                    message=record['alert_farm_message'],
                                    multiplier=float(record['alert_farm_multiplier']),
@@ -760,11 +790,15 @@ async def _dict_to_user(record: dict[str, Any]) -> User:
             alert_pets = UserAlert(enabled=bool(record['alert_pets_enabled']),
                                    message=record['alert_pets_message'],
                                    multiplier=1.0,
-                                   visible=record['alert_pets_visible']),
+                                   visible=bool(record['alert_pets_visible'])),
             alert_quest = UserAlert(enabled=bool(record['alert_quest_enabled']),
                                     message=record['alert_quest_message'],
                                     multiplier=float(record['alert_quest_multiplier']),
                                     visible=bool(record['alert_quest_visible'])),
+            alert_surf = UserAlert(enabled=bool(record['alert_surf_enabled']),
+                                    message=record['alert_surf_message'],
+                                    multiplier=float(record['alert_surf_multiplier']),
+                                    visible=bool(record['alert_surf_visible'])),
             alert_training = UserAlert(enabled=bool(record['alert_training_enabled']),
                                        message=record['alert_training_message'],
                                        multiplier=float(record['alert_training_multiplier']),
@@ -791,7 +825,6 @@ async def _dict_to_user(record: dict[str, Any]) -> User:
             auto_flex_tip_read = bool(record['auto_flex_tip_read']),
             bot_enabled = bool(record['bot_enabled']),
             chocolate_box_unlocked = bool(record['chocolate_box_unlocked']),
-            clan_name = record['clan_name'],
             christmas_area_enabled = bool(record['christmas_area_enabled']),
             cmd_cd_visible = record['cmd_cd_visible'],
             cmd_inventory_visible = record['cmd_inventory_visible'],
@@ -800,12 +833,13 @@ async def _dict_to_user(record: dict[str, Any]) -> User:
             context_helper_enabled = bool(record['context_helper_enabled']),
             current_area = -1 if record['current_area'] is None else record['current_area'],
             dnd_mode_enabled = bool(record['dnd_mode_enabled']),
+            eternal_boosts_tier = record['eternal_boosts_tier'],
             farm_helper_mode = record['farm_helper_mode'],
             guild_quest_prompt_active = bool(record['guild_quest_prompt_active']),
             halloween_helper_enabled = bool(record['halloween_helper_enabled']),
             hardmode_mode_enabled = bool(record['hardmode_mode_enabled']),
             heal_warning_enabled = bool(record['heal_warning_enabled']),
-            hunt_end_time = datetime.fromisoformat(record['hunt_end_time']).replace(tzinfo=timezone.utc),
+            hunt_end_time = record['hunt_end_time'].replace(tzinfo=timezone.utc),
             hunt_reminders_combined = bool(record['hunt_reminders_combined']),
             inventory = UserInventory(bread=(record['inventory_bread']), carrot=(record['inventory_carrot']),
                                       potato=(record['inventory_potato']),
@@ -819,7 +853,7 @@ async def _dict_to_user(record: dict[str, Any]) -> User:
             last_lootbox = '' if record['last_lootbox'] is None else record['last_lootbox'],
             last_quest_command = '' if record['last_quest_command'] is None else record['last_quest_command'],
             last_training_command = record['last_training_command'],
-            last_tt = datetime.fromisoformat(record['last_tt']).replace(tzinfo=timezone.utc) if record['last_tt'] is not None else none_date,
+            last_tt = record['last_tt'] if record['last_tt'] is not None else none_date,
             last_work_command = '' if record['last_work_command'] is None else record['last_work_command'],
             megarace_helper_enabled = bool(record['megarace_helper_enabled']),
             multiplier_management_enabled = bool(record['multiplier_management_enabled']),
@@ -827,7 +861,7 @@ async def _dict_to_user(record: dict[str, Any]) -> User:
             partner_channel_id = record['partner_channel_id'],
             partner_chocolate_box_unlocked = bool(record['partner_chocolate_box_unlocked']),
             partner_donor_tier = record['partner_donor_tier'],
-            partner_hunt_end_time = datetime.fromisoformat(record['partner_hunt_end_time']).replace(tzinfo=timezone.utc),
+            partner_hunt_end_time = record['partner_hunt_end_time'].replace(tzinfo=timezone.utc),
             partner_id = record['partner_id'],
             partner_name = record['partner_name'],
             partner_pocket_watch_multiplier = float(record['partner_pocket_watch_multiplier']),
@@ -847,6 +881,7 @@ async def _dict_to_user(record: dict[str, Any]) -> User:
             ready_channel_dungeon = record['ready_channel_dungeon'],
             ready_channel_horse = record['ready_channel_horse'],
             ready_embed_color = record['ready_embed_color'],
+            ready_eternity_visible = bool(record['ready_eternity_visible']),
             ready_other_on_top = bool(record['ready_other_on_top']),
             ready_pets_claim_active = bool(record['ready_pets_claim_active']),
             ready_pets_claim_after_every_pet = bool(record['ready_pets_claim_after_every_pet']),
@@ -861,6 +896,7 @@ async def _dict_to_user(record: dict[str, Any]) -> User:
             ruby_counter_button_mode = bool(record['ruby_counter_button_mode']),
             ruby_counter_enabled = bool(record['ruby_counter_enabled']),
             slash_mentions_enabled = bool(record['slash_mentions_enabled']),
+            surf_helper_enabled = bool(record['surf_helper_enabled']),
             time_potion_warning_enabled = bool(record['time_potion_warning_enabled']),
             time_travel_count = record['time_travel_count'],
             top_hat_unlocked = bool(record['top_hat_unlocked']),
@@ -956,44 +992,6 @@ async def get_all_users() -> tuple[User,...]:
     return tuple(users)
 
 
-async def get_users_by_clan_name(clan_name: str) -> tuple[User,...]:
-    """Gets all user settings of all users that have a certain clan_name set.
-
-    Returns
-    -------
-    Tuple with User objects
-
-    Raises
-    ------
-    sqlite3.Error if something happened within the database.
-    exceptions.NoDataFoundError if no guild was found.
-    LookupError if something goes wrong reading the dict.
-    Also logs all errors to the database.
-    """
-    table: str = 'users'
-    function_name: str = 'get_users_by_clan_name'
-    sql: str = f'SELECT * FROM {table} WHERE clan_name=?'
-    try:
-        cur: sqlite3.Cursor = settings.NAVCHI_DB.cursor()
-        cur.execute(sql, (clan_name,))
-        records: list[Any] = cur.fetchall()
-    except sqlite3.Error as error:
-        await errors.log_error(
-            strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)
-        )
-        raise
-    if not records:
-        raise exceptions.FirstTimeUserError(f'No users found for clan {clan_name} ')
-    users: list[User] = []
-    for record in records:
-        record: dict[str, Any] = dict(record)
-        record['alts'] = await alts_db.get_alts(record['user_id'])
-        user: User = await _dict_to_user(record)
-        users.append(user)
-
-    return tuple(users)
-
-
 async def get_user_count() -> int:
     """Gets the amount of users in the table "users".
 
@@ -1024,14 +1022,14 @@ async def get_user_count() -> int:
 
 
 # Write Data
-async def _update_user(user: User, **kwargs) -> None:
+async def _update_user(user: User, **updated_settings) -> None:
     """Updates user record. Use User.update() to trigger this function.
     If user_donor_tier is updated and a partner is set, the partner's partner_donor_tier is updated as well.
 
     Arguments
     ---------
     user_id: int
-    kwargs (column=value):
+    updated_settings (column=value):
         alert_advent_enabled: bool
         alert_advent_message: str
         alert_advent_visible: bool
@@ -1069,6 +1067,10 @@ async def _update_user(user: User, **kwargs) -> None:
         alert_chimney_message: str
         alert_chimney_multiplier: float
         alert_chimney_visible: bool
+        alert_color_tournament_enabled: bool
+        alert_color_tournament_message: str
+        alert_color_tournament_multiplier: float
+        alert_color_tournament_visible: bool
         alert_daily_enabled: bool
         alert_daily_message: str
         alert_daily_multiplier: float
@@ -1090,6 +1092,8 @@ async def _update_user(user: User, **kwargs) -> None:
         alert_eternal_present_enabled: bool
         alert_eternal_present_message: str
         alert_eternal_present_visible: bool
+        alert_eternity_sealing_enabled: bool
+        alert_eternity_sealing_message: str
         alert_farm_enabled: bool
         alert_farm_message: str
         alert_farm_multiplier: float
@@ -1145,6 +1149,10 @@ async def _update_user(user: User, **kwargs) -> None:
         alert_quest_message: str
         alert_quest_multiplier: float
         alert_quest_visible: bool
+        alert_surf_enabled: bool
+        alert_surf_message: str
+        alert_surf_multiplier: float
+        alert_surf_visible: bool
         alert_training_enabled: bool
         alert_training_message: str
         alert_training_multiplier: float
@@ -1169,7 +1177,6 @@ async def _update_user(user: User, **kwargs) -> None:
         auto_ready_enabled: bool
         bot_enabled: bool
         chocolate_box_unlocked: bool
-        clan_name: str
         cmd_cd_visible: bool
         cmd_inventory_visible: bool
         cmd_cmd_ready_visible: bool
@@ -1178,6 +1185,7 @@ async def _update_user(user: User, **kwargs) -> None:
         context_helper_enabled: bool
         current_area: int
         dnd_mode_enabled: bool
+        eternal_boosts_tier: int
         farm_helper_mode: int
         guild_quest_prompt_active: bool
         halloween_helper_enabled: bool
@@ -1227,6 +1235,7 @@ async def _update_user(user: User, **kwargs) -> None:
         ready_channel_dungeon: int
         ready_channel_horse: int
         ready_embed_color: str
+        ready_eternity_visible: bool
         ready_pets_claim_active: bool
         ready_pets_claim_after_every_pet: bool
         ready_other_on_top: bool
@@ -1241,6 +1250,7 @@ async def _update_user(user: User, **kwargs) -> None:
         ruby_counter_button_mode: bool
         ruby_counter_enabled: bool
         slash_mentions_enabled: bool
+        surf_helper_enabled: bool
         time_potion_warning_enabled: bool
         time_travel_count: int
         top_hat_unlocked: bool
@@ -1255,12 +1265,12 @@ async def _update_user(user: User, **kwargs) -> None:
     Raises
     ------
     sqlite3.Error if something happened within the database.
-    NoArgumentsError if no kwargs are passed (need to pass at least one)
+    NoArgumentsError if no updated_settings are passed (need to pass at least one)
     Also logs all errors to the database.
     """
     table: str = 'users'
     function_name: str = '_update_user'
-    if not kwargs:
+    if not updated_settings:
         await errors.log_error(
             strings.INTERNAL_ERROR_NO_ARGUMENTS.format(table=table, function=function_name)
         )
@@ -1268,15 +1278,15 @@ async def _update_user(user: User, **kwargs) -> None:
     try:
         cur: sqlite3.Cursor = settings.NAVCHI_DB.cursor()
         sql: str = f'UPDATE {table} SET'
-        for kwarg in kwargs:
-            sql = f'{sql} {kwarg} = :{kwarg},'
+        for updated_setting in updated_settings:
+            sql = f'{sql} {updated_setting} = :{updated_setting},'
         sql = sql.strip(",")
-        kwargs['user_id'] = user.user_id
+        updated_settings['user_id'] = user.user_id
         sql = f'{sql} WHERE user_id = :user_id'
-        cur.execute(sql, kwargs)
-        if 'user_donor_tier' in kwargs and user.partner_id is not None:
+        cur.execute(sql, updated_settings)
+        if 'user_donor_tier' in updated_settings and user.partner_id is not None:
             partner: User = await get_user(user.partner_id)
-            await partner.update(partner_donor_tier=kwargs['user_donor_tier'])
+            await partner.update(partner_donor_tier=updated_settings['user_donor_tier'])
     except sqlite3.Error as error:
         await errors.log_error(
             strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)

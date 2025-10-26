@@ -3,7 +3,7 @@
 
 import asyncio
 import re
-from typing import Any, List, Optional
+from typing import Any, Optional
 
 import discord
 from discord.ext import bridge, commands
@@ -142,7 +142,7 @@ if not settings.LITE_MODE: SETTINGS_USER_COLUMNS['reactions'] = 'reactions'
 
 # --- Commands ---
 async def command_enable_disable(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext,
-                                 action: str, settings: List[str]) -> None:
+                                 action: str, settings: list[str]) -> None:
     """Enables/disables specific settings"""
     user_settings: users.User = await users.get_user(ctx.author.id)
     ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
@@ -206,11 +206,11 @@ async def command_enable_disable(bot: bridge.AutoShardedBot, ctx: bridge.BridgeC
         elif setting in SETTINGS_USER: updated_user.append(setting)
         else: ignored_settings.append(setting)
 
-    kwargs = {}
+    updated_settings = {}
     if updated_reminders:
         answer_reminders = f'{action.capitalize()}d reminders for the following activities:'
         for activity in updated_reminders:
-            kwargs[f'{strings.ACTIVITIES_COLUMNS[activity]}_enabled'] = enabled
+            updated_settings[f'{strings.ACTIVITIES_COLUMNS[activity]}_enabled'] = enabled
             answer_reminders = f'{answer_reminders}\n{emojis.BP}`{activity}`'
             if not enabled:
                 if activity == 'pets':
@@ -229,17 +229,17 @@ async def command_enable_disable(bot: bridge.AutoShardedBot, ctx: bridge.BridgeC
     if updated_helpers:
         answer_helpers = f'{action.capitalize()}d the following helpers:'
         for helper in updated_helpers:
-            kwargs[f'{SETTINGS_HELPER_COLUMNS[helper]}_enabled'] = enabled
+            updated_settings[f'{SETTINGS_HELPER_COLUMNS[helper]}_enabled'] = enabled
             answer_helpers = f'{answer_helpers}\n{emojis.BP}`{helper}`'
 
     if updated_user:
         answer_user = f'{action.capitalize()}d the following user settings:'
         for setting in updated_user:
-            kwargs[f'{SETTINGS_USER_COLUMNS[setting]}_enabled'] = enabled
+            updated_settings[f'{SETTINGS_USER_COLUMNS[setting]}_enabled'] = enabled
             answer_user = f'{answer_user}\n{emojis.BP}`{setting}`'
 
     if updated_reminders or updated_helpers or updated_user:
-        await user_settings.update(**kwargs)
+        await user_settings.update(**updated_settings)
 
     if ignored_settings:
         answer_ignored = f'Couldn\'t find the following settings:'
@@ -259,7 +259,7 @@ async def command_enable_disable(bot: bridge.AutoShardedBot, ctx: bridge.BridgeC
     await ctx.respond(answer.strip())
 
 
-async def command_multipliers(bot: bridge.AutoShardedBot, ctx: commands.Context, args: List[str]) -> None:
+async def command_multipliers(bot: bridge.AutoShardedBot, ctx: commands.Context, args: list[str]) -> None:
     user_settings: users.User = await users.get_user(ctx.author.id)
     async def get_current_multipliers() -> str:
         current_multipliers: str = '**Managed**'
@@ -295,12 +295,12 @@ async def command_multipliers(bot: bridge.AutoShardedBot, ctx: commands.Context,
         multiplier_found: float | None = None
         activities_found: list[str] = []
         ignored_activities: list[str] = []
-        kwargs: dict[str, Any] = {}
+        updated_settings: dict[str, Any] = {}
         arg: str
         for arg in args:
             if arg == 'reset':
                 for activity in strings.ACTIVITIES_WITH_CHANGEABLE_MULTIPLIER:
-                     kwargs[f'alert_{activity.replace("-","_")}_multiplier'] = 1
+                     updated_settings[f'alert_{activity.replace("-","_")}_multiplier'] = 1
                 break
             try:
                 multiplier_found = float(arg)
@@ -321,7 +321,7 @@ async def command_multipliers(bot: bridge.AutoShardedBot, ctx: commands.Context,
                             f'Changing managed multipliers with this command is not possible if automatic multiplier management is enabled.'
                         )
                         return
-                    kwargs[f'alert_{activity.replace("-","_")}_multiplier'] = multiplier_found
+                    updated_settings[f'alert_{activity.replace("-","_")}_multiplier'] = multiplier_found
                 activities_found = []
             except ValueError:
                 if arg == 'all':
@@ -339,10 +339,10 @@ async def command_multipliers(bot: bridge.AutoShardedBot, ctx: commands.Context,
                 f'Invalid syntax.\n\n{syntax}'
             )
             return
-        if not kwargs:
+        if not updated_settings:
             answer: str = 'No valid multipliers found.'
         else:
-            await user_settings.update(**kwargs)
+            await user_settings.update(**updated_settings)
             answer: str = 'Multiplier(s) updated.'
         current_multipliers: str = await get_current_multipliers()
         answer = (
@@ -782,6 +782,26 @@ async def command_settings_reminders(bot: bridge.AutoShardedBot, ctx: bridge.Bri
     view.interaction = interaction
     await view.wait()
 
+    
+async def command_settings_reminders_2(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext,
+                                       switch_view: Optional[discord.ui.View] = None) -> None:
+    """Reminder settings command (page 2)"""
+    user_settings = interaction = None
+    if switch_view is not None:
+        user_settings = getattr(switch_view, 'user_settings', None)
+        interaction = getattr(switch_view, 'interaction', None)
+        switch_view.stop()
+    if user_settings is None:
+        user_settings: users.User = await users.get_user(ctx.author.id)
+    view = views.SettingsReminders2View(ctx, bot, user_settings, embed_settings_reminders_2)
+    embed = await embed_settings_reminders_2(bot, ctx, user_settings)
+    if interaction is None:
+        interaction = await ctx.respond(embed=embed, view=view)
+    else:
+        await interaction.edit(embed=embed, view=view)
+    view.interaction = interaction
+    await view.wait()
+
 
 async def command_server_settings_auto_flex(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext,
                                             switch_view: Optional[discord.ui.View] = None) -> None:
@@ -805,7 +825,7 @@ async def command_server_settings_auto_flex(bot: bridge.AutoShardedBot, ctx: bri
     
 async def command_server_settings_auto_flex_2(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext,
                                               switch_view: Optional[discord.ui.View] = None) -> None:
-    """Server settings auto-flex command (page)"""
+    """Server settings auto-flex command (page 2)"""
     interaction = guild_settings = None
     if switch_view is not None:
         guild_settings = getattr(switch_view, 'guild_settings', None)
@@ -921,9 +941,17 @@ async def embed_settings_clan(bot: bridge.AutoShardedBot, ctx: discord.Applicati
     else:
         quest_user = '`None`'
 
+    clan_leaders: str = ''
+    clan_member: clans.ClanMember
+    for clan_member in clan_settings.members:
+        if clan_member.member_type == 'leader':
+            clan_leaders = f'{clan_leaders}, <@{clan_member.user_id}>'
+    if not clan_leaders:
+        clan_leaders = f'{emojis.WARNING} No guild leader found! Use {strings.SLASH_COMMANDS["guild list"]} or `rpg guid list` to update the member list.'
+
     overview = (
         f'{emojis.BP} **Name**: `{clan_settings.clan_name}`\n'
-        f'{emojis.BP} **Owner**: <@{clan_settings.leader_id}>\n'
+        f'{emojis.BP} **Leader(s)**: {clan_leaders.strip(', ')}\n'
     )
     reminder = (
         f'{emojis.BP} **Guild channel**: {clan_channel}\n'
@@ -937,12 +965,12 @@ async def embed_settings_clan(bot: bridge.AutoShardedBot, ctx: discord.Applicati
         f'{emojis.BP} **Member currently on quest**: {quest_user}\n'
         f'{emojis.DETAIL} _The member on a guild quest will get pinged 5 minutes early._'
     )
-    members = ''
-    member_count = 0
-    for member_id in clan_settings.member_ids:
-        if member_id is not None:
-            members = f'{members}\n{emojis.BP} <@{member_id}>'
-            member_count += 1
+    members: str = ''
+    member_count: int = 0
+    clan_member: clans.ClanMember
+    for clan_member in clan_settings.members:
+        members = f'{members}\n{emojis.BP} <@{clan_member.user_id}>'
+        member_count += 1
     members = f'{members.strip()}\n\n➜ _Use {strings.SLASH_COMMANDS["guild list"]} or `rpg guild list` to update guild members._'
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
@@ -957,7 +985,7 @@ async def embed_settings_clan(bot: bridge.AutoShardedBot, ctx: discord.Applicati
     embed.add_field(name='OVERVIEW', value=overview, inline=False)
     embed.add_field(name='REMINDER', value=reminder, inline=False)
     embed.add_field(name='GUILD QUESTS', value=quests, inline=False)
-    embed.add_field(name=f'MEMBERS ({member_count}/10)', value=members, inline=False)
+    embed.add_field(name=f'MEMBERS ({member_count}/20)', value=members, inline=False)
     return embed
 
 
@@ -988,11 +1016,14 @@ async def embed_settings_helpers(bot: bridge.AutoShardedBot, ctx: discord.Applic
     )
     seasonal_helpers = (
         f'{emojis.BP} **Megarace Helper**: {await functions.bool_to_text(user_settings.megarace_helper_enabled)}\n'
-        f'{emojis.DETAIL} _Provides the optimal answers for the horse festival megarace._\n'
+        f'{emojis.DETAIL} _Provides the optimal answers for `rpg hf megarace`._\n'
         f'{emojis.DETAIL} _Pings you when a megarace boost appears._\n'
         f'{emojis.BP} **Pumpkin bat helper**: '
         f'{await functions.bool_to_text(user_settings.halloween_helper_enabled)}\n'
         f'{emojis.DETAIL} _Provides the answers for the halloween boss._\n'
+        f'{emojis.BP} **Surf helper**: '
+        f'{await functions.bool_to_text(user_settings.surf_helper_enabled)}\n'
+        f'{emojis.DETAIL} _Provides details about the choices in `rpg smr surf`._\n'
     )
     helper_settings = (
         f'{emojis.BP} **Pet catch helper style**: `{pet_helper_mode}`\n'
@@ -1014,7 +1045,7 @@ async def embed_settings_helpers(bot: bridge.AutoShardedBot, ctx: discord.Applic
 
 
 async def embed_settings_portals(bot: bridge.AutoShardedBot, ctx: discord.ApplicationContext, user_settings: users.User,
-                                 user_portals: List[portals.Portal]) -> discord.Embed:
+                                 user_portals: list[portals.Portal]) -> discord.Embed:
     """Portals settings embed"""
     ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
     message_style = 'Embed' if user_settings.portals_as_embed else 'Normal message'
@@ -1037,7 +1068,7 @@ async def embed_settings_portals(bot: bridge.AutoShardedBot, ctx: discord.Applic
 
 
 async def embed_settings_messages(bot: bridge.AutoShardedBot, ctx: discord.ApplicationContext,
-                                  user_settings: users.User, activity: str) -> List[discord.Embed]:
+                                  user_settings: users.User, activity: str) -> list[discord.Embed]:
     """Reminder message specific activity embed"""
     ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
     embed_no = 1
@@ -1204,6 +1235,7 @@ async def embed_settings_ready(bot: bridge.AutoShardedBot, ctx: discord.Applicat
         clan_alert_visible = await bool_to_text(clan_settings.alert_visible)
     auto_ready_enabled = f'{emojis.ENABLED}`Enabled`' if user_settings.auto_ready_enabled else f'{emojis.DISABLED}`Disabled`'
     ping_user_enabled = f'{emojis.ENABLED}`Enabled`' if user_settings.ready_ping_user else f'{emojis.DISABLED}`Disabled`'
+    eternity_visible = f'{emojis.ENABLED}`Enabled`' if user_settings.ready_eternity_visible else f'{emojis.DISABLED}`Disabled`'
     frequency = 'After all commands' if user_settings.ready_after_all_commands else 'After hunt only'
     message_style = 'Embed' if user_settings.ready_as_embed else 'Normal message'
     up_next_tyle = 'Timestamp' if user_settings.ready_up_next_as_timestamp else 'Static time'
@@ -1223,7 +1255,7 @@ async def embed_settings_ready(bot: bridge.AutoShardedBot, ctx: discord.Applicat
     if settings.LITE_MODE:
         field_settings = (
             f'{field_settings}\n'
-            f'{emojis.DETAIL} _This setting can\'t be changed in Navchi Lite._'
+            f'{emojis.DETAIL} _This setting can\'t be changed in Navi Lite._'
         )
     field_settings = (
         f'{field_settings}\n'
@@ -1233,6 +1265,7 @@ async def embed_settings_ready(bot: bridge.AutoShardedBot, ctx: discord.Applicat
         f'{emojis.BP} **Guild channel reminder**: {clan_alert_visible}\n'
         f'{emojis.BP} **{strings.SLASH_COMMANDS["pets claim"]} type**: `{pets_claim_type}`\n'
         f'{emojis.BP} **Position of "other commands"**: `{other_field_position}`\n'
+        f'{emojis.BP} **Eternity time left**: {eternity_visible}\n'
     )
     trade_daily = (
         f'_Daily trades will only show up if you have a top hat!_\n'
@@ -1338,11 +1371,13 @@ async def embed_settings_ready_reminders(bot: bridge.AutoShardedBot, ctx: discor
         f'{emojis.BP} **Cel sacrifice**: '
         f'{await bool_to_text(user_settings.alert_cel_sacrifice.visible)}\n'
         f'{emojis.BP} **Chimney**: {await bool_to_text(user_settings.alert_chimney.visible)}\n'
+        f'{emojis.BP} **Color tournament**: {await bool_to_text(user_settings.alert_color_tournament.visible)}\n'
         f'{emojis.BP} **ETERNAL presents**: '
         f'{await bool_to_text(user_settings.alert_eternal_present.visible)}\n'
         f'{emojis.BP} **Love share**: {await bool_to_text(user_settings.alert_love_share.visible)}\n'
         f'{emojis.BP} **Megarace**: {await bool_to_text(user_settings.alert_megarace.visible)}\n'
         f'{emojis.BP} **Minirace**: {await bool_to_text(user_settings.alert_minirace.visible)}\n'
+        f'{emojis.BP} **Surf**: {await bool_to_text(user_settings.alert_surf.visible)}\n'
     )
     command_channels = (
         f'_Command channels are shown below the corresponding ready command._\n'
@@ -1397,6 +1432,7 @@ async def embed_settings_reminders(bot: bridge.AutoShardedBot, ctx: discord.Appl
         f'{emojis.BP} **Daily**: {await functions.bool_to_text(user_settings.alert_daily.enabled)}\n'
         f'{emojis.BP} **EPIC items**: {await functions.bool_to_text(user_settings.alert_epic.enabled)}\n'
         f'{emojis.BP} **EPIC shop restocks**: {await functions.bool_to_text(user_settings.alert_epic_shop.enabled)}\n'
+        f'{emojis.BP} **Eternity sealing**: {await functions.bool_to_text(user_settings.alert_eternity_sealing.enabled)}\n'
         f'{emojis.BP} **Farm**: {await functions.bool_to_text(user_settings.alert_farm.enabled)}\n'
         f'{emojis.BP} **Guild**: {await functions.bool_to_text(user_settings.alert_guild.enabled)}\n'
         f'{emojis.DETAIL} _For the guild channel reminder switch to `Guild settings`._\n'
@@ -1411,13 +1447,34 @@ async def embed_settings_reminders(bot: bridge.AutoShardedBot, ctx: discord.Appl
         f'{emojis.DETAIL} _Lootbox alerts are sent to this channel._\n'
         f'{emojis.DETAIL} _Requires a partner alert channel set in `Partner settings`._\n'
         f'{emojis.BP} **Pets**: {await functions.bool_to_text(user_settings.alert_pets.enabled)}\n'
-        f'{emojis.DETAIL} _Don\'t like Navchi\'s pet reminders? Get [Army Helper]({strings.LINK_ARMY_HELPER})!_\n'
+        f'{emojis.DETAIL} _Don\'t like Navchi\'s pet reminders? Get _[Army Helper]({strings.LINK_ARMY_HELPER})_!_\n'
         f'{emojis.BP} **Quest**: {await functions.bool_to_text(user_settings.alert_quest.enabled)}\n'
         f'{emojis.BP} **Training**: {await functions.bool_to_text(user_settings.alert_training.enabled)}\n'
         f'{emojis.BP} **Vote**: {await functions.bool_to_text(user_settings.alert_vote.enabled)}\n'
         f'{emojis.BP} **Weekly**: {await functions.bool_to_text(user_settings.alert_weekly.enabled)}\n'
         f'{emojis.BP} **Work**: {await functions.bool_to_text(user_settings.alert_work.enabled)}'
     )
+    embed = discord.Embed(
+        color = settings.EMBED_COLOR,
+        title = f'{ctx_author_name.upper()}\'S REMINDER SETTINGS (1/2)',
+        description = (
+            f'_Settings to toggle your reminders._\n'
+            f'_Note that disabling a reminder also deletes the reminder from my database._'
+        )
+    )
+    embed.add_field(name='REMINDER BEHAVIOUR', value=behaviour, inline=False)
+    embed.add_field(name='REMINDERS (I)', value=command_reminders, inline=False)
+    embed.add_field(name='REMINDERS (II)', value=command_reminders2, inline=False)
+    return embed
+
+
+async def embed_settings_reminders_2(bot: bridge.AutoShardedBot, ctx: discord.ApplicationContext,
+                                   user_settings: users.User) -> discord.Embed:
+    """Reminder settings embed"""
+    ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
+    reminder_channel = '`Last channel the reminder was updated in`'
+    if user_settings.reminder_channel_id is not None:
+        reminder_channel = f'<#{user_settings.reminder_channel_id}>'
     event_reminders = (
         f'{emojis.BP} **Big arena**: {await functions.bool_to_text(user_settings.alert_big_arena.enabled)}\n'
         f'{emojis.BP} **Horse race**: {await functions.bool_to_text(user_settings.alert_horse_race.enabled)}\n'
@@ -1436,23 +1493,22 @@ async def embed_settings_reminders(bot: bridge.AutoShardedBot, ctx: discord.Appl
         f'{emojis.BP} **Cel sacrifice**: '
         f'{await functions.bool_to_text(user_settings.alert_cel_sacrifice.enabled)}\n'
         f'{emojis.BP} **Chimney**: {await functions.bool_to_text(user_settings.alert_chimney.enabled)}\n'
+        f'{emojis.BP} **Color tournament**: {await functions.bool_to_text(user_settings.alert_color_tournament.enabled)}\n'
         f'{emojis.BP} **ETERNAL presents**: '
         f'{await functions.bool_to_text(user_settings.alert_eternal_present.enabled)}\n'
         f'{emojis.BP} **Love share**: {await functions.bool_to_text(user_settings.alert_love_share.enabled)}\n'
         f'{emojis.BP} **Megarace**: {await functions.bool_to_text(user_settings.alert_megarace.enabled)}\n'
         f'{emojis.BP} **Minirace**: {await functions.bool_to_text(user_settings.alert_minirace.enabled)}\n'
+        f'{emojis.BP} **Surf**: {await functions.bool_to_text(user_settings.alert_surf.enabled)}\n'
     )
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
-        title = f'{ctx_author_name.upper()}\'S REMINDER SETTINGS',
+        title = f'{ctx_author_name.upper()}\'S REMINDER SETTINGS (2/2)',
         description = (
             f'_Settings to toggle your reminders._\n'
             f'_Note that disabling a reminder also deletes the reminder from my database._'
         )
     )
-    embed.add_field(name='REMINDER BEHAVIOUR', value=behaviour, inline=False)
-    embed.add_field(name='REMINDERS (I)', value=command_reminders, inline=False)
-    embed.add_field(name='REMINDERS (II)', value=command_reminders2, inline=False)
     embed.add_field(name='EVENT REMINDERS', value=event_reminders, inline=False)
     embed.add_field(name='SEASONAL REMINDERS', value=seasonal_reminders, inline=False)
     return embed
@@ -1569,7 +1625,7 @@ async def embed_server_settings_auto_flex_2(bot: bridge.AutoShardedBot, ctx: dis
         f'{await functions.bool_to_text(guild_settings.auto_flex_pets_catch_epic_enabled)}\n'
         f'{emojis.BP} Pets: **Catch pet with timetraveler skill in `training`**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_pets_catch_tt_enabled)}\n'
-        f'{emojis.BP} Pets: **Get OMEGA lootbox from snowman pet**: '
+        f'{emojis.BP} Pets: **Rare drops (OMEGA lootbox & time capsule)**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_pets_claim_omega_enabled)}\n'
         f'{emojis.BP} Progress: **Ascension**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_pr_ascension_enabled)}\n'
@@ -1653,7 +1709,7 @@ async def embed_settings_user(bot: bridge.AutoShardedBot, ctx: bridge.BridgeCont
     if settings.LITE_MODE:
         field_bot = (
             f'{field_bot}\n'
-            f'{emojis.DETAIL} _This setting can\'t be changed in Navchi Lite._'
+            f'{emojis.DETAIL} _This setting can\'t be changed in Navi Lite._'
         )
     field_bot = (
         f'{field_bot}\n'

@@ -5,7 +5,7 @@
 from dataclasses import dataclass
 import itertools
 import sqlite3
-from typing import List, NamedTuple, Tuple, Union
+from typing import NamedTuple, Union
 
 import discord
 from discord.ext import bridge, commands
@@ -71,6 +71,7 @@ class Guild():
     event_log: EventPing
     event_lootbox: EventPing
     event_miniboss: EventPing
+    event_rare_hunt_monster: EventPing
     guild_id: int
     prefix: str
 
@@ -127,13 +128,14 @@ class Guild():
         self.event_log = new_settings.event_log
         self.event_lootbox = new_settings.event_lootbox
         self.event_miniboss = new_settings.event_miniboss
+        self.event_rare_hunt_monster = new_settings.event_rare_hunt_monster
 
-    async def update(self, **kwargs) -> None:
+    async def update(self, **updated_settings) -> None:
         """Updates the guild record in the database. Also calls refresh().
 
         Arguments
         ---------
-        kwargs (column=value):
+        updated_settings (column=value):
             auto_flex_brew_electronical_enabled: bool
             auto_flex_channel_id: int
             auto_flex_enabled: bool
@@ -190,9 +192,11 @@ class Guild():
             event_lootbox_message: str
             event_miniboss_enabled: bool
             event_miniboss_message: str
+            event_rare_hunt_monster_enabled: bool
+            event_rare_hunt_monster_message: str
             prefix: str
         """
-        await _update_guild(self.guild_id, **kwargs)
+        await _update_guild(self.guild_id, **updated_settings)
         await self.refresh()
 
 
@@ -264,6 +268,7 @@ async def _dict_to_guild(record: dict) -> Guild:
             event_legendary_boss = EventPing(enabled=bool(record['event_legendary_boss_enabled']), message=record['event_legendary_boss_message']),
             event_lootbox = EventPing(enabled=bool(record['event_lootbox_enabled']), message=record['event_lootbox_message']),
             event_miniboss = EventPing(enabled=bool(record['event_miniboss_enabled']), message=record['event_miniboss_message']),
+            event_rare_hunt_monster = EventPing(enabled=bool(record['event_rare_hunt_monster_enabled']), message=record['event_rare_hunt_monster_message']),
             guild_id = record['guild_id'],
             prefix = record['prefix'],
         )
@@ -276,7 +281,7 @@ async def _dict_to_guild(record: dict) -> Guild:
     return guild
 
 
-async def _get_mixed_case_prefixes(prefix: str) -> List[str]:
+async def _get_mixed_case_prefixes(prefix: str) -> list[str]:
     """Turns a string into a list of all mixed case variations of said string
 
     Returns
@@ -312,7 +317,7 @@ async def get_prefix(ctx_or_message: Union[bridge.BridgeContext, discord.Message
 
     return prefix
 
-async def get_all_prefixes(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext) -> Tuple:
+async def get_all_prefixes(bot: bridge.AutoShardedBot, message: discord.Message) -> list[str]:
     """Gets all prefixes. If no prefix is found, a record for the guild is created with the
     default prefix.
 
@@ -327,7 +332,8 @@ async def get_all_prefixes(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext
     table = 'guilds'
     function_name = 'get_all_prefixes'
     sql = f'SELECT prefix FROM {table} WHERE guild_id=?'
-    guild_id = ctx.guild.id
+    if message.guild is None: return commands.when_mentioned_or()(bot, message)
+    guild_id = message.guild.id
     try:
         cur = settings.NAVCHI_DB.cursor()
         cur.execute(sql, (guild_id,))
@@ -347,11 +353,10 @@ async def get_all_prefixes(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext
     except sqlite3.Error as error:
         await errors.log_error(
             strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql),
-            ctx
+            message
         )
         raise
-
-    return commands.when_mentioned_or(*prefixes)(bot, ctx)
+    return commands.when_mentioned_or(*prefixes)(bot, message)
 
 
 async def get_guild(guild_id: int) -> Guild:
@@ -398,12 +403,12 @@ async def get_guild(guild_id: int) -> Guild:
 
 
 # Write Data
-async def _update_guild(guild_id: int, **kwargs) -> None:
+async def _update_guild(guild_id: int, **updated_settings) -> None:
     """Updates guild record. Use Guild.update() to trigger this function.
 
     Arguments
     ---------
-    kwargs (column=value):
+    updated_settings (column=value):
         auto_flex_brew_electronical_enabled: bool
         auto_flex_channel_id: int
         auto_flex_enabled: bool
@@ -459,17 +464,19 @@ async def _update_guild(guild_id: int, **kwargs) -> None:
         event_lootbox_message: str
         event_miniboss_enabled: bool
         event_miniboss_message: str
+        event_rare_hunt_monster_enabled: bool
+        event_rare_hunt_monster_message: str
         prefix: str
 
     Raises
     ------
     sqlite3.Error if something happened within the database.
-    NoArgumentsError if no kwargs are passed (need to pass at least one)
+    NoArgumentsError if no updated_settings are passed (need to pass at least one)
     Also logs all errors to the database.
     """
     table = 'guilds'
     function_name = '_update_guild'
-    if not kwargs:
+    if not updated_settings:
         await errors.log_error(
             strings.INTERNAL_ERROR_NO_ARGUMENTS.format(table=table, function=function_name)
         )
@@ -477,12 +484,12 @@ async def _update_guild(guild_id: int, **kwargs) -> None:
     try:
         cur = settings.NAVCHI_DB.cursor()
         sql = f'UPDATE {table} SET'
-        for kwarg in kwargs:
-            sql = f'{sql} {kwarg} = :{kwarg},'
+        for updated_setting in updated_settings:
+            sql = f'{sql} {updated_setting} = :{updated_setting},'
         sql = sql.strip(",")
-        kwargs['guild_id'] = guild_id
+        updated_settings['guild_id'] = guild_id
         sql = f'{sql} WHERE guild_id = :guild_id'
-        cur.execute(sql, kwargs)
+        cur.execute(sql, updated_settings)
     except sqlite3.Error as error:
         await errors.log_error(
             strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)

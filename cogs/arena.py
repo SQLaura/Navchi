@@ -25,10 +25,13 @@ class ArenaCog(commands.Cog):
         embed_data_after = await functions.parse_embed(message_after)
         if (message_before.content == message_after.content and embed_data_before == embed_data_after
             and message_before.components == message_after.components): return
+        row: discord.Component
         for row in message_after.components:
-            for component in row.children:
-                if component.disabled:
-                    return
+            if isinstance(row, discord.ActionRow):
+                for component in row.children:
+                    if isinstance(component, (discord.Button, discord.SelectMenu)):
+                        if component.disabled:
+                            return
         await self.on_message(message_after)
 
     @commands.Cog.listener()
@@ -71,7 +74,7 @@ class ArenaCog(commands.Cog):
                 user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, message_author)
                 if user_name_match:
                     user_name = user_name_match.group(1)
-                    embed_users = await functions.get_guild_member_by_name(message.guild, user_name)
+                    embed_users = await functions.get_member_by_name(self.bot, message.guild, user_name)
                 if not user_name_match or not embed_users:
                     await functions.add_warning_reaction(message)
                     await errors.log_error('Embed user not found for arena cooldown message.', message)

@@ -25,10 +25,13 @@ class BoostsCog(commands.Cog):
         embed_data_after = await functions.parse_embed(message_after)
         if (message_before.content == message_after.content and embed_data_before == embed_data_after
             and message_before.components == message_after.components): return
+        row: discord.Component
         for row in message_after.components:
-            for component in row.children:
-                if component.disabled:
-                    return
+            if isinstance(row, discord.ActionRow):
+                for component in row.children:
+                    if isinstance(component, (discord.Button, discord.SelectMenu)):
+                        if component.disabled:
+                            return
         await self.on_message(message_after)
 
     @commands.Cog.listener()
@@ -78,7 +81,7 @@ class BoostsCog(commands.Cog):
                     user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, embed_author)
                     if user_name_match:
                         user_name = user_name_match.group(1)
-                        embed_users = await functions.get_guild_member_by_name(message.guild, user_name)
+                        embed_users = await functions.get_member_by_name(self.bot, message.guild, user_name)
                     if not user_name_match or not embed_users:
                         return
                 if interaction_user not in embed_users: return
@@ -116,7 +119,7 @@ class BoostsCog(commands.Cog):
                     if active_item_activity == 'dragon-breath-potion': potion_dragon_breath_active = True
                     if active_item_activity == 'round-card': round_card_active = True
                     if active_item_activity == 'flask-potion': potion_flask_active = True
-                    if active_item_activity in ('mega-boost', 'potion-potion'): auto_healing_active = True
+                    if active_item_activity in ('mega-boost', 'potion-potion', 'egg-blessing'): auto_healing_active = True
                     if not user_settings.alert_boosts.enabled: continue
                     active_item_emoji = emojis.BOOSTS_EMOJIS.get(active_item_activity, '')
                     time_string = active_item_match.group(2)
@@ -132,17 +135,17 @@ class BoostsCog(commands.Cog):
                         await reminders.insert_user_reminder(interaction_user.id, active_item_activity, time_left,
                                                              message.channel.id, reminder_message)
                     )
-                kwargs = {}
+                updated_settings = {}
                 if user_settings.auto_healing_active != auto_healing_active:
-                    kwargs['auto_healing_active'] = auto_healing_active
+                    updated_settings['auto_healing_active'] = auto_healing_active
                 if user_settings.round_card_active != round_card_active:
-                    kwargs['round_card_active'] = round_card_active
+                    updated_settings['round_card_active'] = round_card_active
                 if user_settings.potion_flask_active != potion_flask_active:
-                    kwargs['potion_flask_active'] = potion_flask_active
+                    updated_settings['potion_flask_active'] = potion_flask_active
                 if user_settings.potion_dragon_breath_active != potion_dragon_breath_active:
-                    kwargs['potion_dragon_breath_active'] = potion_dragon_breath_active
-                if kwargs:
-                    await user_settings.update(**kwargs)
+                    updated_settings['potion_dragon_breath_active'] = potion_dragon_breath_active
+                if updated_settings:
+                    await user_settings.update(**updated_settings)
                 if not user_settings.alert_boosts.enabled: return
                 for activity in all_boosts:
                     try:
@@ -243,9 +246,9 @@ class BoostsCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_boosts.enabled: return
-                timestring_match = re.search(r'for \*\*(.+?)\*\*:', message_content.lower())
                 time_left_hours = 1
-                if user_settings.user_pocket_watch_multiplier < 1: time_left_hours *= 2
+                if user_settings.eternal_boosts_tier >= 4: time_left_hours *= 3
+                elif user_settings.user_pocket_watch_multiplier < 1: time_left_hours *= 2
                 time_left = timedelta(hours=time_left_hours)
                 reminder_message = (
                         user_settings.alert_boosts.message
@@ -295,7 +298,7 @@ class BoostsCog(commands.Cog):
                     await user_settings.update(potion_dragon_breath_active=True)
                 if item_activity == 'round-card':
                     await user_settings.update(round_card_active=True)
-                if item_activity == 'potion-potion':
+                if item_activity in ('potion-potion', 'egg-blessing', 'mega-boost'):
                     await user_settings.update(auto_healing_active=True)
                 if not user_settings.alert_boosts.enabled: return
                 item_emoji = emojis.BOOSTS_EMOJIS.get(item_activity, '')
@@ -304,7 +307,8 @@ class BoostsCog(commands.Cog):
                 current_time = utils.utcnow()
                 time_elapsed = current_time - bot_answer_time
                 time_left -= time_elapsed
-                if user_settings.user_pocket_watch_multiplier < 1: time_left *= 2
+                if user_settings.eternal_boosts_tier >= 4: time_left *= 3
+                elif user_settings.user_pocket_watch_multiplier < 1: time_left *= 2
                 reminder_message = (
                         user_settings.alert_boosts.message
                         .replace('{boost_emoji}', item_emoji)
@@ -341,7 +345,8 @@ class BoostsCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_boosts.enabled: return
                 time_left_hours = 1
-                if user_settings.user_pocket_watch_multiplier < 1: time_left_hours *= 2
+                if user_settings.eternal_boosts_tier >= 4: time_left_hours *= 3
+                elif user_settings.user_pocket_watch_multiplier < 1: time_left_hours *= 2
                 time_left = timedelta(hours=time_left_hours)
                 reminder_message = (
                         user_settings.alert_boosts.message
@@ -380,7 +385,8 @@ class BoostsCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_boosts.enabled: return
                 time_left_hours = 2.5
-                if user_settings.user_pocket_watch_multiplier < 1: time_left_hours *= 2
+                if user_settings.eternal_boosts_tier >= 4: time_left_hours *= 3
+                elif user_settings.user_pocket_watch_multiplier < 1: time_left_hours *= 2
                 time_left = timedelta(hours=time_left_hours)
                 reminder_message = (
                         user_settings.alert_boosts.message
@@ -419,7 +425,8 @@ class BoostsCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_boosts.enabled: return
                 time_left_hours = 4
-                if user_settings.user_pocket_watch_multiplier < 1: time_left_hours *= 2
+                if user_settings.eternal_boosts_tier >= 4: time_left_hours *= 3
+                elif user_settings.user_pocket_watch_multiplier < 1: time_left_hours *= 2
                 time_left = timedelta(hours=time_left_hours)
                 reminder_message = (
                         user_settings.alert_boosts.message
@@ -431,6 +438,252 @@ class BoostsCog(commands.Cog):
                     await reminders.insert_user_reminder(user.id, 'christmas-boost', time_left,
                                                          message.channel.id, reminder_message)
                 )
+                await functions.add_reminder_reaction(message, reminder, user_settings)
+
+                
+            # Easter boost
+            search_strings = [
+                '`easter boost` successfully bought', #English
+                '`easter boost` comprado(s)', #Spanish & Portuguese
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings):
+                user = await functions.get_interaction_user(message)
+                user_command_message = None
+                if user is None:
+                    user_command_message = (
+                        await messages.find_message(message.channel.id, regex.COMMAND_EGG_BUY_EASTER_BOOST)
+                    )
+                    if user_command_message is None:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Couldn\'t find a command for the easter boost message.',
+                                               message)
+                        return
+                    user = user_command_message.author
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled or not user_settings.alert_boosts.enabled: return
+                time_left_hours = 1
+                if user_settings.eternal_boosts_tier >= 4: time_left_hours *= 3
+                elif user_settings.user_pocket_watch_multiplier < 1: time_left_hours *= 2
+                time_left = timedelta(hours=time_left_hours)
+                reminder_message = (
+                        user_settings.alert_boosts.message
+                        .replace('{boost_emoji}', emojis.EGG_EASTER)
+                        .replace('{boost_item}', 'easter boost')
+                        .replace('  ', ' ')
+                    )
+                reminder: reminders.Reminder = (
+                    await reminders.insert_user_reminder(user.id, 'easter-boost', time_left,
+                                                         message.channel.id, reminder_message)
+                )
+                await functions.add_reminder_reaction(message, reminder, user_settings)
+
+                
+            # Summer boost
+            search_strings = [
+                '`summer boost` successfully bought', #English
+                '`summer boost` comprado(s)', #Spanish & Portuguese
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings):
+                user = await functions.get_interaction_user(message)
+                user_command_message = None
+                if user is None:
+                    user_command_message = (
+                        await messages.find_message(message.channel.id, regex.COMMAND_SMR_BUY_SUMMER_BOOST)
+                    )
+                    if user_command_message is None:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Couldn\'t find a command for the summer boost message.',
+                                               message)
+                        return
+                    user = user_command_message.author
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled or not user_settings.alert_boosts.enabled: return
+                time_left_hours = 4
+                if user_settings.eternal_boosts_tier >= 4: time_left_hours *= 3
+                elif user_settings.user_pocket_watch_multiplier < 1: time_left_hours *= 2
+                time_left = timedelta(hours=time_left_hours)
+                reminder_message = (
+                        user_settings.alert_boosts.message
+                        .replace('{boost_emoji}', emojis.COCONUT)
+                        .replace('{boost_item}', 'summer boost')
+                        .replace('  ', ' ')
+                    )
+                reminder: reminders.Reminder = (
+                    await reminders.insert_user_reminder(user.id, 'summer-boost', time_left,
+                                                         message.channel.id, reminder_message)
+                )
+                await functions.add_reminder_reaction(message, reminder, user_settings)
+
+
+            # Summer drink boost
+            search_strings = [
+                'received a `boost`', #English
+                'received a `boost`', #TODO: Spanish
+                'received a `boost`', #TODO: Portuguese
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings) and 'drink' in message_content.lower():
+                user = await functions.get_interaction_user(message)
+                user_command_message = None
+                if user is None:
+                    user_command_message = (
+                        await messages.find_message(message.channel.id, regex.COMMAND_SMR_USE_DRINK)
+                    )
+                    if user_command_message is None:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Couldn\'t find a command for the summer drink boost message.',
+                                               message)
+                        return
+                    user = user_command_message.author
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled or not user_settings.alert_boosts.enabled: return
+                time_left_hours = 2
+                if user_settings.eternal_boosts_tier >= 4: time_left_hours *= 3
+                elif user_settings.user_pocket_watch_multiplier < 1: time_left_hours *= 2
+                time_left = timedelta(hours=time_left_hours)
+                if 'blue' in message_content.lower():
+                    drink_color = 'blue'
+                    drink_emoji = emojis.DRINK_BLUE
+                elif 'green' in message_content.lower():
+                    drink_color = 'green'
+                    drink_emoji = emojis.DRINK_GREEN
+                elif 'pink' in message_content.lower():
+                    drink_color = 'pink'
+                    drink_emoji = emojis.DRINK_PINK
+                else:
+                    drink_color = 'yellow'
+                    drink_emoji = emojis.DRINK_YELLOW
+                reminder_message = (
+                        user_settings.alert_boosts.message
+                        .replace('{boost_emoji}', drink_emoji)
+                        .replace('{boost_item}', f'{drink_color} drink')
+                        .replace('  ', ' ')
+                    )
+                reminder: reminders.Reminder = (
+                    await reminders.insert_user_reminder(user.id, f'{drink_color}-drink', time_left,
+                                                         message.channel.id, reminder_message)
+                )
+                await functions.add_reminder_reaction(message, reminder, user_settings)
+
+                
+            # EasteRNG boosts
+            search_strings = [
+                'got the **easterng boost', #English
+                'got the **easterng boost', #TODO: Spanish
+                'got the **easterng boost', #TODO: Portuguese
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings):
+                user = await functions.get_interaction_user(message)
+                user_command_message = None
+                if user is None:
+                    user_command_message = (
+                        await messages.find_message(message.channel.id, regex.COMMAND_EGG_USE_SQUARE_EGG)
+                    )
+                    if user_command_message is None:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Couldn\'t find a command for the easterng boost message.',
+                                               message)
+                        return
+                    user = user_command_message.author
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled or not user_settings.alert_boosts.enabled: return
+                boost_tier_match = re.search(r'boost (.+?)\*\*', message_content.lower())
+                boost_tier = boost_tier_match.group(1)
+                match boost_tier:
+                    case 'i':
+                        time_left_hours = 4
+                    case 'ii':
+                        time_left_hours = 2
+                    case 'iii':
+                        time_left_hours = 3
+                    case _:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Couldn\'t find a boost tier for the easterng boost message.',
+                                               message)
+                        return
+                if user_settings.eternal_boosts_tier >= 4: time_left_hours *= 3
+                elif user_settings.user_pocket_watch_multiplier < 1: time_left_hours *= 2
+                time_left = timedelta(hours=time_left_hours)
+                search_patterns = [
+                    r'the \*\*(.+?)\*\*!', #English
+                    r'the \*\*(.+?)\*\*!', #TODO: Spanish
+                    r'the \*\*(.+?)\*\*!', #TODO: Portuguese
+                ]
+                boost_name_match = await functions.get_match_from_patterns(search_patterns, message_content.lower())
+                boost_name = boost_name_match.group(1)
+                reminder_message = (
+                        user_settings.alert_boosts.message
+                        .replace('{boost_emoji}', emojis.EGG_SQUARE)
+                        .replace('{boost_item}', boost_name)
+                        .replace('  ', ' ')
+                    )
+                reminder: reminders.Reminder = (
+                    await reminders.insert_user_reminder(user.id, boost_name.replace(' ', '-'), time_left,
+                                                         message.channel.id, reminder_message)
+                )
+                await functions.add_reminder_reaction(message, reminder, user_settings)
+
+                
+            # Egg blessing boost
+            search_strings = [
+                'has the egg blessing boost for', #English
+                'has the egg blessing boost for', #TODO: Spanish
+                'has the egg blessing boost for', #TODO: Portuguese
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings):
+                user = await functions.get_interaction_user(message)
+                user_command_message = None
+                if user is None:
+                    search_patterns = [
+                       r"blessed \*\*(.+?)\*\*!", #English
+                       r"blessed \*\*(.+?)\*\*!", #TODO: Spanish
+                       r"blessed \*\*(.+?)\*\*!", #TODO: Portuguese
+                    ]
+                    user_name_match = await functions.get_match_from_patterns(search_patterns, message_content.lower())
+                    user_command_message = (
+                        await messages.find_message(message.channel.id, regex.COMMAND_EGG_GOD,
+                                                    user_name=user_name_match.group(1))
+                    )
+                    if user_command_message is None:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Couldn\'t find a command for the egg blessing boost message.',
+                                               message)
+                        return
+                    user = user_command_message.author
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled or not user_settings.alert_boosts.enabled: return
+                time_left_days = 30
+                if user_settings.eternal_boosts_tier >= 4: time_left_days *= 3
+                elif user_settings.user_pocket_watch_multiplier < 1: time_left_days *= 2
+                time_left = timedelta(days=time_left_days)
+                boost_name_match = re.search(r'\s\*\*(.+?)\*\*!', message_content.lower())
+                boost_name = boost_name_match.group(1)
+                reminder_message = (
+                        user_settings.alert_boosts.message
+                        .replace('{boost_emoji}', emojis.BUNNY_GOD)
+                        .replace('{boost_item}', 'egg-blessing')
+                        .replace('  ', ' ')
+                    )
+                reminder: reminders.Reminder = (
+                    await reminders.insert_user_reminder(user.id, 'egg-blessing', time_left,
+                                                         message.channel.id, reminder_message)
+                )
+                if not user_settings.auto_healing_active:
+                    await user_settings.update(auto_healing_active=True)
                 await functions.add_reminder_reaction(message, reminder, user_settings)
 
 
@@ -475,7 +728,8 @@ class BoostsCog(commands.Cog):
                 current_time = utils.utcnow()
                 time_elapsed = current_time - bot_answer_time
                 time_left -= time_elapsed
-                if user_settings.user_pocket_watch_multiplier < 1: time_left *= 2
+                if user_settings.eternal_boosts_tier >= 4: time_left *= 3
+                elif user_settings.user_pocket_watch_multiplier < 1: time_left *= 2
                 await reminders.reduce_reminder_time_percentage(user_settings, 90, strings.ROUND_CARD_AFFECTED_ACTIVITIES)
                 reminder_message = (
                         user_settings.alert_boosts.message
@@ -532,7 +786,8 @@ class BoostsCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_boosts.enabled: return
                 time_left = timedelta(days=30)
-                if user_settings.user_pocket_watch_multiplier < 1: time_left *= 2
+                if user_settings.eternal_boosts_tier >= 4: time_left *= 3
+                elif user_settings.user_pocket_watch_multiplier < 1: time_left *= 2
                 reminder_message = (
                         user_settings.alert_boosts.message
                         .replace('{boost_emoji}', emojis.MEGA_BOOST)

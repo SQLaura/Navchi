@@ -3,9 +3,9 @@
 
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 import sqlite3
-from typing import NamedTuple, Optional, Tuple
+from typing import NamedTuple, Optional
 
 from discord import utils
 from discord.ext import tasks
@@ -57,19 +57,19 @@ class LogEntry():
         self.guild_id = new_settings.guild_id
         self.user_id = new_settings.user_id
 
-    async def update(self, **kwargs) -> None:
+    async def update(self, **updated_settings) -> None:
         """Updates the log entry record in the database. Also calls refresh().
 
         Arguments
         ---------
-        kwargs (column=value):
+        updated_settings (column=value):
             command: str
             command_count: int
             date_time: datetime
             entry_type: Literal['single', 'summary']
             guild_id: int
         """
-        await _update_log_entry(self, **kwargs)
+        await _update_log_entry(self, **updated_settings)
         await self.refresh()
 
 class LogReport(NamedTuple):
@@ -125,12 +125,12 @@ class LogLeaderboardUser():
         self.updated = new_settings.updated
         self.user_id = new_settings.user_id
 
-    async def update(self, **kwargs) -> None:
+    async def update(self, **updated_settings) -> None:
         """Updates the leaderboard record in the database. Also calls refresh().
 
         Arguments
         ---------
-        kwargs (column=value):
+        updated_settings (column=value):
             user_id: int
             guild_id: int
             command: str
@@ -143,14 +143,14 @@ class LogLeaderboardUser():
             all_time: int
             updated: datetime UTC - If not specified, will be set to current time
         """
-        await _update_log_leaderboard_user(self, **kwargs)
+        await _update_log_leaderboard_user(self, **updated_settings)
         await self.refresh()
 
 # Tasks
 @tasks.loop(minutes=5.0)
 async def log_to_leaderboard():
     """Task that converts the tracking log entries into leaderboard entries"""
-    async def count_commands(log_entries: Tuple[LogEntry]) -> dict:
+    async def count_commands(log_entries: tuple[LogEntry, ...]) -> dict:
         """Returns dict with total command count for each guild for a tuple of log entries
 
         Returns
@@ -205,7 +205,7 @@ async def _dict_to_log_entry(record: dict) -> LogEntry:
         log_entry = LogEntry(
             command = record['command'],
             command_count = record['command_count'],
-            date_time = datetime.fromisoformat(record['date_time']).replace(tzinfo=timezone.utc),
+            date_time = record['date_time'],
             entry_type = record['type'],
             guild_id = record['guild_id'],
             user_id = record['user_id'],
@@ -247,7 +247,7 @@ async def _dict_to_leaderboard_user(record: dict) -> LogEntry:
             last_4w = record['last_4w'],
             last_12m = record['last_12m'],
             report_type = 'global' if record['guild_id'] is None else 'guild',
-            updated = datetime.fromisoformat(record['updated']).replace(tzinfo=timezone.utc),
+            updated = record['updated'],
             user_id = record['user_id'],
         )
 
@@ -298,7 +298,7 @@ async def get_log_entry(user_id: int, guild_id: int, command: str, date_time: da
 
 
 async def get_log_entries(user_id: int, command: str, timeframe: timedelta,
-                          guild_id: Optional[int] = None) -> Tuple[LogEntry]:
+                          guild_id: Optional[int] = None) -> tuple[LogEntry, ...]:
     """Gets all log entries for one command for a certain amount of time from a user id.
     If the guild_id is specified, the log entries are limited to that guild.
 
@@ -311,7 +311,7 @@ async def get_log_entries(user_id: int, command: str, timeframe: timedelta,
 
     Returns
     -------
-    Tuple[LogEntry]
+    Tuple[LogEntry, ...]
 
     Raises
     ------
@@ -351,7 +351,7 @@ async def get_log_entries(user_id: int, command: str, timeframe: timedelta,
     return tuple(log_entries)
 
 
-async def get_all_log_entries(user_id: int) -> Tuple[LogEntry]:
+async def get_all_log_entries(user_id: int) -> tuple[LogEntry, ...]:
     """Gets ALL log entries for a user.
 
     Arguments
@@ -360,7 +360,7 @@ async def get_all_log_entries(user_id: int) -> Tuple[LogEntry]:
 
     Returns
     -------
-    Tuple[LogEntry]
+    Tuple[LogEntry, ...]
 
     Raises
     ------
@@ -394,7 +394,7 @@ async def get_all_log_entries(user_id: int) -> Tuple[LogEntry]:
     return tuple(log_entries)
 
 
-async def get_old_log_entries(days: int) -> Tuple[LogEntry]:
+async def get_old_log_entries(days: int) -> tuple[LogEntry, ...]:
     """Gets all single log entries older than a certain amount of days.
 
     Arguments
@@ -405,7 +405,7 @@ async def get_old_log_entries(days: int) -> Tuple[LogEntry]:
 
     Returns
     -------
-    Tuple[LogEntry]
+    Tuple[LogEntry, ...]
 
     Raises
     ------
@@ -513,7 +513,7 @@ async def get_log_leaderboard_user(user_id: int, guild_id: int, command: str) ->
 
     Returns
     -------
-    Tuple[LogEntry]
+    LogLeaderboardUser
 
     Raises
     ------
@@ -544,7 +544,7 @@ async def get_log_leaderboard_user(user_id: int, guild_id: int, command: str) ->
     return log_leaderboard_user
 
 
-async def get_log_leaderboard(command: str, guild_id: Optional[int] = None) -> Tuple[LogLeaderboardUser]:
+async def get_log_leaderboard(command: str, guild_id: Optional[int] = None) -> tuple[LogLeaderboardUser, ...]:
     """Gets a certain record from table "tracking_leaderboard".
 
     Arguments
@@ -554,7 +554,7 @@ async def get_log_leaderboard(command: str, guild_id: Optional[int] = None) -> T
 
     Returns
     -------
-    Tuple[LogEntry]
+    Tuple[LogLeaderboardUser, ...]
 
     Raises
     ------
@@ -612,13 +612,13 @@ async def _delete_log_entry(log_entry: LogEntry) -> None:
         raise
 
 
-async def _update_log_leaderboard_user(log_leaderboard_user: LogLeaderboardUser, **kwargs) -> None:
+async def _update_log_leaderboard_user(log_leaderboard_user: LogLeaderboardUser, **updated_settings) -> None:
     """Updates log_leaderboard record. Use LogLeaderboardUser.update() to trigger this function.
 
     Arguments
     ---------
     log_leaderboard_user: LogLeaderboardUser
-    kwargs (column=value):
+    updated_settings (column=value):
         user_id: int
         guild_id: int
         command: str
@@ -634,29 +634,29 @@ async def _update_log_leaderboard_user(log_leaderboard_user: LogLeaderboardUser,
     Raises
     ------
     sqlite3.Error if something happened within the database.
-    NoArgumentsError if no kwargs are passed (need to pass at least one)
+    NoArgumentsError if no updated_settings are passed (need to pass at least one)
     Also logs all errors to the database.
     """
     table = 'log_leaderboard'
     function_name = '_update_log_leaderboard_user'
-    if not kwargs:
+    if not updated_settings:
         await errors.log_error(
             strings.INTERNAL_ERROR_NO_ARGUMENTS.format(table=table, function=function_name)
         )
         raise exceptions.NoArgumentsError('You need to specify at least one keyword argument.')
-    if 'updated' not in kwargs:
-        kwargs['updated'] = utils.utcnow()
+    if 'updated' not in updated_settings:
+        updated_settings['updated'] = utils.utcnow()
     try:
         cur = settings.NAVCHI_DB.cursor()
         sql = f'UPDATE {table} SET'
-        for kwarg in kwargs:
-            sql = f'{sql} {kwarg} = :{kwarg},'
+        for updated_setting in updated_settings:
+            sql = f'{sql} {updated_setting} = :{updated_setting},'
         sql = sql.strip(",")
-        kwargs['user_id_old'] = log_leaderboard_user.user_id
-        kwargs['guild_id_old'] = log_leaderboard_user.guild_id
-        kwargs['command_old'] = log_leaderboard_user.command
+        updated_settings['user_id_old'] = log_leaderboard_user.user_id
+        updated_settings['guild_id_old'] = log_leaderboard_user.guild_id
+        updated_settings['command_old'] = log_leaderboard_user.command
         sql = f'{sql} WHERE user_id = :user_id_old AND guild_id = :guild_id_old AND command = :command_old'
-        cur.execute(sql, kwargs)
+        cur.execute(sql, updated_settings)
     except sqlite3.Error as error:
         await errors.log_error(
             strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)
@@ -664,13 +664,13 @@ async def _update_log_leaderboard_user(log_leaderboard_user: LogLeaderboardUser,
         raise
 
 
-async def _update_log_entry(log_entry: LogEntry, **kwargs) -> None:
+async def _update_log_entry(log_entry: LogEntry, **updated_settings) -> None:
     """Updates tracking_log record. Use LogEntry.update() to trigger this function.
 
     Arguments
     ---------
     user_id: int
-    kwargs (column=value):
+    updated_settings (column=value):
         command: str
         command_count: int
         date_time: datetime
@@ -681,12 +681,12 @@ async def _update_log_entry(log_entry: LogEntry, **kwargs) -> None:
     Raises
     ------
     sqlite3.Error if something happened within the database.
-    NoArgumentsError if no kwargs are passed (need to pass at least one)
+    NoArgumentsError if no updated_settings are passed (need to pass at least one)
     Also logs all errors to the database.
     """
     table = 'tracking_log'
     function_name = '_update_log_entry'
-    if not kwargs:
+    if not updated_settings:
         await errors.log_error(
             strings.INTERNAL_ERROR_NO_ARGUMENTS.format(table=table, function=function_name)
         )
@@ -694,18 +694,18 @@ async def _update_log_entry(log_entry: LogEntry, **kwargs) -> None:
     try:
         cur = settings.NAVCHI_DB.cursor()
         sql = f'UPDATE {table} SET'
-        for kwarg in kwargs:
-            sql = f'{sql} {kwarg} = :{kwarg},'
+        for updated_setting in updated_settings:
+            sql = f'{sql} {updated_setting} = :{updated_setting},'
         sql = sql.strip(",")
-        kwargs['user_id_old'] = log_entry.user_id
-        kwargs['command_old'] = log_entry.command
-        kwargs['date_time_old'] = log_entry.date_time
-        kwargs['entry_type_old'] = log_entry.entry_type
+        updated_settings['user_id_old'] = log_entry.user_id
+        updated_settings['command_old'] = log_entry.command
+        updated_settings['date_time_old'] = log_entry.date_time
+        updated_settings['entry_type_old'] = log_entry.entry_type
         sql = (
             f'{sql} WHERE user_id = :user_id_old AND type = :entry_type_old AND command = :command_old '
             f'AND date_time = :date_time_old'
         )
-        cur.execute(sql, kwargs)
+        cur.execute(sql, updated_settings)
     except sqlite3.Error as error:
         await errors.log_error(
             strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)

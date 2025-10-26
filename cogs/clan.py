@@ -28,10 +28,13 @@ class ClanCog(commands.Cog):
         embed_data_after = await functions.parse_embed(message_after)
         if (message_before.content == message_after.content and embed_data_before == embed_data_after
             and message_before.components == message_after.components): return
+        row: discord.Component
         for row in message_after.components:
-            for component in row.children:
-                if component.disabled:
-                    return
+            if isinstance(row, discord.ActionRow):
+                for component in row.children:
+                    if isinstance(component, (discord.Button, discord.SelectMenu)):
+                        if component.disabled:
+                            return
         await self.on_message(message_after)
 
     @commands.Cog.listener()
@@ -216,11 +219,12 @@ class ClanCog(commands.Cog):
                         if settings.DEBUG_MODE: await message.add_reaction(emojis.CROSS)
                         return
                     current_time = utils.utcnow()
-                    for member_id in clan.member_ids:
-                        if member_id == user.id: continue
+                    clan_member: clans.ClanMember
+                    for clan_member in clan.members:
+                        if clan_member.user_id == user.id: continue
                         try:
                             user_clan_reminder: reminders.Reminder = (
-                                await reminders.get_user_reminder(member_id, 'guild')
+                                await reminders.get_user_reminder(clan_member.user_id, 'guild')
                             )
                         except exceptions.NoDataFoundError:
                             continue

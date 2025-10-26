@@ -1,10 +1,10 @@
 # functions.py
 
 from argparse import ArgumentError
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from math import ceil, floor
 import re
-from typing import Any, Coroutine,List
+from typing import Any, Coroutine
 
 import discord
 from discord import utils
@@ -14,7 +14,7 @@ from discord.utils import MISSING
 
 from database import cooldowns, errors, reminders, users
 from database import settings as settings_db
-from resources import emojis, exceptions, settings, strings
+from resources import emojis, exceptions, logs, settings, strings
 
 # --- Get discord data ---
 async def get_interaction(message: discord.Message) -> discord.MessageInteraction | None:
@@ -24,7 +24,21 @@ async def get_interaction(message: discord.Message) -> discord.MessageInteractio
             message = message.reference.cached_message
         elif message.reference.message_id is not None:
             message = await message.channel.fetch_message(message.reference.message_id)
-    return message.interaction
+
+    """message.interaction is deprecated and will be removed by Discord.
+    However, the replacement message.interaction_metadata does not include the command name.
+    Which is why I'm still using the deprecated message.interaction for now.
+    This will stop working once Discord removes the deprecated attribute.
+
+    TODO:
+    - Remove the warning suppression once Discord removes the deprecated attribute.
+    - Remove usage of interaction.name in the code. This will result in degraded functionality.
+    """
+    logs.logging.captureWarnings(True)
+    interaction: discord.MessageInteraction | None = message.interaction
+    logs.logging.captureWarnings(False)
+    
+    return interaction
 
 
 async def get_interaction_user(message: discord.Message) -> discord.User | None:
@@ -118,7 +132,7 @@ async def get_discord_channel(bot: bridge.AutoShardedBot, channel_id: int | None
 
 # --- Reactions
 async def add_reminder_reaction(message: discord.Message, reminder: reminders.Reminder,  user_settings: users.User) -> None:
-    """Adds a Navi reaction if the reminder was created, otherwise add a warning and send the error if debug mode is on"""
+    """Adds a Navchi reaction if the reminder was created, otherwise add a warning and send the error if debug mode is on"""
     if reminder.record_exists:
         if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVCHI)
     else:
@@ -134,7 +148,7 @@ async def add_warning_reaction(message: discord.Message) -> None:
 
 
 # --- Regex ---
-async def get_match_from_patterns(patterns: List[str], string: str) -> re.Match | None:
+async def get_match_from_patterns(patterns: list[str], string: str) -> re.Match | None:
     """Searches a string for a regex patterns out of a list of patterns and returns the first match.
     Returns None if no match is found.
     """
@@ -145,9 +159,11 @@ async def get_match_from_patterns(patterns: List[str], string: str) -> re.Match 
     return match
 
 
-# --- Time calculations ---
-async def get_guild_member_by_name(guild: discord.Guild | None, user_name: str) -> List[discord.Member]:
-    """Returns all guild members found by the given name"""
+# --- Get members ---
+async def get_member_by_name(bot: discord.AutoShardedBot, guild: discord.Guild | None, user_name: str) -> list[discord.Member]:
+    """Returns all guild members with the given name
+    If no guild member with the name is found, this function searches in all members the bot can see.
+    """
     members: list[discord.Member] = []
     if guild is None: return members
     for member in guild.members:
@@ -157,12 +173,21 @@ async def get_guild_member_by_name(guild: discord.Guild | None, user_name: str) 
             except exceptions.FirstTimeUserError:
                 continue
             members.append(member)
+    if not members:
+        for member in bot.get_all_members():
+            if await encode_text(member.name) == await encode_text(user_name) and not member.bot:
+                try:
+                    await users.get_user(member.id)
+                except exceptions.FirstTimeUserError:
+                    continue
+                members.append(member)
     return members
 
 
+# --- Time calculations ---
 async def calculate_time_left_from_cooldown(message: discord.Message, user_settings: users.User, activity: str) -> timedelta:
     """Returns the time left for a reminder based on a cooldown."""
-    slash_command: bool = True if message.interaction is not None else False
+    slash_command: bool = True if message.interaction_metadata is not None else False
     cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown(activity)
     bot_answer_time: datetime = message.edited_at if message.edited_at else message.created_at
     time_elapsed: timedelta = utils.utcnow() - bot_answer_time
@@ -819,44 +844,53 @@ async def get_training_answer_text(message: discord.Message) -> str:
     return answer
 
 
-async def get_void_training_answer_buttons(message: discord.Message, user_settings: users.User) -> str:
+async def get_void_training_answer_buttons(message: discord.Message, user_settings: users.User) -> tuple[str, dict[int, dict[str | None, tuple[str | None, discord.PartialEmoji | None, bool]]]]: 
     """Returns the answer to a void training question."""
-    all_settings = await settings_db.get_settings()
-    answer = ''
-    current_time = utils.utcnow()
-    a16_seal_time = all_settings.get('a16_seal_time', None)
-    a17_seal_time = all_settings.get('a17_seal_time', None)
-    a18_seal_time = all_settings.get('a18_seal_time', None)
-    a19_seal_time = all_settings.get('a19_seal_time', None)
-    a20_seal_time = all_settings.get('a20_seal_time', None)
-    seal_times = [a16_seal_time, a17_seal_time, a18_seal_time, a19_seal_time, a20_seal_time]
-    seal_times_areas_days = {}
-    seal_times_days = []
-    for area_no, seal_time in enumerate(seal_times, 16):
-        if seal_time is not None:
-            seal_time = datetime.fromisoformat(seal_time, ).replace(tzinfo=timezone.utc)
-            time_left = seal_time - current_time
+    all_settings: dict[str, str] = await settings_db.get_settings()
+    answer: str = ''
+    current_time: datetime = utils.utcnow()
+    a16_seal_time: str | None = all_settings.get('a16_seal_time', None)
+    a17_seal_time: str | None = all_settings.get('a17_seal_time', None)
+    a18_seal_time: str | None = all_settings.get('a18_seal_time', None)
+    a19_seal_time: str | None = all_settings.get('a19_seal_time', None)
+    a20_seal_time: str | None = all_settings.get('a20_seal_time', None)
+    seal_times: list[str | None] = [a16_seal_time, a17_seal_time, a18_seal_time, a19_seal_time, a20_seal_time]
+    seal_times_areas_days: dict[int, str] = {}
+    seal_times_days: list[str] = []
+    area_no: int
+    seal_time_str: str | None
+    for area_no, seal_time_str in enumerate(seal_times, 16):
+        if seal_time_str is not None:
+            seal_time: datetime = datetime.fromisoformat(seal_time_str)
+            time_left: timedelta = seal_time - current_time
             if seal_time > current_time:
                 seal_times_areas_days[area_no] = str(time_left.days)
                 seal_times_days.append(str(time_left.days))
-    matches = []
+    matches: list[str] = []
+    row: int  
+    action_row: discord.Component  
     for row, action_row in enumerate(message.components, start=1):
-        for button in action_row.children:
-            if button.label in seal_times_days:
-                matches.append(button.label)
-    buttons = {}
+        if isinstance(action_row, discord.ActionRow):
+            for button in action_row.children:
+                if isinstance(button, discord.Button):
+                    if button.label in seal_times_days:
+                        matches.append(button.label)
+    buttons: dict[int, dict[str | None, tuple[str | None, discord.PartialEmoji | None, bool]]] = {}
     if len(matches) == 1:
         for row, action_row in enumerate(message.components, start=1):
             buttons[row] = {}
-            for button in action_row.children:
-                if button.label == matches[0]:
-                    buttons[row][button.custom_id] = (button.label, button.emoji, True)
-                else:
-                    buttons[row][button.custom_id] = (button.label, button.emoji, False)
+            if isinstance(action_row, discord.ActionRow):
+                for button in action_row.children:
+                    if isinstance(button, discord.Button):
+                        if button.label == matches[0]:
+                            buttons[row][button.custom_id] = (button.label, button.emoji, True)
+                        else:
+                            buttons[row][button.custom_id] = (button.label, button.emoji, False)
+    days: str
     for area_no, days in seal_times_areas_days.items():
         answer = f'{answer}\n{emojis.BP}Area **{area_no}** will close in **{days}** days.'.strip()
-    if answer == '':
-        command_void_areas = await get_slash_command(user_settings, 'void areas')
+    if not answer:
+        command_void_areas: str = await get_slash_command(user_settings, 'void areas')
         answer = (
             f'No idea, lol.\n'
             f'Please use {command_void_areas} before your next training.'
@@ -870,19 +904,18 @@ async def get_void_training_answer_text(message: discord.Message, user_settings:
     all_settings: dict[str, str] = await settings_db.get_settings()
     answer: str = ''
     current_time: datetime = utils.utcnow()
-    a16_seal_time: str = all_settings.get('a16_seal_time', None)
-    a17_seal_time: str = all_settings.get('a17_seal_time', None)
-    a18_seal_time: str = all_settings.get('a18_seal_time', None)
-    a19_seal_time: str = all_settings.get('a19_seal_time', None)
-    a20_seal_time: str = all_settings.get('a20_seal_time', None)
+    a16_seal_time: datetime = all_settings.get('a16_seal_time', None)
+    a17_seal_time: datetime = all_settings.get('a17_seal_time', None)
+    a18_seal_time: datetime = all_settings.get('a18_seal_time', None)
+    a19_seal_time: datetime = all_settings.get('a19_seal_time', None)
+    a20_seal_time: datetime = all_settings.get('a20_seal_time', None)
     seal_times: list[str] = [a16_seal_time, a17_seal_time, a18_seal_time, a19_seal_time, a20_seal_time]
     seal_times_areas_days: dict[int, int] = {}
     seal_times_days: list[str] = []
     area_no: int
-    seal_time: str
-    for area_no, seal_time_str in enumerate(seal_times, 16):
-        if seal_time_str is not None:
-            seal_time = datetime.fromisoformat(seal_time_str, ).replace(tzinfo=timezone.utc)
+    seal_time: datetime
+    for area_no, seal_time in enumerate(seal_times, 16):
+        if seal_time is not None:
             time_left = seal_time - current_time
             if seal_time > current_time:
                 seal_times_areas_days[area_no] = str(time_left.days)
@@ -1023,7 +1056,7 @@ async def get_slash_command(user_settings: users.User, command_name: str, includ
 
 
 async def get_navchi_slash_command(bot: bridge.AutoShardedBot, command_name: str) -> str:
-    """Gets a slash command from Navi. If found, returns the slash mention. If not found, just returns /command.
+    """Gets a slash command from Navchi. If found, returns the slash mention. If not found, just returns /command.
     Note that slash mentions only work with GLOBAL commands."""
     main_command: str
     sub_commands: list[str]
@@ -1081,11 +1114,11 @@ async def reply_or_respond(ctx: discord.ApplicationContext | commands.Context, a
         return await ctx.respond(answer, ephemeral=ephemeral)
 
 
-async def parse_embed(message: discord.Message) -> dict[str, str]:
+async def parse_embed(message: discord.Message) -> dict[str, dict[str, str] | str]:
     """Parses all data from an embed into a dictionary.
     All keys are guaranteed to exist and have an empty string as value if not set in the embed.
     """
-    embed_data: dict[str, dict[str, str]] = {
+    embed_data: dict[str, dict[str, str] | str] = {
         'author': {'icon_url': '', 'name': ''},
         'description': '',
         'field0': {'name': '', 'value': ''},
@@ -1101,24 +1134,24 @@ async def parse_embed(message: discord.Message) -> dict[str, str]:
         embed: discord.Embed = message.embeds[0]
         if embed.author:
             if embed.author.icon_url:
-                embed_data['author']['icon_url'] = embed.author.icon_url
+                embed_data['author']['icon_url'] = embed.author.icon_url # pyright: ignore
             if embed.author.name:
-                embed_data['author']['name'] = embed.author.name
+                embed_data['author']['name'] = embed.author.name # pyright: ignore
         if embed.description:
             embed_data['description'] = embed.description
         if embed.fields:
             index: int
             for index in range(0,6):
                 try:
-                    embed_data[f'field{index}']['name'] = embed.fields[index].name
-                    embed_data[f'field{index}']['value'] = embed.fields[index].value
+                    embed_data[f'field{index}']['name'] = embed.fields[index].name # pyright: ignore
+                    embed_data[f'field{index}']['value'] = embed.fields[index].value # pyright: ignore
                 except IndexError:
                     break
         if embed.footer:
             if embed.footer.icon_url:
-                embed_data['footer']['icon_url'] = embed.footer.icon_url
+                embed_data['footer']['icon_url'] = embed.footer.icon_url # pyright: ignore
             if embed.footer.text:
-                embed_data['footer']['text'] = embed.footer.text
+                embed_data['footer']['text'] = embed.footer.text # pyright: ignore
         if embed.title:
             embed_data['title'] = embed.title
     return embed_data
@@ -1133,26 +1166,26 @@ async def update_area(user_settings: users.User, new_area: int) -> None:
         user_settings (users.User)
         new_area (int)
     """
-    kwargs: dict[str, Any] = {
+    updated_settings: dict[str, Any] = {
         'current_area': new_area,
     }
     # Reset multipliers when entering area 20
     if user_settings.multiplier_management_enabled:
         if (new_area == 20 and user_settings.current_area != 20
             or new_area != 20 and user_settings.current_area == 18):
-            kwargs[f"{strings.ACTIVITIES_COLUMNS['adventure']}_multiplier"] = 1
-            kwargs[f"{strings.ACTIVITIES_COLUMNS['card-hand']}_multiplier"] = 1
-            kwargs[f"{strings.ACTIVITIES_COLUMNS['daily']}_multiplier"] = 1
-            kwargs[f"{strings.ACTIVITIES_COLUMNS['duel']}_multiplier"] = 1
-            kwargs[f"{strings.ACTIVITIES_COLUMNS['epic']}_multiplier"] = 1
-            kwargs[f"{strings.ACTIVITIES_COLUMNS['farm']}_multiplier"] = 1
-            kwargs[f"{strings.ACTIVITIES_COLUMNS['hunt']}_multiplier"] = 1
-            kwargs[f"{strings.ACTIVITIES_COLUMNS['lootbox']}_multiplier"] = 1
-            kwargs[f"{strings.ACTIVITIES_COLUMNS['quest']}_multiplier"] = 1
-            kwargs[f"{strings.ACTIVITIES_COLUMNS['training']}_multiplier"] = 1
-            kwargs[f"{strings.ACTIVITIES_COLUMNS['weekly']}_multiplier"] = 1
-            kwargs[f"{strings.ACTIVITIES_COLUMNS['work']}_multiplier"] = 1
-    await user_settings.update(**kwargs)
+            updated_settings[f'{strings.ACTIVITIES_COLUMNS['adventure']}_multiplier'] = 1
+            updated_settings[f'{strings.ACTIVITIES_COLUMNS['card-hand']}_multiplier'] = 1
+            updated_settings[f'{strings.ACTIVITIES_COLUMNS['daily']}_multiplier'] = 1
+            updated_settings[f'{strings.ACTIVITIES_COLUMNS['duel']}_multiplier'] = 1
+            updated_settings[f'{strings.ACTIVITIES_COLUMNS['epic']}_multiplier'] = 1
+            updated_settings[f'{strings.ACTIVITIES_COLUMNS['farm']}_multiplier'] = 1
+            updated_settings[f'{strings.ACTIVITIES_COLUMNS['hunt']}_multiplier'] = 1
+            updated_settings[f'{strings.ACTIVITIES_COLUMNS['lootbox']}_multiplier'] = 1
+            updated_settings[f'{strings.ACTIVITIES_COLUMNS['quest']}_multiplier'] = 1
+            updated_settings[f'{strings.ACTIVITIES_COLUMNS['training']}_multiplier'] = 1
+            updated_settings[f'{strings.ACTIVITIES_COLUMNS['weekly']}_multiplier'] = 1
+            updated_settings[f'{strings.ACTIVITIES_COLUMNS['work']}_multiplier'] = 1
+    await user_settings.update(**updated_settings)
 
 
 async def get_ready_command_activities(seasonal_event: str) -> list[str]:
@@ -1193,6 +1226,8 @@ async def get_ready_command_activities(seasonal_event: str) -> list[str]:
             activities_commands += ['boo',]
         case 'horse_festival':
             activities_commands += ['megarace', 'minirace']
+        case 'summer':
+            activities_commands += ['color-tournament', 'surf']
         case 'valentine':
             activities_commands += ['love-share',]
 

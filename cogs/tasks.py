@@ -6,7 +6,6 @@ from datetime import datetime, timedelta
 from humanfriendly import format_timespan
 import re
 import sqlite3
-from typing import List
 
 import discord
 from discord import utils
@@ -26,7 +25,7 @@ class TasksCog(commands.Cog):
         self.bot = bot
 
     # Task management
-    async def background_task(self, reminders_list: List[reminders.Reminder]) -> None:
+    async def background_task(self, reminders_list: list[reminders.Reminder]) -> None:
         """Background task for scheduling reminders"""
         first_reminder = reminders_list[0]
         current_time = utils.utcnow()
@@ -127,16 +126,24 @@ class TasksCog(commands.Cog):
                     elif reminder.activity == 'round-card':
                         await reminders.increase_reminder_time_percentage(user_settings, 95, strings.ROUND_CARD_AFFECTED_ACTIVITIES)
                         await user_settings.update(round_card_active=False)
-                    elif reminder.activity == 'mega-boost':
+                    elif reminder.activity in ('mega-boost', 'egg-blessing', 'potion-potion'):
+                        auto_healing_active = False
                         try:
                             await reminders.get_user_reminder(user_settings.user_id, 'potion-potion')
+                            auto_healing_active = True
                         except exceptions.NoDataFoundError:
-                            await user_settings.update(auto_healing_active=False)
-                    elif reminder.activity == 'potion-potion':
+                            pass
                         try:
                             await reminders.get_user_reminder(user_settings.user_id, 'mega-boost')
+                            auto_healing_active = True
                         except exceptions.NoDataFoundError:
-                            await user_settings.update(auto_healing_active=False)
+                            pass
+                        try:
+                            await reminders.get_user_reminder(user_settings.user_id, 'egg-blessing')
+                            auto_healing_active = True
+                        except exceptions.NoDataFoundError:
+                            pass
+                        await user_settings.update(auto_healing_active=auto_healing_active)
                     for message in messages.values():
                         for found_id in re.findall(r'<@!?(\d{16,20})>', message):
                             if int(found_id) not in user_settings.alts and int(found_id) != user_settings.user_id:
@@ -157,7 +164,7 @@ class TasksCog(commands.Cog):
             if first_reminder.reminder_type == 'clan':
                 channel = await functions.get_discord_channel(self.bot, first_reminder.channel_id)
                 if channel is None: return
-                clan = await clans.get_clan_by_clan_name(first_reminder.clan_name)
+                clan: clans.Clan = await clans.get_clan_by_clan_name(first_reminder.clan_name)
                 if clan.quest_user_id is not None:
                     quest_user_id = clan.quest_user_id
                     await clan.update(quest_user_id=None)
@@ -181,9 +188,9 @@ class TasksCog(commands.Cog):
                     except asyncio.CancelledError:
                         return
                 message_mentions = ''
-                for member_id in clan.member_ids:
-                    if member_id is not None:
-                        message_mentions = f'{message_mentions}<@{member_id}> '
+                clan_member: clans.ClanMember
+                for clan_member in clan.members:
+                    message_mentions = f'{message_mentions}<@{clan_member.user_id}> '
                 time_left = get_time_left()
                 try:
                     await asyncio.sleep(time_left.total_seconds())
@@ -198,7 +205,7 @@ class TasksCog(commands.Cog):
         except Exception as error:
             await errors.log_error(error)
 
-    async def create_task(self, reminders_list: List[reminders.Reminder]) -> None:
+    async def create_task(self, reminders_list: list[reminders.Reminder]) -> None:
         """Creates a new background task"""
         await self.delete_task(reminders_list[0].task_name)
         task = self.bot.loop.create_task(self.background_task(reminders_list))
@@ -293,6 +300,10 @@ class TasksCog(commands.Cog):
             self.disable_event_reduction.start()
         except RuntimeError:
             pass
+        try:
+            self.delete_empty_clans.start()
+        except RuntimeError:
+            pass
 
     # Tasks
     @tasks.loop(seconds=0.5)
@@ -349,6 +360,17 @@ class TasksCog(commands.Cog):
                     f'Reminder: {reminder}\nError: {error}'
             )
 
+    @tasks.loop(hours=24)
+    async def delete_empty_clans(self) -> None:
+        """Task that deletes clans that have no members registered anymore."""
+        try:
+            all_clans: tuple[clans.Clan, ...] = await clans.get_all_clans()
+        except exceptions.NoDataFoundError:
+            return
+        clan: clans.Clan
+        for clan in all_clans:
+            if not clan.members: await clan.delete()
+            
     @tasks.loop(seconds=60)
     async def reset_clans(self) -> None:
         """Task that creates the weekly reports and resets the clans"""
@@ -461,10 +483,10 @@ class TasksCog(commands.Cog):
             for user_settings in all_user_settings:
                 if user_settings.trade_daily_done != 0: await user_settings.update(trade_daily_done=0)
 
-    @tasks.loop(minutes=10)
+    @tasks.loop(seconds=60)
     async def delete_old_messages_from_cache(self) -> None:
         """Task that deletes messages from the message cache that are older than 10 minutes"""
-        deleted_messages_count = await messages.delete_old_messages(timedelta(minutes=5))
+        deleted_messages_count = await messages.delete_old_messages(timedelta(minutes=10))
         if settings.DEBUG_MODE:
             logs.logger.debug(f'Deleted {deleted_messages_count} messages from message cache.')
 

@@ -2,9 +2,9 @@
 """Provides access to the tables "reminders_users" and "reminders_clans" in the database"""
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 import sqlite3
-from typing import List, Optional, Tuple, TYPE_CHECKING, Union
+from typing import Any, Optional, Union
 
 from discord import utils
 from discord.ext import tasks
@@ -75,12 +75,12 @@ class Reminder():
         self.triggered = new_settings.triggered
         self.user_id = new_settings.user_id
 
-    async def update(self, **kwargs) -> None:
+    async def update(self, **updated_settings) -> None:
         """Updates the clan record in the database. Also calls refresh().
 
         Arguments
         ---------
-        kwargs (column=value):
+        updated_settings (column=value):
             activity: str
             channel_id: int
             clan_name: str
@@ -91,7 +91,7 @@ class Reminder():
             triggered: bool
             user_id: int
         """
-        await _update_reminder(self, **kwargs)
+        await _update_reminder(self, **updated_settings)
         await self.refresh()
 
 
@@ -152,7 +152,7 @@ async def _dict_to_reminder(record: dict) -> Reminder:
             channel_id = record['channel_id'],
             clan_name = record.get('clan_name', None),
             custom_id = record.get('custom_id', None),
-            end_time = datetime.fromisoformat(record['end_time'], ).replace(tzinfo=timezone.utc),
+            end_time = record['end_time'],
             message = record['message'],
             reminder_type = reminder_type,
             task_name = task_name,
@@ -251,7 +251,7 @@ async def get_clan_reminder(clan_name: str) -> Reminder:
 
 
 async def get_active_user_reminders(user_id: Optional[int] = None, activity: Optional[str] = None,
-                                    end_time: Optional[datetime] = None) -> Tuple[Reminder]:
+                                    end_time: Optional[datetime] = None) -> tuple[Reminder, ...]:
     """Gets all active reminders for all users or - if the argument user_id is set - for one user.
 
     Arguments
@@ -262,7 +262,7 @@ async def get_active_user_reminders(user_id: Optional[int] = None, activity: Opt
 
     Returns
     -------
-    Tuple[Reminder]
+    Tuple[Reminder, ...]
 
     Raises
     ------
@@ -275,10 +275,8 @@ async def get_active_user_reminders(user_id: Optional[int] = None, activity: Opt
     function_name = 'get_active_user_reminders'
     sql = f'SELECT * FROM {table} WHERE end_time>?'
     if end_time is None:
-        end_time_str = utils.utcnow().isoformat(sep=' ')
-    else:
-        end_time_str = end_time.isoformat(sep=' ')
-    queries = [end_time_str,]
+        end_time = utils.utcnow()
+    queries: list[Any] = [end_time,]
     if user_id is not None:
         sql = f'{sql} AND user_id=?'
         queries.append(user_id)
@@ -308,12 +306,12 @@ async def get_active_user_reminders(user_id: Optional[int] = None, activity: Opt
     return tuple(reminders)
 
 
-async def get_active_clan_reminders(clan_name: Optional[str] = None) -> Tuple[Reminder]:
+async def get_active_clan_reminders(clan_name: Optional[str] = None) -> tuple[Reminder, ...]:
     """Gets all active reminders for all clans or - if the argument clan_name is set - for one clan.
 
     Returns
     -------
-    Tuple[Reminder]
+    Tuple[Reminder, ...]
 
     Raises
     ------
@@ -330,8 +328,8 @@ async def get_active_clan_reminders(clan_name: Optional[str] = None) -> Tuple[Re
         sql = f'SELECT * FROM {table} WHERE clan_name=? AND end_time>? ORDER BY end_time'
     try:
         cur = settings.NAVCHI_DB.cursor()
-        current_time_str = utils.utcnow().isoformat(sep=' ')
-        cur.execute(sql, (current_time_str,)) if clan_name is None else cur.execute(sql, (clan_name, current_time_str))
+        current_time = utils.utcnow()
+        cur.execute(sql, (current_time,)) if clan_name is None else cur.execute(sql, (clan_name, current_time))
         records = cur.fetchall()
     except sqlite3.Error as error:
         await errors.log_error(
@@ -351,14 +349,13 @@ async def get_active_clan_reminders(clan_name: Optional[str] = None) -> Tuple[Re
     return tuple(reminders)
 
 
-async def get_due_user_reminders(user_id: Optional[int] = None) -> Tuple[Reminder]:
+async def get_due_user_reminders(user_id: Optional[int] = None) -> tuple[Reminder, ...]:
     """Gets all reminders for all users or - if the argument user_id is set - for one user that are due within
     the next 15 seconds.
 
     Returns
     -------
-    Tuple[Reminder]
-
+    Tuple[Reminder, ...]
     Raises
     ------
     sqlite3.Error if something happened within the database.
@@ -376,13 +373,11 @@ async def get_due_user_reminders(user_id: Optional[int] = None) -> Tuple[Reminde
         cur = settings.NAVCHI_DB.cursor()
         current_time = utils.utcnow()
         end_time = current_time + timedelta(seconds=15)
-        current_time_str = current_time.isoformat(sep=' ')
-        end_time_str = end_time.isoformat(sep=' ')
         triggered = False
         if user_id is None:
-            cur.execute(sql, (triggered, current_time_str, end_time_str))
+            cur.execute(sql, (triggered, current_time, end_time))
         else:
-            cur.execute(sql, (user_id, triggered, current_time_str, end_time_str))
+            cur.execute(sql, (user_id, triggered, current_time, end_time))
         records = cur.fetchall()
     except sqlite3.Error as error:
         await errors.log_error(
@@ -402,13 +397,13 @@ async def get_due_user_reminders(user_id: Optional[int] = None) -> Tuple[Reminde
     return tuple(reminders)
 
 
-async def get_due_clan_reminders(clan_name: Optional[str] = None) -> Tuple[Reminder]:
+async def get_due_clan_reminders(clan_name: Optional[str] = None) -> tuple[Reminder, ...]:
     """Gets all reminders for all clans or - if the argument clan_name is set - for one clan that are due within
     the next 15 seconds.
 
     Returns
     -------
-    Tuple[Reminder]
+    Tuple[Reminder, ...]
 
     Raises
     ------
@@ -427,13 +422,11 @@ async def get_due_clan_reminders(clan_name: Optional[str] = None) -> Tuple[Remin
         cur = settings.NAVCHI_DB.cursor()
         current_time = utils.utcnow()
         end_time  = current_time + timedelta(seconds=15)
-        current_time_str = current_time.isoformat(sep=' ')
-        end_time_str = end_time.isoformat(sep=' ')
         triggered = False
         if clan_name is None:
-            cur.execute(sql, (triggered, current_time_str, end_time_str))
+            cur.execute(sql, (triggered, current_time, end_time))
         else:
-            cur.execute(sql, (clan_name, triggered, current_time_str, end_time_str))
+            cur.execute(sql, (clan_name, triggered, current_time, end_time))
         records = cur.fetchall()
     except sqlite3.Error as error:
         await errors.log_error(
@@ -453,13 +446,13 @@ async def get_due_clan_reminders(clan_name: Optional[str] = None) -> Tuple[Remin
     return tuple(reminders)
 
 
-async def get_old_user_reminders(user_id: Optional[int] = None) -> Tuple[Reminder]:
+async def get_old_user_reminders(user_id: Optional[int] = None) -> tuple[Reminder, ...]:
     """Gets all reminders for all users or - if the argument user_id is set - for one user that are have an end time
     more than 20 seconds in the past.
 
     Returns
     -------
-    Tuple[Reminder]
+    Tuple[Reminder, ...]
 
     Raises
     ------
@@ -477,8 +470,7 @@ async def get_old_user_reminders(user_id: Optional[int] = None) -> Tuple[Reminde
     try:
         cur = settings.NAVCHI_DB.cursor()
         end_time = utils.utcnow() - timedelta(seconds=20)
-        end_time_str = end_time.isoformat(sep=' ')
-        cur.execute(sql, (end_time_str,)) if user_id is None else cur.execute(sql, (user_id, end_time_str))
+        cur.execute(sql, (end_time,)) if user_id is None else cur.execute(sql, (user_id, end_time))
         records = cur.fetchall()
     except sqlite3.Error as error:
         await errors.log_error(
@@ -498,13 +490,13 @@ async def get_old_user_reminders(user_id: Optional[int] = None) -> Tuple[Reminde
     return tuple(reminders)
 
 
-async def get_old_clan_reminders(clan_name: Optional[str] = None) -> Tuple[Reminder]:
+async def get_old_clan_reminders(clan_name: Optional[str] = None) -> tuple[Reminder, ...]:
     """Gets all reminders for all clans or - if the argument clan_name is set - for one clan that are have an end time
     more than 20 seconds in the past.
 
     Returns
     -------
-    Tuple[Reminder]
+    Tuple[Reminder, ...]
 
     Raises
     ------
@@ -522,8 +514,7 @@ async def get_old_clan_reminders(clan_name: Optional[str] = None) -> Tuple[Remin
     try:
         cur = settings.NAVCHI_DB.cursor()
         end_time = utils.utcnow() - timedelta(seconds=20)
-        end_time_str = end_time.isoformat(sep=' ')
-        cur.execute(sql, (end_time_str,)) if clan_name is None else cur.execute(sql, (clan_name, end_time_str))
+        cur.execute(sql, (end_time_str,)) if clan_name is None else cur.execute(sql, (clan_name, end_time))
         records = cur.fetchall()
     except sqlite3.Error as error:
         await errors.log_error(
@@ -576,13 +567,13 @@ async def _delete_reminder(reminder: Reminder) -> None:
         raise
 
 
-async def _update_reminder(reminder: Reminder, **kwargs) -> None:
+async def _update_reminder(reminder: Reminder, **updated_settings) -> None:
     """Updates reminder record. Use Reminder.update() to trigger this function.
 
     Arguments
     ---------
     reminder: Reminder
-    kwargs (column=value):
+    updated_settings (column=value):
         activity: str
         channel_id: int
         clan_name: str
@@ -596,38 +587,38 @@ async def _update_reminder(reminder: Reminder, **kwargs) -> None:
     Raises
     ------
     sqlite3.Error if something happened within the database.
-    NoArgumentsError if no kwargs are passed (need to pass at least one)
+    NoArgumentsError if no updated_settings are passed (need to pass at least one)
     Also logs all errors to the database.
     """
     table = 'reminders_users' if reminder.reminder_type == 'user' else 'reminders_clans'
     function_name = '_update_reminder'
-    if not kwargs:
+    if not updated_settings:
         await errors.log_error(
             strings.INTERNAL_ERROR_NO_ARGUMENTS.format(table=table, function=function_name)
         )
         raise exceptions.NoArgumentsError('You need to specify at least one keyword argument.')
-    end_time = kwargs['end_time'] if 'end_time' in kwargs else reminder.end_time
+    end_time = updated_settings['end_time'] if 'end_time' in updated_settings else reminder.end_time
     time_left = end_time - utils.utcnow()
     triggered = False if time_left.total_seconds() > 15 else True
-    if 'triggered' not in kwargs: kwargs['triggered'] = triggered
+    if 'triggered' not in updated_settings: updated_settings['triggered'] = triggered
     try:
         cur = settings.NAVCHI_DB.cursor()
         sql = f'UPDATE {table} SET'
-        for kwarg in kwargs:
-            sql = f'{sql} {kwarg} = :{kwarg},'
+        for updated_setting in updated_settings:
+            sql = f'{sql} {updated_setting} = :{updated_setting},'
         sql = sql.strip(",")
-        kwargs['activity_old'] = reminder.activity
+        updated_settings['activity_old'] = reminder.activity
         sql = f'{sql} WHERE activity = :activity_old'
         if reminder.reminder_type == 'user':
-            kwargs['user_id_old'] = reminder.user_id
+            updated_settings['user_id_old'] = reminder.user_id
             sql = f'{sql} AND user_id = :user_id_old'
         else:
-            kwargs['clan_name_old'] = reminder.clan_name
+            updated_settings['clan_name_old'] = reminder.clan_name
             sql = f'{sql} AND clan_name = :clan_name_old'
         if reminder.activity == 'custom':
-            kwargs['custom_id_old'] = reminder.custom_id
+            updated_settings['custom_id_old'] = reminder.custom_id
             sql = f'{sql} AND custom_id = :custom_id_old'
-        cur.execute(sql, kwargs)
+        cur.execute(sql, updated_settings)
     except sqlite3.Error as error:
         await errors.log_error(
             strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)
@@ -773,7 +764,7 @@ async def insert_clan_reminder(clan_name: str, time_left: timedelta, channel_id:
     return reminder
 
 
-async def reduce_reminder_time(user_settings, time_reduction: Union[timedelta, str], activities: List[str]) -> None:
+async def reduce_reminder_time(user_settings, time_reduction: Union[timedelta, str], activities: list[str]) -> None:
     """Reduces the end time of all user reminders affected by sleepy potions of one user by a certain amount.
     If the new end time is within the next 15 seconds, the reminder is immediately scheduled.
     If the new end time is in the past, the reminder is deleted.
@@ -814,19 +805,33 @@ async def reduce_reminder_time(user_settings, time_reduction: Union[timedelta, s
                 raise ValueError('Argument "time_reduction" is neither a timedelta nor the string \'half\'.')
         else:
             reduced_time = time_reduction
+        reminder_message = reminder.message
         new_end_time = reminder.end_time - reduced_time
         time_left = new_end_time - current_time
+        if reminder.activity == 'hunt':
+            last_hunt_mode = user_settings.last_hunt_mode.replace('together', '').strip()
+            if not user_settings.hunt_reminders_combined:
+                try:
+                    hunt_partner_reminder = await get_user_reminder(user_settings.user_id, 'hunt-partner')
+                    if time_left.total_seconds() <= 0 and hunt_partner_reminder.end_time <= current_time:
+                        last_hunt_mode = f'{last_hunt_mode} together'
+                    elif hunt_partner_reminder.end_time <= new_end_time:
+                        last_hunt_mode = f'{last_hunt_mode} together'
+                except exceptions.NoDataFoundError:
+                    last_hunt_mode = f'{last_hunt_mode} together'
+                reminder_message = user_settings.alert_hunt.message.replace('{command}', last_hunt_mode)
+            await user_settings.update(last_hunt_mode=last_hunt_mode)
         if time_left.total_seconds() <= 0:
             scheduled_for_deletion[reminder.task_name] = reminder
             await reminder.delete()
         elif 1 <= time_left.total_seconds() <= 15:
-            await reminder.update(end_time=new_end_time, triggered=True)
+            await reminder.update(end_time=new_end_time, triggered=True, message=reminder_message)
             scheduled_for_tasks[reminder.task_name] = reminder
         else:
-            await reminder.update(end_time=new_end_time)
+            await reminder.update(end_time=new_end_time, message=reminder_message)
 
 
-async def reduce_reminder_time_percentage(user_settings, percentage: float, activities: List[str]) -> None:
+async def reduce_reminder_time_percentage(user_settings, percentage: float, activities: list[str]) -> None:
     """Reduces the end time of user reminders by a certain percentage of the cooldown.
     If the new end time is within the next 15 seconds, the reminder is immediately scheduled.
     If the new end time is in the past, the reminder is deleted.
@@ -836,12 +841,7 @@ async def reduce_reminder_time_percentage(user_settings, percentage: float, acti
     ---------
     user_settings: user settings
     percentage: Percentage to reduce (1-100)
-    for half of their remaining amount.
     activities: List with the affected activities
-
-    Raises
-    ------
-    ValueError if time_reduction is neither time_delta nor the string 'half'
     """
     current_time = utils.utcnow()
     if 'hunt' in activities and user_settings.hunt_end_time > current_time:
@@ -886,7 +886,7 @@ async def reduce_reminder_time_percentage(user_settings, percentage: float, acti
             await reminder.update(end_time=new_end_time)
 
 
-async def increase_reminder_time_percentage(user_settings, percentage: float, activities: List[str]) -> None:
+async def increase_reminder_time_percentage(user_settings, percentage: float, activities: list[str]) -> None:
     """Increases the end time of user reminders by a certain percentage of the cooldown.
     Doesn't affect reminders already scheduled.
     Note that the percentage is calculated based on the full cooldown.

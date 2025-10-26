@@ -4,6 +4,7 @@ import asyncio
 from datetime import timedelta
 from math import ceil, floor
 import re
+from typing import Union
 
 import discord
 from discord import utils
@@ -28,10 +29,13 @@ class HuntCog(commands.Cog):
         embed_data_after = await functions.parse_embed(message_after)
         if (message_before.content == message_after.content and embed_data_before == embed_data_after
             and message_before.components == message_after.components): return
+        row: discord.Component
         for row in message_after.components:
-            for component in row.children:
-                if component.disabled:
-                    return
+            if isinstance(row, discord.ActionRow):
+                for component in row.children:
+                    if isinstance(component, (discord.Button, discord.SelectMenu)):
+                        if component.disabled:
+                            return
         await self.on_message(message_after)
 
     @commands.Cog.listener()
@@ -41,14 +45,15 @@ class HuntCog(commands.Cog):
 
         if message.embeds:
             embed: discord.Embed = message.embeds[0]
-            message_author = message_title = icon_url = ''
+            message_author = message_title = icon_url = message_description = ''
             if embed.author is not None:
                 message_author = str(embed.author.name)
                 icon_url = str(embed.author.icon_url)
             if embed.title is not None: message_title = str(embed.title)
+            if embed.description is not None: message_description = str(embed.description)
 
             # Hunt cooldown
-            search_strings = [
+            search_strings: list[str] = [
                 'you have already looked around', #English
                 'ya has mirado a tu alrededor', #Spanish
                 'você já olhou ao seu redor', #Portuguese
@@ -83,7 +88,7 @@ class HuntCog(commands.Cog):
                     user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, message_author)
                     if user_name_match:
                         user_name = user_name_match.group(1)
-                        embed_users = await functions.get_guild_member_by_name(message.guild, user_name)
+                        embed_users = await functions.get_member_by_name(self.bot, message.guild, user_name)
                     if user_name_match is None:
                         await functions.add_warning_reaction(message)
                         await errors.log_error('Embed user not found in hunt cooldown message.', message)
@@ -148,6 +153,28 @@ class HuntCog(commands.Cog):
                     await user_settings.update(hunt_end_time=utils.utcnow() + time_left)
                 await functions.add_reminder_reaction(message, reminder, user_settings)
 
+
+            # Rare hunt monster event reset (all languages)
+            search_strings = [
+                'golden wolf',
+                'ruby zombie',
+                'diamond unicorn',
+                'emerald mermaid',
+                'sapphire killer robot',
+            ]
+            if  (any(search_string in message_description.lower() for search_string in search_strings)
+                 and (':coffin:' in message_description.lower() or '⚰️' in message_description.lower())):
+                event_players = embed.fields[0].value.split('\n')[0]
+                players_found = re.findall(r'\s(.+?)(?:,|$)', event_players)
+                for user_name in players_found:
+                    users_found = await functions.get_member_by_name(self.bot, message.guild, user_name)
+                    if users_found:
+                        try:
+                            user_settings = await users.get_user(users_found[0].id)
+                        except exceptions.FirstTimeUserError:
+                            continue
+                        await reminders.reduce_reminder_time_percentage(user_settings, 100, ['hunt',])
+
         if not message.embeds:
             message_content = ''
             for line in message.content.split('\n'):
@@ -165,6 +192,7 @@ class HuntCog(commands.Cog):
                     any(f'> {monster.lower()}' in message_content.lower() for monster in strings.MONSTERS_HUNT)
                     or any(monster.lower() in message_content.lower() for monster in strings.MONSTERS_HUNT_TOP)
                     or 'pink wolf' in message_content.lower() or 'party slime' in message_content.lower()
+                    or 'summer slime' in message_content.lower()
                 )
             ):
                 user_name = partner_name = last_hunt_mode = user_command_message = partner = None
@@ -200,6 +228,7 @@ class HuntCog(commands.Cog):
                     'bunny slime',
                     'pink wolf',
                     'party slime',
+                    'summer slime',
                 ]
                 if any(search_string in message_content.lower() for search_string in search_strings_event_mobs):
                     search_strings_together = [
@@ -219,7 +248,7 @@ class HuntCog(commands.Cog):
                         user_name = user_name_match.group(1)
                         partner_name = user_name_match.group(2)
                     else:
-                        if event_mob:
+                        if event_mob and not slash_command:
                             user_command_message = (
                                 await messages.find_message(message.channel.id, regex.COMMAND_HUNT)
                             )
@@ -390,7 +419,7 @@ class HuntCog(commands.Cog):
                     )
                     reminder_created = True
                 if (user_settings.alert_hunt_partner.enabled and time_left_partner_hunt >= timedelta(0) and together
-                    and not user_settings.hunt_reminders_combined):
+                    and not user_settings.hunt_reminders_combined and user_settings.partner_name is not None):
                     reminder_message = (user_settings.alert_hunt_partner.message.replace('{command}', hunt_command)
                                         .replace('{partner}', user_settings.partner_name))
                     reminder: reminders.Reminder = (
@@ -436,8 +465,8 @@ class HuntCog(commands.Cog):
                             try:
                                 search_patterns = [
                                     fr"\+(.+?) (.+?) {re.escape(lb_name)}", #All languages
-                                    fr"\*\* got (.+?) (.+?) {re.escape(lb_name)}", #English
-                                    fr"\*\* cons(?:e|i)gui(?:ó|u) (.+?) (.+?) {re.escape(lb_name)}", #Spanish, Portuguese
+                                    fr"got (.+?) (.+?) {re.escape(lb_name)}", #English
+                                    fr"cons(?:e|i)gui(?:ó|u) (.+?) (.+?) {re.escape(lb_name)}", #Spanish, Portuguese
                                 ]
                                 lb_match = await functions.get_match_from_patterns(search_patterns, lb_search_content)
                                 if not lb_match: continue

@@ -9,7 +9,7 @@ from discord.ext import bridge, commands
 
 from content import main
 from database import errors, guilds
-from resources import exceptions, functions, logs, settings
+from resources import exceptions, functions, logs, settings, strings
 
 if TYPE_CHECKING:
     from discord.ext.commands import Command
@@ -35,7 +35,7 @@ class MainCog(commands.Cog):
         """Main help command"""
         await main.command_help(self.bot, ctx)
 
-    @bridge.bridge_command(name='about', description='Some info and links about Navi', aliases=('info','ping'))
+    @bridge.bridge_command(name='about', description='Some info and links about Navchi', aliases=('info','ping'))
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
     async def about(self, ctx: bridge.BridgeContext) -> None:
         """About command"""
@@ -43,7 +43,7 @@ class MainCog(commands.Cog):
 
     # Slash commands
     if settings.LINK_INVITE:
-        @slash_command(name='invite', description='Invite Navi to your server!')
+        @slash_command(name='invite', description='Invite Navchi to your server!')
         async def invite(self, ctx: discord.ApplicationContext) -> None:
             """Sends an invite link"""
             await ctx.respond(f'Click [here]({settings.LINK_INVITE}) to invite me!')
@@ -58,11 +58,11 @@ class MainCog(commands.Cog):
                 f'Click [here]({settings.LINK_INVITE}) to invite me!'
             )
         else:
-            navi_lite_invite: str = 'https://canary.discord.com/api/oauth2/authorize?client_id=1213487623688167494&permissions=378944&scope=bot'
+            navchi_lite_invite: str = 'https://canary.discord.com/api/oauth2/authorize?client_id=1213487623688167494&permissions=378944&scope=bot'
             answer: str = (
                 f'Sorry, you can\'t invite this Navi.\n\n'
                 f'However, you can:\n'
-                f'1. [Invite Navi Lite]({navi_lite_invite}), a global version of Navi with a few limitations.\n'
+                f'1. [Invite Navi Lite]({navchi_lite_invite}), a global version of Navchi with a few limitations.\n'
                 f'2. [Run Navi yourself](https://github.com/MirielCH/Navi). Navi is free and open source.\n'
             )
         await ctx.reply(answer)
@@ -189,6 +189,11 @@ class MainCog(commands.Cog):
             await ctx.respond(
                 await ctx.respond('As you might have guessed, you are not allowed to use this command.',
                 ephemeral=True)
+            )
+        elif isinstance(error, exceptions.NoClanLeaderFoundError):
+            await ctx.reply(
+                f'**{ctx_author_name}**, there is no leader registered for this guild.\n'
+                f'Use {strings.SLASH_COMMANDS["guild list"]} or `rpg guild list` to update your guild.',
             )
         elif isinstance(error, discord.errors.Forbidden):
             return

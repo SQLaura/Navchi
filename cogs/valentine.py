@@ -11,7 +11,7 @@ from discord.ext import bridge, commands
 
 from cache import messages
 from database import cooldowns, errors, reminders, users
-from resources import exceptions, functions, regex, settings, strings
+from resources import exceptions, functions, regex, settings
 
 
 class ValentineCog(commands.Cog):
@@ -28,10 +28,13 @@ class ValentineCog(commands.Cog):
         embed_data_after = await functions.parse_embed(message_after)
         if (message_before.content == message_after.content and embed_data_before == embed_data_after
             and message_before.components == message_after.components): return
+        row: discord.Component
         for row in message_after.components:
-            for component in row.children:
-                if component.disabled:
-                    return
+            if isinstance(row, discord.ActionRow):
+                for component in row.children:
+                    if isinstance(component, (discord.Button, discord.SelectMenu)):
+                        if component.disabled:
+                            return
         await self.on_message(message_after)
 
     @commands.Cog.listener()
@@ -72,7 +75,7 @@ class ValentineCog(commands.Cog):
                     user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, embed_author)
                     if user_name_match:
                         user_name = user_name_match.group(1)
-                        embed_users = await functions.get_guild_member_by_name(message.guild, user_name)
+                        embed_users = await functions.get_member_by_name(self.bot, message.guild, user_name)
                     if not user_name_match or not embed_users:
                         await functions.add_warning_reaction(message)
                         await errors.log_error('Couldn\'t find embed user for the love share cooldown message.', message)
@@ -94,7 +97,7 @@ class ValentineCog(commands.Cog):
                 timestring = timestring_match.group(1)
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring)
                 if time_left < timedelta(0): return
-                reminder_message = user_settings.alert_daily.message.replace('{command}', user_command)
+                reminder_message = user_settings.alert_love_share.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(interaction_user.id, 'love-share', time_left,
                                                          message.channel.id, reminder_message)
@@ -151,7 +154,7 @@ class ValentineCog(commands.Cog):
                     time_left_seconds *= settings.CHOCOLATE_BOX_MULTIPLIER # Unclear if accurate
                 time_left = timedelta(seconds=time_left_seconds)
                 if time_left < timedelta(0): return
-                reminder_message = strings.DEFAULT_MESSAGE.replace('{command}', user_command)
+                reminder_message = user_settings.alert_love_share.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'love-share', time_left,
                                                         message.channel.id, reminder_message)

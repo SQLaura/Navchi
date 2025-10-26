@@ -43,7 +43,7 @@ class HorseFestivalCog(commands.Cog):
                         user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, message_author)
                         if user_name_match:
                             user_name = user_name_match.group(1)
-                            user = await functions.get_guild_member_by_name(message_after.guild, user_name)
+                            user = await functions.get_member_by_name(self.bot, message_after.guild, user_name)
                         else:
                             await functions.add_warning_reaction(message_after)
                             await errors.log_error('User not found in minirace embed.', message_after)
@@ -79,10 +79,13 @@ class HorseFestivalCog(commands.Cog):
         embed_data_after = await functions.parse_embed(message_after)
         if (message_before.content == message_after.content and embed_data_before == embed_data_after
             and message_before.components == message_after.components): return
+        row: discord.Component
         for row in message_after.components:
-            for component in row.children:
-                if component.disabled:
-                    return
+            if isinstance(row, discord.ActionRow):
+                for component in row.children:
+                    if isinstance(component, (discord.Button, discord.SelectMenu)):
+                        if component.disabled:
+                            return
         await self.on_message(message_after)
 
 
@@ -389,7 +392,7 @@ class HorseFestivalCog(commands.Cog):
                         await errors.log_error('User not found in megarace boost done message.', message)
                         return
                     user_name = user_name_match.group(1)
-                    guild_users = await functions.get_guild_member_by_name(message.guild, user_name)
+                    guild_users = await functions.get_member_by_name(self.bot, message.guild, user_name)
                     if not guild_users: return
                     if len(guild_users) > 1:
                         await functions.add_warning_reaction(message)

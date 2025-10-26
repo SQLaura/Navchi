@@ -125,6 +125,7 @@ DEFAULT_MESSAGES: Final[dict[str, str]] = {
     'cel-multiply': DEFAULT_MESSAGE,
     'cel-sacrifice': DEFAULT_MESSAGE,
     'chimney': DEFAULT_MESSAGE,
+    'color-tournament': DEFAULT_MESSAGE,
     'boo': DEFAULT_MESSAGE,
     'boosts': '{name} Hey! Your {boost_emoji} **{boost_item}** just ran out!',
     'daily': DEFAULT_MESSAGE,
@@ -133,6 +134,7 @@ DEFAULT_MESSAGES: Final[dict[str, str]] = {
     'epic': '{name} Hey! Your EPIC item cooldown is ready!',
     'epic-shop': '{name} Hey! The {epic_shop_emoji} **{epic_shop_item}** is back on sale in the {command}!',
     'eternal-presents': '{name} Hey! It''s time to {command} your ETERNAL presents! Make sure you open all of them in **one** command!',
+    'eternity-sealing': '{name} Hey! The eternity just sealed itself!',
     'farm': DEFAULT_MESSAGE,
     'guild': DEFAULT_MESSAGE,
     'horse': DEFAULT_MESSAGE,
@@ -150,6 +152,7 @@ DEFAULT_MESSAGES: Final[dict[str, str]] = {
     'pets': '{name} Hey! Your pet `{id}` is back! {emoji}',
     'pet-tournament': DEFAULT_MESSAGE_EVENT,
     'quest': DEFAULT_MESSAGE,
+    'surf': DEFAULT_MESSAGE,
     'training': DEFAULT_MESSAGE,
     'vote': DEFAULT_MESSAGE,
     'weekly': DEFAULT_MESSAGE,
@@ -210,6 +213,8 @@ ARTIFACTS_EMOJIS: Final[dict[str, str]] = {
     'golden pan': emojis.ARTIFACT_GOLDEN_PAN,
     'master key': emojis.ARTIFACT_MASTER_KEY,
     'pocket watch': emojis.ARTIFACT_POCKET_WATCH,
+    'shiny pickaxe': emojis.ARTIFACT_SHINY_PICKAXE,
+    'sunglasses': emojis.ARTIFACT_SUNGLASSES,
     'top hat': emojis.ARTIFACT_TOP_HAT,
     'vampire teeth': emojis.ARTIFACT_VAMPIRE_TEETH,
 }
@@ -271,6 +276,7 @@ SLEEPY_POTION_AFFECTED_ACTIVITIES: Final[tuple[str, ...]] = (
     'hunt',
     'lootbox',
     'quest',
+    'surf',
     'training',
     'weekly',
     'work'
@@ -321,11 +327,13 @@ ACTIVITIES: Final[tuple[str, ...]] = (
     'cel-dailyquest',
     'cel-multiply',
     'chimney',
+    'color-tournament',
     'daily',
     'duel',
     'dungeon-miniboss',
     'epic',
     'epic-shop',
+    'eternity-sealing',
     'eternal-presents',
     'farm',
     'guild',
@@ -344,6 +352,7 @@ ACTIVITIES: Final[tuple[str, ...]] = (
     'pets',
     'pet-tournament',
     'quest',
+    'surf',
     'training',
     'vote',
     'weekly',
@@ -364,6 +373,8 @@ ACTIVITIES_EVENTS: Final[tuple[str, ...]] = (
 
 ACTIVITIES_BOOSTS: Final[tuple[str, ...]] = (
     'banana-potion',
+    'blue-drink',
+    'chopped-coconut-boost',
     'christmas-boost',
     'celebration-boost',
     'cookie-potion',
@@ -371,10 +382,14 @@ ACTIVITIES_BOOSTS: Final[tuple[str, ...]] = (
     'dev-buff',
     'dragon-breath-potion',
     'easter-boost',
+    'easterng-boost-i',
+    'easterng-boost-ii',
+    'easterng-boost-iii',
     'egg-blessing',
     'electronical-potion',
     'fish-potion',
     'flask-potion',
+    'green-drink',
     'halloween-boost',
     'horse-festival-boost',
     'inverted-potion',
@@ -390,22 +405,27 @@ ACTIVITIES_BOOSTS: Final[tuple[str, ...]] = (
     'new-player-boost',
     'p2w-potion',
     'party-popper',
+    'pink-drink',
     'potion-potion',
     'round-card',
     'smol-potion',
+    'summer-boost',
     'time-potion',
     'triple-potion',
     'unepic-boost',
     'valentine-boost',
     'void-potion',
     'wood-potion',
+    'yellow-drink',
 )
 
 BOOSTS_ALIASES: Final[dict[str, str]] = {
     'christmas': 'christmas-boost',
     'celebration': 'celebration-boost',
+    'chopped-coconut': 'chopped-coconut-boost',
     'halloween': 'halloween-boost',
     'horse-festival': 'horse-festival-boost',
+    'summer': 'summer-boost',
     'unepic': 'unepic-boost',
     '💢-unepic': 'unepic-boost',
 }
@@ -422,6 +442,7 @@ ACTIVITIES_SLASH_COMMANDS: Final[dict[str, str]] = {
     'cel-multiply': 'cel multiply',
     'cel-sacrifice': 'cel sacrifice',
     'chimney': 'xmas chimney',
+    'color-tournament': 'smr color tournament',
     'cookie-potion': 'alchemy',
     'daily': 'daily',
     'dragon-breath-potion': 'alchemy',
@@ -452,6 +473,7 @@ ACTIVITIES_SLASH_COMMANDS: Final[dict[str, str]] = {
     'pet-tournament': 'pets tournament',
     'potion-potion': 'alchemy',
     'quest': 'quest',
+    'surf': 'smr surf',
     'time-potion': 'alchemy',
     'trade list': 'trade list',
     'trade items': 'trade items',
@@ -543,6 +565,20 @@ ACTIVITIES_ALIASES: Final[dict[str, str]] = {
     'hunt-together': 'hunt-partner',
     'partner-hunt': 'hunt-partner',
     'huntpartner': 'hunt-partner',
+    'eternity': 'eternity-sealing',
+    'smr-surf': 'surf',
+    'smrsurf': 'surf',
+    'smr-surfing': 'surf',
+    'smrsurfing': 'surf',
+    'surfing': 'surf',
+    'colortournament': 'color-tournament',
+    'color': 'color-tournament',
+    'smr-color-tournament': 'color-tournament',
+    'smr-color': 'color-tournament',
+    'smrcolor': 'color-tournament',
+    'smrcolortournament': 'color-tournament',
+    'smrtournament': 'color-tournament',
+    'smr-tournament': 'color-tournament',
 }
 
 ACTIVITIES_COLUMNS: Final[dict[str, str]] = {
@@ -560,6 +596,7 @@ ACTIVITIES_COLUMNS: Final[dict[str, str]] = {
     'cel-sacrifice': 'alert_cel_sacrifice',
     'chimney': 'alert_chimney',
     'cookie-potion': 'alert_boosts',
+    'color-tournament': 'alert_color_tournament',
     'daily': 'alert_daily',
     'dev-boost': 'alert_boosts',
     'dev-buff': 'alert_boosts',
@@ -570,6 +607,7 @@ ACTIVITIES_COLUMNS: Final[dict[str, str]] = {
     'epic': 'alert_epic',
     'epic-shop': 'alert_epic_shop',
     'eternal-presents': 'alert_eternal_present',
+    'eternity-sealing': 'alert_eternity_sealing',
     'farm': 'alert_farm',
     'fish-potion': 'alert_boosts',
     'guild': 'alert_guild',
@@ -600,6 +638,7 @@ ACTIVITIES_COLUMNS: Final[dict[str, str]] = {
     'pets': 'alert_pets',
     'potion-potion': 'alert_boosts',
     'quest': 'alert_quest',
+    'surf': 'alert_surf',
     'round-card': 'alert_boosts',
     'time-potion': 'alert_boosts',
     'training': 'alert_training',
@@ -628,6 +667,7 @@ ACTIVITIES_WITH_COOLDOWN: Final[tuple[str, ...]] = (
     'dungeon-miniboss',
     'quest',
     'quest-decline',
+    'surf',
     'training',
     'weekly',
     'work',
@@ -661,6 +701,7 @@ EVENT_PINGS: Final[dict[str, str]] = {
     'lootbox': 'Lootbox summoning',
     'fish': 'Megalodon',
     'miniboss': 'Miniboss',
+    'rare_hunt_monster': 'Rare hunt monster',
 }
 
 
@@ -669,6 +710,7 @@ SEASONAL_EVENTS: Final[list[str]] = [
     'celebration',
     'halloween',
     'horse_festival',
+    'summer',
     'valentine',
 ]
 
@@ -682,6 +724,7 @@ LOOTBOXES: Final[dict[str, str]] = {
     'OMEGA lootbox': emojis.LB_OMEGA,
     'GODLY lootbox': emojis.LB_GODLY,
     'VOID lootbox': emojis.LB_VOID,
+    'ETERNAL lootbox': emojis.LB_ETERNAL,
 }
 
 
@@ -984,6 +1027,7 @@ MONSTERS_HUNT_MISC: Final[tuple[str, ...]] = (
     '**Horslime**',
     '**Pink Wolf**',
     '**Party Slime**',
+    '**Summer Slime**',
 )
 
 MONSTERS_HUNT: Final[tuple[str, ...]] = (
@@ -1126,6 +1170,9 @@ SLASH_COMMANDS: Final[dict[str, str]] = {
     'refine': '</refine:959164904609316904>',
     'sell': '</sell:959942191726338068>',
     'slots': '</slots:958555798273925180>',
+    'smr surf': '`rpg smr surf`',
+    'smr color tournament': '`rpg smr color tournament`',
+    'smr drink': '`rpg smr drink`',
     'tractor': '</tractor:959164278890463272>',
     'trade list': '</trade list:959915739840647188>',
     'trade items': '</trade items:959915739840647188>',
@@ -1224,6 +1271,9 @@ RPG_COMMANDS: Final[dict[str, str]] = {
     'refine': 'rpg refine',
     'sell': 'rpg sell',
     'slots': 'rpg slots',
+    'smr surf': 'rpg smr surf',
+    'smr color tournament': 'rpg smr color tournament',
+    'smr craft drink': 'rpg smr craft <drink>',
     'tractor': 'rpg tractor',
     'trade items': 'rpg trade',
     'trade list': 'rpg trade',
@@ -1493,6 +1543,13 @@ FLEX_TITLES_PETS_CATCH_TT: Final[tuple[str, ...]] = (
     'Always close your phone box door',
 )
 
+FLEX_TITLES_PETS_CLAIM_CAPSULE: Final[tuple[str, ...]] = (
+    'That poor cat looks like it has been through a lot',
+    'TIMEY WHIMEY CAT ALERT',
+    'Please don\'t subject your cats to time travel',
+    'Time and space and cat food',
+)
+
 FLEX_TITLES_PETS_CLAIM_OMEGA: Final[tuple[str, ...]] = (
     'Anything for the OMEGAs it seems',
     'This is against the Geneva Conventions',
@@ -1629,6 +1686,10 @@ FLEX_TITLES_TIME_TRAVEL_100_PLUS: Final[tuple[str, ...]] = (
     'The all important question is... why?',
 )
 
+FLEX_TITLES_TIME_TRAVEL_1000000: Final[tuple[str, ...]] = (
+    'A poem for a legend',
+)
+
 FLEX_TITLES_XMAS_CHIMNEY: Final[tuple[str, ...]] = (
     'Now this is embarassing',
     'Can we get a live stream?',
@@ -1706,6 +1767,13 @@ FLEX_THUMBNAILS_ARTIFACTS_COWBOY_BOOTS: Final[tuple[str, ...]] = (
     'https://media1.tenor.com/m/lBEJu36EtYsAAAAd/cowboy-boots-western-boots.gif',
     'https://media1.tenor.com/m/aADNFJFpOzcAAAAC/boots-shoes.gif',
     'https://media1.tenor.com/m/S83c-j-wvpoAAAAC/cowboy-boots-cowboy.gif',
+)
+
+FLEX_THUMBNAILS_ARTIFACTS_SHINY_PICKAXE: Final[tuple[str, ...]] = (
+    'https://c.tenor.com/Isec7K5eGFMAAAAd/tenor.gif',
+    'https://c.tenor.com/byo3PamG1PUAAAAC/tenor.gif',
+    'https://c.tenor.com/NUMy8NdzwBsAAAAC/tenor.gif',
+    'https://c.tenor.com/qBxnw59KgQcAAAAd/tenor.gif',
 )
 
 FLEX_THUMBNAILS_BREW_ELECTRONICAL: Final[tuple[str, ...]] = (
@@ -1933,6 +2001,14 @@ FLEX_THUMBNAILS_PETS_CATCH_TT: Final[tuple[str, ...]] = (
     'https://media.giphy.com/media/U7JM6ChJMrFnXfFHvE/giphy.gif',
 )
 
+FLEX_THUMBNAILS_PETS_CLAIM_CAPSULE: Final[tuple[str, ...]] = (
+    'https://c.tenor.com/4CHnbg_zVEoAAAAC/tenor.gif',
+    'https://c.tenor.com/zbDHXQ60jMIAAAAC/tenor.gif',
+    'https://c.tenor.com/CcOypZMhDS8AAAAC/tenor.gif',
+    'https://c.tenor.com/IOQxHefEGmoAAAAC/tenor.gif',
+    'https://c.tenor.com/lhww8cZ_nEQAAAAC/tenor.gif',
+)
+
 FLEX_THUMBNAILS_PETS_CLAIM_OMEGA: Final[tuple[str, ...]] = (
     'https://media.tenor.com/sQVkHE1_BgcAAAAC/ahh-scared.gif',
     'https://media.tenor.com/eFNKOmp6hSsAAAAC/olaf-disney.gif',
@@ -1977,7 +2053,7 @@ FLEX_THUMBNAILS_EVENT_ENCHANT: Final[tuple[str, ...]] = (
     'https://media.giphy.com/media/ef4gyEAxktrF3cWO5g/giphy.gif',
     'https://media.tenor.com/oTpEgUkQjngAAAAC/vibing-dancing.gif',
     'https://media.tenor.com/9-b0gUv-HokAAAAC/enchanted-sword-enchanted-iron-sword.gif',
-    'https://media.tenor.com/Z3mgGQaNQt4AAAAC/legendofzelda-navi.gif',
+    'https://media.tenor.com/Z3mgGQaNQt4AAAAC/legendofzelda-navchi.gif',
 )
 
 FLEX_THUMBNAILS_EVENT_FARM: Final[tuple[str, ...]] = (
@@ -2054,6 +2130,10 @@ FLEX_THUMBNAILS_TIME_TRAVEL_100_PLUS: Final[tuple[str, ...]] = (
     'https://media.tenor.com/twi6r7OVu6MAAAAd/blue-spiral.gif',
     'https://media.tenor.com/VrcRpp5urSoAAAAC/time-clock.gif',
     'https://media.tenor.com/7JwnIw76nRwAAAAC/time-clock.gif',
+)
+
+FLEX_THUMBNAILS_TIME_TRAVEL_1000000: Final[tuple[str, ...]] = (
+    'https://c.tenor.com/Z3mgGQaNQt4AAAAC/tenor.gif',
 )
 
 FLEX_THUMBNAILS_TIME_TRAVEL_300: Final[tuple[str, ...]] = (

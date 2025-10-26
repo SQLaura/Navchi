@@ -1,6 +1,7 @@
 # settings.py
 """Contains global settings"""
 
+import datetime
 import os
 import sqlite3
 import sys
@@ -16,20 +17,45 @@ ENV_VARIABLE_MISSING: Final[str] = (
 )
 
 PYTHON_VERSION: Final[float] = 3.12
-NAVCHI_DB_VERSION: Final[int] = 25
+NAVCHI_DB_VERSION: Final[int] = 30
 
 # Files and directories
 BOT_DIR: Final[str] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DB_FILE: Final[str] = os.path.join(BOT_DIR, 'database/navchi_db.db')
+LOG_FILE: Final[str] = os.path.join(BOT_DIR, 'logs/discord.log')
+IMG_NAVCHI: Final[str] = os.path.join(BOT_DIR, 'images/navchi.png')
+_VERSION_FILE: Final[str] = os.path.join(BOT_DIR, 'VERSION')
+
+# Database connection
+def adapt_date_iso(value_date: datetime.date) -> str:
+    """Adapt datetime.date to ISO 8601 date."""
+    return value_date.isoformat()
+
+def adapt_datetime_iso(value_datetime: datetime.datetime) -> str:
+    """Adapt datetime.datetime to ISO 8601 date."""
+    if value_datetime.tzinfo is None:
+        raise ValueError("Only timezone-aware datetime objects are supported.")
+    return value_datetime.isoformat(sep=' ')
+
+def convert_date(value_db: bytes) -> datetime.date:
+    """Convert ISO 8601 date to datetime.date object."""
+    return datetime.date.fromisoformat(value_db.decode())
+
+def convert_datetime(value_db: bytes) -> datetime.datetime:
+    """Convert ISO 8601 datetime to datetime.datetime object."""
+    return datetime.datetime.fromisoformat(value_db.decode())
+
+sqlite3.register_adapter(datetime.date, adapt_date_iso)
+sqlite3.register_adapter(datetime.datetime, adapt_datetime_iso)
+sqlite3.register_converter("date", convert_date)
+sqlite3.register_converter("datetime", convert_datetime)
+
 if os.path.isfile(DB_FILE):
     NAVCHI_DB: Final[sqlite3.Connection] = sqlite3.connect(DB_FILE, isolation_level=None, detect_types=sqlite3.PARSE_DECLTYPES)
 else:
     print(f'Database {DB_FILE} does not exist. Please follow the setup instructions in the README first.')
     sys.exit()
 NAVCHI_DB.row_factory = sqlite3.Row
-LOG_FILE: Final[str] = os.path.join(BOT_DIR, 'logs/discord.log')
-IMG_NAVCHI: Final[str] = os.path.join(BOT_DIR, 'images/navchi.png')
-_VERSION_FILE: Final[str] = os.path.join(BOT_DIR, 'VERSION')
 
 
 # Load .env variables
@@ -165,7 +191,7 @@ class ClanReset(NamedTuple):
 
 CLAN_DEFAULT_STEALTH_THRESHOLD: Final[int] = 90
 
-CHOCOLATE_BOX_MULTIPLIER: Final[float] = 0.98
+CHOCOLATE_BOX_MULTIPLIER: Final[float] = 0.97
 CHRISTMAS_AREA_MULTIPLIER: Final[float] = 1.0 # Set this to 0.9 during christmas event and to 1 during the rest of the year
 POTION_FLASK_MULTIPLIER: Final[float] = 0.9999 # Why did I even do this
 ROUND_CARD_MULTIPLIER: Final[float] = 0.1

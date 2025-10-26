@@ -95,18 +95,15 @@ class HelperPetsCog(commands.Cog):
                             user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, message_author)
                         if user_name_match:
                             user_name = user_name_match.group(1)
-                            if not bunny_event:
-                                user_command_message = (
-                                    await messages.find_message(message.channel.id, regex.COMMAND_TRAINING_BUNNY_PET,
-                                                                user_name=user_name)
-                                )
-                                if user_command_message is None:
-                                    await functions.add_warning_reaction(message)
-                                    await errors.log_error('User not found in pet catch message for pet helper.', message)
-                                    return
+                            regex_command = regex.COMMAND_TRAINING_BUNNY_PET if not bunny_event else None
+                            user_command_message = (
+                                await messages.find_message(message.channel.id, regex_command,
+                                                            user_name=user_name)
+                            )
+                            if user_command_message is not None:
                                 user = user_command_message.author
-                            else:
-                                guild_users = await functions.get_guild_member_by_name(message.guild, user_name)
+                            if user is None:
+                                guild_users = await functions.get_member_by_name(self.bot, message.guild, user_name)
                                 if len(guild_users) > 1: return
                                 if not guild_users:
                                     await functions.add_warning_reaction(message)

@@ -3,7 +3,7 @@
 
 import asyncio
 import re
-from typing import Dict, List, Literal, Optional
+from typing import Callable, Dict, Literal, Optional
 
 import discord
 
@@ -84,21 +84,21 @@ class ToggleUserSettingsSelect(discord.ui.Select):
 
     async def callback(self, interaction: discord.Interaction):
         select_value = self.values[0]
-        kwargs = {}
+        updated_settings = {}
         if select_value in ('enable_all','disable_all'):
             enabled = True if select_value == 'enable_all' else False
             for setting in self.toggled_settings.values():
                 if not setting.endswith('_enabled'):
                     setting = f'{setting}_enabled'
-                kwargs[setting] = enabled
+                updated_settings[setting] = enabled
         else:
             setting_value = getattr(self.view.user_settings, select_value)
             if isinstance(setting_value, users.UserAlert):
                 setting_value = getattr(setting_value, 'enabled')
             if not select_value.endswith('_enabled'):
                 select_value = f'{select_value}_enabled'
-            kwargs[select_value] = not setting_value
-        await self.view.user_settings.update(**kwargs)
+            updated_settings[select_value] = not setting_value
+        await self.view.user_settings.update(**updated_settings)
         for child in self.view.children.copy():
             if child.custom_id == self.custom_id:
                 self.view.remove_item(child)
@@ -127,21 +127,21 @@ class ToggleServerSettingsSelect(discord.ui.Select):
 
     async def callback(self, interaction: discord.Interaction):
         select_value = self.values[0]
-        kwargs = {}
+        updated_settings = {}
         if select_value in ('enable_all','disable_all'):
             enabled = True if select_value == 'enable_all' else False
             for setting in self.toggled_settings.values():
                 if not setting.endswith('_enabled'):
                     setting = f'{setting}_enabled'
-                kwargs[setting] = enabled
+                updated_settings[setting] = enabled
         else:
             setting_value = getattr(self.view.guild_settings, select_value)
             if isinstance(setting_value, guilds.EventPing):
                 setting_value = getattr(setting_value, 'enabled')
             if not select_value.endswith('_enabled'):
                 select_value = f'{select_value}_enabled'
-            kwargs[select_value] = not setting_value
-        await self.view.guild_settings.update(**kwargs)
+            updated_settings[select_value] = not setting_value
+        await self.view.guild_settings.update(**updated_settings)
         for child in self.view.children.copy():
             if child.custom_id == self.custom_id:
                 self.view.remove_item(child)
@@ -171,7 +171,7 @@ class ToggleEventPingsSelect(discord.ui.Select):
 
     async def callback(self, interaction: discord.Interaction):
         select_value = self.values[0]
-        kwargs = {}
+        updated_settings = {}
         if select_value in ('enable_all','disable_all'):
             enabled = True if select_value == 'enable_all' else False
             if enabled:
@@ -186,14 +186,14 @@ class ToggleEventPingsSelect(discord.ui.Select):
             for setting in self.toggled_settings.values():
                 if not setting.endswith('_enabled'):
                     setting = f'{setting}_enabled'
-                kwargs[setting] = enabled
+                updated_settings[setting] = enabled
         else:
             setting_value = getattr(self.view.guild_settings, select_value)
             if isinstance(setting_value, guilds.EventPing):
                 setting_value = getattr(setting_value, 'enabled')
             if not select_value.endswith('_enabled'):
                 select_value = f'{select_value}_enabled'
-            kwargs[select_value] = not setting_value
+            updated_settings[select_value] = not setting_value
             if not setting_value == True:
                 channel_permissions = self.view.ctx.channel.permissions_for(self.view.ctx.guild.me)
                 if not channel_permissions.mention_everyone:
@@ -203,7 +203,7 @@ class ToggleEventPingsSelect(discord.ui.Select):
                         ephemeral=True
                     )
                     return
-        await self.view.guild_settings.update(**kwargs)
+        await self.view.guild_settings.update(**updated_settings)
         for child in self.view.children.copy():
             if child.custom_id == self.custom_id:
                 self.view.remove_item(child)
@@ -233,21 +233,21 @@ class ToggleReadySettingsSelect(discord.ui.Select):
 
     async def callback(self, interaction: discord.Interaction):
         select_value = self.values[0]
-        kwargs = {}
+        updated_settings = {}
         if select_value in ('enable_all','disable_all'):
             enabled = True if select_value == 'enable_all' else False
             for setting in self.toggled_settings.values():
                 if not setting.endswith('_visible'):
                     setting = f'{setting}_visible'
-                kwargs[setting] = enabled
+                updated_settings[setting] = enabled
         else:
             setting_value = getattr(self.view.user_settings, select_value)
             if isinstance(setting_value, users.UserAlert):
                 setting_value = getattr(setting_value, 'visible')
             if not select_value.endswith('_visible'):
                 select_value = f'{select_value}_visible'
-            kwargs[select_value] = not setting_value
-        await self.view.user_settings.update(**kwargs)
+            updated_settings[select_value] = not setting_value
+        await self.view.user_settings.update(**updated_settings)
         for child in self.view.children.copy():
             if child.custom_id == self.custom_id:
                 self.view.remove_item(child)
@@ -282,12 +282,16 @@ class ManageClanSettingsSelect(discord.ui.Select):
                          custom_id='manage_clan_settings')
 
     async def callback(self, interaction: discord.Interaction):
+        clan_leader_ids: list[int] = []
+        for clan_member in self.view.clan_settings.members:
+            if clan_member.member_type == 'leader':
+                clan_leader_ids.append(clan_member.user_id)
         user_global_name = interaction.user.global_name if interaction.user.global_name is not None else interaction.user.name
-        if interaction.user.id != self.view.clan_settings.leader_id:
+        if interaction.user.id not in clan_leader_ids:
             await interaction.response.send_message(
-                f'**{user_global_name}**, you are not registered as the guild owner. Only the guild owner can '
+                f'**{user_global_name}**, you are not registered as a guild leader. Only guild leaders can '
                 f'change these settings.\n'
-                f'If you _are_ the guild owner, run {strings.SLASH_COMMANDS["guild list"]} to update '
+                f'If you _are_ a guild leader, run {strings.SLASH_COMMANDS["guild list"]} to update '
                 f'your guild in my database.\n',
                 ephemeral=True
             )
@@ -365,6 +369,7 @@ class ManageReadySettingsSelect(discord.ui.Select):
         message_style = 'normal message' if view.user_settings.ready_as_embed else 'embed'
         user_ping_emoji = emojis.ENABLED if view.user_settings.ready_ping_user else emojis.DISABLED
         trade_daily_emoji = emojis.ENABLED if view.user_settings.ready_trade_daily_visible else emojis.DISABLED
+        eternity_emoji = emojis.ENABLED if view.user_settings.ready_eternity_visible else emojis.DISABLED
         trade_daily_done_emoji = emojis.ENABLED if view.user_settings.ready_trade_daily_completed_visible else emojis.DISABLED
         up_next_reminder_emoji = emojis.ENABLED if view.user_settings.ready_up_next_visible else emojis.DISABLED
         up_next_style = 'static time' if view.user_settings.ready_up_next_as_timestamp else 'timestamp'
@@ -397,6 +402,8 @@ class ManageReadySettingsSelect(discord.ui.Select):
                                                 value='toggle_pets_claim'))
         options.append(discord.SelectOption(label=f'Show "other commands" {other_position}',
                                             value='toggle_other_position', emoji=None))
+        options.append(discord.SelectOption(label=f'Eternity time left',
+                                            value='toggle_eternity_visible', emoji=eternity_emoji))
         options.append(discord.SelectOption(label='Daily trades',
                                             value='toggle_trade_daily', emoji=trade_daily_emoji))
         options.append(discord.SelectOption(label='Daily trades when done',
@@ -452,6 +459,8 @@ class ManageReadySettingsSelect(discord.ui.Select):
             )
         elif select_value == 'toggle_other_position':
             await self.view.user_settings.update(ready_other_on_top=not self.view.user_settings.ready_other_on_top)
+        elif select_value == 'toggle_eternity_visible':
+            await self.view.user_settings.update(ready_eternity_visible=not self.view.user_settings.ready_eternity_visible)
         elif select_value == 'toggle_pets_claim':
             await self.view.user_settings.update(
                 ready_pets_claim_after_every_pet=not self.view.user_settings.ready_pets_claim_after_every_pet
@@ -583,7 +592,7 @@ class SwitchRemindersListAltSelect(discord.ui.Select):
 
 class SwitchSettingsSelect(discord.ui.Select):
     """Select to switch between settings embeds"""
-    def __init__(self, view: discord.ui.View, commands_settings: Dict[str, callable], row: Optional[int] = None):
+    def __init__(self, view: discord.ui.View, commands_settings: Dict[str, Callable], row: Optional[int] = None):
         self.commands_settings = commands_settings
         options = []
         for label in commands_settings.keys():
@@ -752,7 +761,10 @@ class RemoveAltSelect(discord.ui.Select):
         options = []
         for alt_id in view.user_settings.alts:
             alt = view.bot.get_user(alt_id)
-            label = str(alt_id) if alt is None else alt.global_name
+            if alt is None:
+                label = str(alt_id)
+            else:
+                alt.global_name if alt.global_name is not None else alt.name
             options.append(discord.SelectOption(label=label, value=str(alt_id), emoji=emojis.REMOVE))
         super().__init__(placeholder='Remove alts', min_values=1, max_values=1,
                          options=options, row=row,
@@ -1190,7 +1202,7 @@ class AddPartnerSelect(discord.ui.Select):
 
 class ReminderMessageSelect(discord.ui.Select):
     """Select to select reminder messages by activity"""
-    def __init__(self, view: discord.ui.View, activities: List[str], placeholder: str, custom_id: str,
+    def __init__(self, view: discord.ui.View, activities: list[str], placeholder: str, custom_id: str,
                  row: Optional[int] = None):
         options = []
         options.append(discord.SelectOption(label='All', value='all', emoji=None))
@@ -1251,11 +1263,11 @@ class SetReminderMessageButton(discord.ui.Button):
             confirm_view.interaction_message = confirm_interaction
             await confirm_view.wait()
             if confirm_view.value == 'confirm':
-                kwargs = {}
+                updated_settings = {}
                 for activity in strings.ACTIVITIES:
                     activity_column = strings.ACTIVITIES_COLUMNS[activity]
-                    kwargs[f'{activity_column}_message'] = strings.DEFAULT_MESSAGES[activity]
-                await self.view.user_settings.update(**kwargs)
+                    updated_settings[f'{activity_column}_message'] = strings.DEFAULT_MESSAGES[activity]
+                await self.view.user_settings.update(**updated_settings)
                 await interaction.edit_original_response(
                     content=(
                         f'Changed all messages back to their default message.\n\n'
@@ -1334,10 +1346,10 @@ class SetReminderMessageButton(discord.ui.Button):
             await followup_message.delete(delay=3)
         elif self.custom_id == 'reset_message':
             new_message = strings.DEFAULT_MESSAGES[self.view.activity]
-        kwargs = {}
+        updated_settings = {}
         activity_column = strings.ACTIVITIES_COLUMNS[self.view.activity]
-        kwargs[f'{activity_column}_message'] = new_message
-        await self.view.user_settings.update(**kwargs)
+        updated_settings[f'{activity_column}_message'] = new_message
+        await self.view.user_settings.update(**updated_settings)
         embeds = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings, self.view.activity)
         if interaction.response.is_done():
             await interaction.message.edit(embeds=embeds, view=self.view)
@@ -1376,7 +1388,7 @@ class ToggleTimestampsButton(discord.ui.Button):
 
 class DeleteCustomReminderSelect(discord.ui.Select):
     """Select to delete custom reminders"""
-    def __init__(self, view: discord.ui.View, custom_reminders: List[reminders.Reminder], row: Optional[int] = 2):
+    def __init__(self, view: discord.ui.View, custom_reminders: list[reminders.Reminder], row: Optional[int] = 2):
         self.custom_reminders = custom_reminders
 
         options = []
@@ -1645,7 +1657,7 @@ class ManageManualMultipliersSelect(discord.ui.Select):
 
 class ManageEventReductionsSelect(discord.ui.Select):
     """Select to manage cooldowns"""
-    def __init__(self, view: discord.ui.View, all_cooldowns: List[cooldowns.Cooldown],
+    def __init__(self, view: discord.ui.View, all_cooldowns: list[cooldowns.Cooldown],
                  cd_type: Literal['slash', 'text'], row: Optional[int] = None):
         self.all_cooldowns = all_cooldowns
         self.cd_type = cd_type
@@ -1912,10 +1924,10 @@ class ManageEventPingMessagesSelect(discord.ui.Select):
             confirm_view.interaction_message = confirm_interaction
             await confirm_view.wait()
             if confirm_view.value == 'confirm':
-                kwargs = {}
+                updated_settings = {}
                 for event in strings.EVENT_PINGS.keys():
-                    kwargs[f'event_{event}_message'] = strings.DEFAULT_MESSAGES_EVENT_PINGS[event]
-                await self.view.guild_settings.update(**kwargs)
+                    updated_settings[f'event_{event}_message'] = strings.DEFAULT_MESSAGES_EVENT_PINGS[event]
+                await self.view.guild_settings.update(**updated_settings)
                 await interaction.edit_original_response(
                     content=(
                         f'Changed all event messages back to their default message.'
@@ -1963,8 +1975,8 @@ class ManageEventPingMessagesSelect(discord.ui.Select):
                 await interaction.message.edit(embed=embed, view=self.view)
                 return
             await interaction.delete_original_response(delay=3)
-            kwargs = {f'event_{event}_message': new_message}
-            await self.view.guild_settings.update(**kwargs)
+            updated_settings = {f'event_{event}_message': new_message}
+            await self.view.guild_settings.update(**updated_settings)
             followup_message = await interaction.followup.send('Message updated!')
             await followup_message.delete(delay=3)
         for child in self.view.children.copy():
