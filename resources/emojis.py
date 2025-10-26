@@ -44,6 +44,8 @@ ARTIFACT_COIN_RING: Final[str] = '<:artifact_coin_ring:1146227689565470812>'
 ARTIFACT_GOLDEN_PAN: Final[str] = '<:artifact_golden_pan:1146227692564398122>'
 ARTIFACT_MASTER_KEY: Final[str] = '<:artifact_master_key:1146227694753812612>'
 ARTIFACT_POCKET_WATCH: Final[str] = '<:artifact_pocket_watch:1146227698201546804>'
+ARTIFACT_SHINY_PICKAXE: Final[str] = '<:artifact_shiny_pickaxe:1398217672730345522>'
+ARTIFACT_SUNGLASSES: Final[str] = '<:artifact_sunglasses:1398217708016767016>'
 ARTIFACT_TOP_HAT: Final[str] = '<:artifact_top_hat:1146227700827160736>'
 ARTIFACT_VAMPIRE_TEETH: Final[str] = '<:artifact_vampire_teeth:1179391328019292301>'
 
@@ -59,7 +61,16 @@ CARD_UNCOMMON: Final[str] = '<:card_uncommon:1179386173345505360>'
 CARD_VOID: Final[str] = '<:card_void:1179386179280441375>'
 
 # EPIC RPG event items
+BUNNY_GOD: Final[str] = '<:bunny_god:1398218538262597832>'
+COCONUT: Final[str] = '<:coconut:1398218552217174027>'
+COCONUT_CHOPPED: Final[str] = '<:coconut_chopped:1398219017860419594>'
 COIN_CELEBRATION: Final[str] = '<:coin_celebration:1179391452657233960>'
+DRINK_BLUE: Final[str] = '<:drink_blue:1398219492009574420>'
+DRINK_GREEN: Final[str] = '<:drink_green:1398219507071324160>'
+DRINK_PINK: Final[str] = '<:drink_pink:1398219521873149962>'
+DRINK_YELLOW: Final[str] = '<:drink_yellow:1398219535131086889>'
+EGG_EASTER: Final[str] = '<:egg_easter:1398220358708105328>'
+EGG_SQUARE: Final[str] = '<:egg_square:1398220377951567882>'
 HORSE_ARMOR: Final[str] = '<:horsearmor:1144082370107023441>'
 LB_EASTER: Final[str] = '<:lb_easter:1144082372321624155>'
 PARTY_POPPER: Final[str] = '<:party_popper:1144082376209735700>'
@@ -81,6 +92,7 @@ XMAS_SOCKS: Final[str] = '<:christmassocks:1144082366600581191>'
 LB_COMMON: Final[str] = '<:lb_common:1144082887528943696>'
 LB_EDGY: Final[str] = '<:lb_edgy:1144082891312201842>'
 LB_EPIC: Final[str] = '<:lb_epic:1144082893283524658>'
+LB_ETERNAL: Final[str] = '<a:lb_eternal:1243973305644355675>'
 LB_GODLY: Final[str] = '<:lb_godly:1144082896324411472>'
 LB_OMEGA: Final[str] = '<:lb_omega:1144082898505437284>'
 LB_RARE: Final[str] = '<:lb_rare:1144082902267723906>'
@@ -128,6 +140,7 @@ TIME_TRAVEL: Final[str] = '<:timetravel:1144090242962423868>'
 
 # EPIC RPG pets
 PET_CAT: Final[str] = '<:catto:1144083180052299786>'
+PET_CATERNAL: Final[str] = '<:caternal:1398227078318522389>'
 PET_DOG: Final[str] = '<:doggo:1144083184502448158>'
 PET_DRAGON: Final[str] = '<:draggo:1144083189455912980>'
 PET_GOLDEN_BUNNY: Final[str] = '<:goldenbunny:1144083192899440731>'
@@ -142,6 +155,7 @@ PET_PONY: Final[str] = '<:pony:1144083214655291503>'
 PET_PUMPKIN_BAT: Final[str] = '<:pumpkinbat:1144083218044293222>'
 PET_SNOWBALL: Final[str] = '<:snowball:781654310873464872>'
 PET_SNOWMAN: Final[str] = '<:snowball:1144083229792534638>'
+PET_TURTLE: Final[str] = '<:turtle:1398227149802176532>'
 PET_RANDOM: Final[str] = '<a:pets:1144083204496687265>'
 PET_VOIDOG: Final[str] = '<:voidog:1144083235635216415>'
 PET_WORKER: Final[str] = '<:worker:1179392024693186635>'
@@ -222,14 +236,22 @@ MONSTER_DROP_AREAS_EMOJIS: dict[int, str] = {
 
 BOOSTS_EMOJIS: dict[str, str] = {
     'banana-potion': POTION_BANANA,
+    'blue-drink': DRINK_BLUE,
     'christmas-boost': PRESENT,
+    'chopped-coconut-boost': COCONUT_CHOPPED,
     'cookie-potion': POTION_COOKIE,
     'dev-boost': DEV_BUFF,
     'dev-buff': DEV_BUFF,
     'dragon-breath-potion': POTION_DRAGON_BREATH,
+    'easter-boost': EGG_EASTER,
+    'easterng-boost-i': EGG_SQUARE,
+    'easterng-boost-ii': EGG_SQUARE,
+    'easterng-boost-iii': EGG_SQUARE,
+    'egg-blessing': BUNNY_GOD,
     'electronical-potion': POTION_ELECTRONICAL,
     'fish-potion': POTION_FISH,
     'flask-potion': POTION_FLASK,
+    'green-drink': DRINK_GREEN,
     'halloween-boost': PUMPKIN,
     'inverted-potion': POTION_INVERTED,
     'juice-potion': POTION_JUICE,
@@ -243,14 +265,18 @@ BOOSTS_EMOJIS: dict[str, str] = {
     'monster-potion': POTION_MONSTER,
     'p2w-potion': POTION_P2W,
     'party-popper': PARTY_POPPER,
+    'pink-drink': DRINK_PINK,
     'potion-potion': POTION_POTION,
     'smol-potion': POTION_SMOL,
+    'refreshing-life-potion': LIFE_POTION,
     'round-card': CARD_ROUND,
+    'summer-boost': COCONUT,
     'time-potion': POTION_TIME,
     'triple-potion': POTION_TRIPLE,
     'valentine-boost': '❤️',
     'void-potion': POTION_VOID,
     'wood-potion': POTION_WOOD,
+    'yellow-drink': DRINK_YELLOW,
 }
 
 EPIC_SHOP_EMOJIS: dict[str, str] = {
